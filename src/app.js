@@ -187,9 +187,9 @@ function award(id){
   const r = RITUALS.find(x => x.id === id);
   S.today.done[id] = true; S.rituals++;
   gain(r.pts, r.n);
-  if (RITUALS.every(x => S.today.done[x.id]) && !S.today.done.all){
+  if (DAILY.every(x => S.today.done[x]) && !S.today.done.all){
     S.today.done.all = true;
-    setTimeout(() => gain(ALL_DONE_PTS, 'Tous les rituels du jour'), 400);
+    setTimeout(() => gain(DAILY_BONUS, 'Rituel du jour accompli'), 400);
   }
   save(); updateChip();
   return true;
@@ -310,12 +310,12 @@ function vAccueil(){
   const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
   const thought = THOUGHTS[(doy + now.getFullYear()) % THOUGHTS.length];
   const mi = moonInfo();
-  const done = RITUALS.filter(r => isDone(r.id)).length;
+  const done = DAILY.filter(isDone).length;
   const lv = levelOf(S.points), next = LEVELS[lv + 1];
   const pct = next ? Math.round((S.points - LEVELS[lv].p) / (next.p - LEVELS[lv].p) * 100) : 100;
-  const chGlyph = CHINESE[chineseOf(p.birth).animal].h;
-  const lp = lifePath(p.birth);
-  const glyphFor = r => r.id === 'horo' ? z.g + VS : r.id === 'chinois' ? chGlyph : r.id === 'numero' ? lp : r.g;
+  const si = signIndex(birthParts(p.birth).m, birthParts(p.birth).d);
+  const card = drawSpread(1)[0], cardDone = isDone('tarot1'), horoDone = isDone('horo');
+  const ptsOf = id => RITUALS.find(r => r.id === id).pts;
   return `<section class="view">
     ${topbar()}
     <header class="hero">
@@ -327,9 +327,7 @@ function vAccueil(){
     <article class="frame" aria-labelledby="pt">
       <div class="h-eyebrow" id="pt" style="text-align:center">Pensée du jour</div>
       <p class="thought">« ${esc(thought)} »</p>
-      <div class="thought-foot">${isDone('pensee')
-        ? `<button class="btn btn-ghost" data-act="breathe">Respirer encore avec elle</button>`
-        : `<button class="btn btn-gold" data-act="breathe">Respirer avec elle <span class="pts">+5</span></button>`}</div>
+      <div class="thought-foot"><button class="btn btn-ghost btn-sm" data-act="breathe">Respirer avec elle${isDone('pensee') ? '' : ' <span class="pts">+5</span>'}</button></div>
     </article>
 
     ${canInstall() && !S.installHide ? `<div class="install-banner">
@@ -340,15 +338,39 @@ function vAccueil(){
     </div>` : ''}
 
     <section class="stack" aria-labelledby="rt">
-      <div class="section-head"><h2 id="rt">Rituels du jour</h2><span class="count">${done} / ${RITUALS.length}</span></div>
-      <div class="rituals">
-        ${RITUALS.map(r => `<button class="rit ${isDone(r.id) ? 'done' : ''}" data-act="go" data-go='${JSON.stringify(r.go)}'>
-          <span class="g">${esc(String(glyphFor(r)))}</span>
-          <span class="t">${esc(r.n)}<br><span class="p">${isDone(r.id) ? '✓ accompli' : '+' + r.pts + ' points'}</span></span>
-        </button>`).join('')}
+      <div class="section-head"><h2 id="rt">Votre rituel du jour</h2><span class="count">${done} / ${DAILY.length}</span></div>
+      <div class="daily2">
+        <div class="dtile ${cardDone ? 'done' : ''}">
+          <div class="dt-head"><span class="h-eyebrow">Carte du jour</span><span class="badge ${cardDone ? 'ok' : ''}">${cardDone ? '✓' : '+' + ptsOf('tarot1')}</span></div>
+          <button class="tcard home-card ${cardDone ? 'flipped' : ''}" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
+            <span class="tc-inner">${backFace(S.back)}${cardFront(card)}</span>
+          </button>
+          ${cardDone
+            ? `<div class="dt-name">${esc(card.name)}</div><div class="dt-text">${esc(card.msg)}</div><button class="dt-link" data-act="card" data-card="${card.id}">Voir la carte</button>`
+            : `<div class="dt-name">Touchez pour la retourner</div>`}
+        </div>
+        <div class="dtile ${horoDone ? 'done' : ''}">
+          <div class="dt-head"><span class="h-eyebrow">Horoscope</span><span class="badge ${horoDone ? 'ok' : ''}">${horoDone ? '✓' : '+' + ptsOf('horo')}</span></div>
+          <div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div>
+          <div class="dt-name">${z.n}</div>
+          ${horoDone
+            ? `<div class="dt-text">${esc(horoscopeFor(si).open)}</div><button class="dt-link" data-act="go" data-go='["astres","zodiaque"]'>Lire en entier</button>`
+            : `<button class="btn btn-gold btn-sm" data-act="reveal" data-id="horo">Révéler</button>`}
+        </div>
       </div>
-      <p class="small muted" style="margin:0;text-align:center">Accomplissez les ${RITUALS.length} rituels pour un bonus de ${ALL_DONE_PTS} points.</p>
+      <p class="small muted" style="margin:0;text-align:center">${done === DAILY.length
+        ? '✦ Rituel accompli. Les étoiles vous retrouvent demain.'
+        : `Faites les deux pour un bonus de ${DAILY_BONUS} points.`}</p>
     </section>
+
+    <div class="explore">
+      <span class="small muted">Envie d'aller plus loin ?</span>
+      <div class="explore-links">
+        <button data-act="go" data-go='["tarot",3]'>Tirage 3 cartes</button>
+        <button data-act="go" data-go='["astres","lune"]'>Lune</button>
+        <button data-act="go" data-go='["oracles"]'>Oracles</button>
+      </div>
+    </div>
 
     <a class="frame-plain levelbar" href="#profil" style="text-decoration:none;color:inherit">
       <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">${S.points} pts</span></div>
@@ -810,6 +832,17 @@ document.addEventListener('click', e => {
         award(id);
         setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'}); }, reduceMotion ? 0 : 1000);
       }
+      break;
+    }
+    case 'homeflip': {
+      if (isDone('tarot1')){ cardSheet(el.dataset.card); break; }
+      el.classList.add('flipped');
+      setTimeout(() => sparkleAt(el, 26, 1.2), reduceMotion ? 0 : 380);
+      const c = drawSpread(1)[0];
+      S.today.draws[1] = [c.id];
+      S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
+      award('tarot1');
+      setTimeout(render, reduceMotion ? 0 : 1000);
       break;
     }
     case 'card': cardSheet(el.dataset.card); break;

@@ -445,5 +445,7 @@ const RITUALS = [
   {id:"pendule", n:"Pendule",          pts:5,  g:"▾", go:["oracles","pendule"]},
   {id:"compat",  n:"Compatibilité",    pts:10, g:"♡", go:["oracles","compat"]}
 ];
-const VISIT_PTS = 10, ALL_DONE_PTS = 25;
+/* Rituel du jour mis en avant sur l'accueil ; les autres options rapportent des points sans être des tâches. */
+const DAILY = ['tarot1', 'horo'];
+const VISIT_PTS = 10, DAILY_BONUS = 20;
 const STREAK_BONUS = {3:15, 7:50, 14:100, 30:200, 60:300, 100:500, 365:1000};
