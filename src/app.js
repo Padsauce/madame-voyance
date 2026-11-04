@@ -77,6 +77,11 @@ if (!inFrame){
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
   window.addEventListener('appinstalled', () => { installEvt = null; toast('Madame Voyance est sur votre écran d\'accueil'); render(); });
 }
+if (isIOS) document.documentElement.classList.add('ios');
+const dateInput = (id, value) => `<div class="date-wrap${value ? ' has-value' : ''}"><input id="${id}" name="${id}" type="date" min="1900-01-01" max="${dk()}" value="${esc(value || '')}"><span class="date-ph" aria-hidden="true">Touchez pour choisir</span></div>`;
+const syncDate = e => { const t = e.target; if (t && t.type === 'date' && t.parentNode.classList) t.parentNode.classList.toggle('has-value', !!t.value); };
+document.addEventListener('input', syncDate);
+document.addEventListener('change', syncDate);
 const canInstall = () => !inFrame && !standalone() && (!!installEvt || isIOS || isTouch);
 
 /* ---------- Profil et calculs ---------- */
@@ -565,7 +570,7 @@ function oracleBody(id){
     const res = UI.compat;
     return `<form class="form" data-form="compat" novalidate>
         <div class="field"><label for="cn">Prénom de l'autre personne</label><input id="cn" name="cn" maxlength="30" placeholder="Facultatif" autocomplete="off"></div>
-        <div class="field"><label for="cb">Sa date de naissance</label><input id="cb" name="cb" type="date" min="1900-01-01" max="${dk()}"><span class="err" id="cb-err"></span></div>
+        <div class="field"><label for="cb">Sa date de naissance</label>${dateInput('cb', '')}<span class="err" id="cb-err"></span></div>
         <button class="btn btn-gold btn-wide" type="submit">Lire notre compatibilité ${isDone('compat') ? '' : '<span class="pts">+10</span>'}</button>
       </form>
       ${res ? compatResult(res) : ''}
@@ -678,7 +683,7 @@ function profileForm(isEdit){
   const p = S.profile || {name:'', birth:''};
   return `<form class="form" data-form="${isEdit ? 'edit' : 'profile'}" novalidate>
     <div class="field"><label for="pn">Votre prénom</label><input id="pn" name="pn" maxlength="30" autocomplete="given-name" value="${esc(p.name)}" placeholder="Votre prénom"><span class="err" id="pn-err"></span></div>
-    <div class="field"><label for="pb">Votre date de naissance</label><input id="pb" name="pb" type="date" min="1900-01-01" max="${dk()}" value="${esc(p.birth)}"><span class="err" id="pb-err"></span></div>
+    <div class="field"><label for="pb">Votre date de naissance</label>${dateInput('pb', p.birth)}<span class="err" id="pb-err"></span></div>
     <button class="btn btn-gold btn-wide" type="submit">${isEdit ? 'Enregistrer' : 'Entrer dans le cercle'}</button>
   </form>`;
 }

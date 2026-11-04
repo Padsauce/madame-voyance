@@ -234,6 +234,13 @@ input{font:inherit;color:inherit}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 .field input{min-height:50px;padding:0 16px;border-radius:14px;border:1px solid var(--gold-line);background:rgba(10,6,22,.6);font-size:16px;color:var(--ink);width:100%}
+.field input{display:block;min-width:0;max-width:100%;height:50px;margin:0;-webkit-appearance:none;appearance:none}
+.field input[type=date]{line-height:48px;text-align:left}
+.field input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.8) sepia(.6) saturate(3) hue-rotate(5deg);opacity:.8;cursor:pointer}
+.date-wrap{position:relative;min-width:0}
+.date-ph{display:none;position:absolute;left:17px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px;pointer-events:none}
+.ios .date-wrap:not(.has-value) .date-ph{display:block}
 .field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(230,195,120,.2),0 0 18px -4px var(--violet-glow)}
 .field .err{font-size:13px;color:var(--danger);min-height:0}
 .form{display:flex;flex-direction:column;gap:16px}
@@ -871,6 +878,11 @@ if (!inFrame){
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
   window.addEventListener('appinstalled', () => { installEvt = null; toast('Madame Voyance est sur votre écran d\'accueil'); render(); });
 }
+if (isIOS) document.documentElement.classList.add('ios');
+const dateInput = (id, value) => `<div class="date-wrap${value ? ' has-value' : ''}"><input id="${id}" name="${id}" type="date" min="1900-01-01" max="${dk()}" value="${esc(value || '')}"><span class="date-ph" aria-hidden="true">Touchez pour choisir</span></div>`;
+const syncDate = e => { const t = e.target; if (t && t.type === 'date' && t.parentNode.classList) t.parentNode.classList.toggle('has-value', !!t.value); };
+document.addEventListener('input', syncDate);
+document.addEventListener('change', syncDate);
 const canInstall = () => !inFrame && !standalone() && (!!installEvt || isIOS || isTouch);
 
 /* ---------- Profil et calculs ---------- */
@@ -1359,7 +1371,7 @@ function oracleBody(id){
     const res = UI.compat;
     return `<form class="form" data-form="compat" novalidate>
         <div class="field"><label for="cn">Prénom de l'autre personne</label><input id="cn" name="cn" maxlength="30" placeholder="Facultatif" autocomplete="off"></div>
-        <div class="field"><label for="cb">Sa date de naissance</label><input id="cb" name="cb" type="date" min="1900-01-01" max="${dk()}"><span class="err" id="cb-err"></span></div>
+        <div class="field"><label for="cb">Sa date de naissance</label>${dateInput('cb', '')}<span class="err" id="cb-err"></span></div>
         <button class="btn btn-gold btn-wide" type="submit">Lire notre compatibilité ${isDone('compat') ? '' : '<span class="pts">+10</span>'}</button>
       </form>
       ${res ? compatResult(res) : ''}
@@ -1472,7 +1484,7 @@ function profileForm(isEdit){
   const p = S.profile || {name:'', birth:''};
   return `<form class="form" data-form="${isEdit ? 'edit' : 'profile'}" novalidate>
     <div class="field"><label for="pn">Votre prénom</label><input id="pn" name="pn" maxlength="30" autocomplete="given-name" value="${esc(p.name)}" placeholder="Votre prénom"><span class="err" id="pn-err"></span></div>
-    <div class="field"><label for="pb">Votre date de naissance</label><input id="pb" name="pb" type="date" min="1900-01-01" max="${dk()}" value="${esc(p.birth)}"><span class="err" id="pb-err"></span></div>
+    <div class="field"><label for="pb">Votre date de naissance</label>${dateInput('pb', p.birth)}<span class="err" id="pb-err"></span></div>
     <button class="btn btn-gold btn-wide" type="submit">${isEdit ? 'Enregistrer' : 'Entrer dans le cercle'}</button>
   </form>`;
 }
