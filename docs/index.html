@@ -1,0 +1,1687 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Votre voyance du jour : tarot, horoscope, lune, runes et numérologie.">
+<link rel="manifest" href="manifest.webmanifest">
+<style>html{padding-top:env(safe-area-inset-top,0px)}</style>
+<title>Madame Voyance</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0a0616">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Jost:wght@400;500;600&family=Noto+Sans+Runic&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600&text=%E9%BC%A0%E7%89%9B%E8%99%8E%E5%85%94%E9%BE%8D%E8%9B%87%E9%A6%AC%E7%BE%8A%E7%8C%B4%E9%9B%9E%E7%8B%97%E8%B1%AC&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&display=swap">
+<style>
+/* Mise en page : application mobile à une colonne (max 520px), barre d'onglets fixe en bas, ciel étoilé animé derrière tout. */
+:root{
+  --night:#0a0616;
+  --night-2:#140b2b;
+  --velvet:#1f1340;
+  --velvet-2:#2c1b55;
+  --violet:#a77dff;
+  --violet-glow:rgba(167,125,255,.42);
+  --gold:#e6c378;
+  --gold-hi:#fbe9b7;
+  --gold-lo:#9b783a;
+  --gold-line:rgba(230,195,120,.5);
+  --gold-faint:rgba(230,195,120,.16);
+  --ink:#f2ecff;
+  --mist:#b9abda;
+  --dim:#8a7cad;
+  --ok:#a8e8c3;
+  --danger:#ff9aa8;
+
+  --f-display:'Cinzel','Trajan Pro',Georgia,serif;
+  --f-read:'Cormorant Garamond','Cormorant',Georgia,'Times New Roman',serif;
+  --f-ui:'Jost','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --f-sym:'Noto Sans Symbols','Noto Sans Symbols 2','Segoe UI Symbol','Apple Symbols',serif;
+  --f-rune:'Noto Sans Runic','Segoe UI Historic',serif;
+  --f-cjk:'Noto Serif SC','Songti SC','SimSun',serif;
+
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  color-scheme:dark;
+}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+html,body{height:100%;background:var(--night);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+*,*::before,*::after{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+
+/* ---- Ciel ---- */
+.nebula{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(60% 45% at 15% 8%, rgba(120,70,220,.38), transparent 70%),
+  radial-gradient(55% 40% at 95% 55%, rgba(170,60,170,.20), transparent 70%),
+  radial-gradient(70% 50% at 40% 105%, rgba(70,40,160,.35), transparent 70%),
+  linear-gradient(180deg, var(--night) 0%, var(--night-2) 100%)}
+#sky,#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#sky{z-index:0}
+#fx{z-index:60}
+
+/* ---- Structure ---- */
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:10px calc(104px + env(safe-area-inset-bottom, 0px))}
+.view{display:flex;flex-direction:column;gap:22px;animation:rise .5s ease both}
+@keyframes rise{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.brand-mini{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.chip{text-decoration:none;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;border:1px solid var(--gold-line);background:rgba(20,11,43,.7);font-size:13px;font-weight:500;color:var(--gold-hi);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip .sep{width:1px;height:12px;background:var(--gold-line)}
+.chip svg{width:14px;height:14px}
+
+.h-eyebrow{font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--mist)}
+.h-title{font-family:var(--f-display);font-weight:600;font-size:26px;line-height:1.15;letter-spacing:.04em;margin:4px 0 0;text-wrap:balance}
+.gold{background:linear-gradient(180deg,var(--gold-hi) 0%,var(--gold) 55%,var(--gold-lo) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px var(--violet-glow))}
+.lead{font-family:var(--f-read);font-size:19px;line-height:1.45;color:var(--ink)}
+.muted{color:var(--mist)}
+.small{font-size:13px}
+
+/* ---- Cadre doré ---- */
+.frame{position:relative;border:1px solid var(--gold-line);border-radius:var(--r-lg);
+  background:linear-gradient(180deg,rgba(44,27,85,.78),rgba(20,11,43,.86));
+  box-shadow:0 0 0 4px rgba(10,6,22,.55),0 0 0 5px var(--gold-faint),0 18px 50px -18px var(--violet-glow);
+  padding:24px 20px 20px}
+.frame::before{content:"✦";position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:0 10px;font-size:14px;line-height:20px;color:var(--gold);background:var(--night-2);border-radius:10px}
+.frame-plain{border:1px solid var(--gold-faint);border-radius:var(--r-md);background:rgba(28,17,58,.66);padding:16px}
+
+/* ---- Boutons ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:999px;font-weight:500;letter-spacing:.02em;transition:transform .15s ease, box-shadow .2s ease}
+.btn:active{transform:scale(.97)}
+.btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,#c99f4c);color:#25153f;font-weight:600;box-shadow:0 0 0 1px rgba(255,240,200,.4) inset,0 8px 26px -8px rgba(230,195,120,.7)}
+.btn-ghost{border:1px solid var(--gold-line);color:var(--gold-hi);background:rgba(20,11,43,.6)}
+.btn-ghost:hover{box-shadow:0 0 18px -4px var(--violet-glow)}
+.btn-danger{border:1px solid rgba(255,154,168,.5);color:var(--danger);background:rgba(60,10,30,.35)}
+.btn-wide{width:100%}
+.pts{font-family:var(--f-ui);font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(37,21,63,.18);font-variant-numeric:tabular-nums}
+.btn-ghost .pts{background:var(--gold-faint);color:var(--gold-hi)}
+
+/* ---- Segments ---- */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--gold-faint);background:rgba(20,11,43,.72)}
+.seg button{min-height:40px;padding:0 8px;border-radius:999px;font-size:13px;font-weight:500;color:var(--mist);transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,rgba(167,125,255,.35),rgba(167,125,255,.15));color:var(--gold-hi);box-shadow:0 0 0 1px var(--gold-line) inset,0 0 16px -4px var(--violet-glow)}
+
+/* ---- Accueil ---- */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-top:10px}
+.wordmark{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,9vw,40px);letter-spacing:.08em;line-height:1.05;margin:0}
+.wordmark small{display:block;font-size:.42em;letter-spacing:.5em;font-weight:500;margin-bottom:6px}
+.date-line{display:flex;align-items:center;gap:10px;color:var(--mist);font-size:14px}
+.date-line .dot{width:4px;height:4px;border-radius:50%;background:var(--gold)}
+.greet{font-family:var(--f-read);font-size:21px;font-style:italic;color:var(--ink)}
+.thought{font-family:var(--f-read);font-style:italic;font-weight:500;font-size:clamp(22px,6vw,26px);line-height:1.35;text-align:center;margin:8px 0 18px;text-wrap:balance}
+.thought-foot{display:flex;justify-content:center}
+.done-note{display:inline-flex;align-items:center;gap:8px;color:var(--ok);font-size:14px}
+
+.rituals{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rit{display:flex;align-items:center;gap:10px;padding:10px 12px;min-height:54px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.66);text-align:left;transition:border-color .2s, box-shadow .2s}
+.rit:hover{border-color:var(--gold-line)}
+.rit .g{flex:0 0 30px;height:30px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--gold-line);font-family:var(--f-display),var(--f-sym),var(--f-rune);font-size:13px;color:var(--gold)}
+.rit .t{flex:1;min-width:0;font-size:13px;line-height:1.25}
+.rit .p{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.rit.done{border-color:rgba(168,232,195,.35);background:rgba(30,60,55,.28)}
+.rit.done .g{border-color:rgba(168,232,195,.6);color:var(--ok)}
+.rit.done .p{color:var(--ok)}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.section-head h2{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0}
+.count{font-size:13px;color:var(--mist);font-variant-numeric:tabular-nums}
+
+.levelbar{display:flex;flex-direction:column;gap:8px}
+.lv-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.lv-name{font-family:var(--f-display);font-size:16px;color:var(--gold-hi)}
+.track{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;border:1px solid var(--gold-faint)}
+.track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--gold));box-shadow:0 0 12px var(--violet-glow)}
+
+/* ---- Cartes de tarot ---- */
+.deck-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.spread{display:grid;gap:10px;justify-content:center;width:100%}
+.spread.n1{grid-template-columns:min(220px,62vw)}
+.spread.n3{grid-template-columns:repeat(3,minmax(0,124px))}
+.spread.n10{grid-template-columns:repeat(5,minmax(0,1fr))}
+.slot{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.slot-label{font-size:11px;letter-spacing:.06em;color:var(--mist);text-align:center;line-height:1.2}
+.n10 .slot-label{font-size:10px}
+.tcard{display:block;width:100%;aspect-ratio:7/12;perspective:900px;border-radius:12px}
+.tc-inner{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,.7,.2,1)}
+.tcard.flipped .tc-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.face.front{transform:rotateY(180deg);background:#f3ead2;border:2px solid var(--gold);box-shadow:0 0 24px -4px var(--violet-glow)}
+.face.front img{width:100%;height:100%;object-fit:cover;display:block}
+.face.front .fallback{display:none}
+.face.front.noimg{display:grid;place-items:center;background:linear-gradient(180deg,var(--velvet-2),var(--night-2));padding:8px;text-align:center}
+.face.front.noimg img{display:none}
+.face.front.noimg .fallback{display:block;font-family:var(--f-display);color:var(--gold-hi);font-size:13px}
+.tcard:not(.flipped) .tc-inner{animation:hover-card 4s ease-in-out infinite}
+.slot:nth-child(odd) .tcard:not(.flipped) .tc-inner{animation-delay:-2s}
+@keyframes hover-card{50%{transform:translateY(-4px)}}
+
+/* Dos de cartes */
+.back{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(10,6,22,.8) inset,0 0 0 4px var(--gold-line) inset,0 0 22px -4px var(--violet-glow)}
+.back-nuit{background:radial-gradient(circle at 50% 50%,rgba(230,195,120,.28) 0 14%,transparent 15%),radial-gradient(circle at 50% 50%,transparent 0 30%,rgba(230,195,120,.35) 30.5% 31.5%,transparent 32%),radial-gradient(1px 1px at 20% 25%,#fff8 99%,transparent),radial-gradient(1px 1px at 75% 18%,#fff9 99%,transparent),radial-gradient(1px 1px at 30% 80%,#fff7 99%,transparent),radial-gradient(1px 1px at 82% 72%,#fff8 99%,transparent),linear-gradient(160deg,#2b1760,#120a2a)}
+.back-lune{background:radial-gradient(circle at 57% 41%,#1c1046 0 21%,transparent 22%),radial-gradient(circle at 46% 47%,var(--gold) 0 22%,transparent 23%),repeating-radial-gradient(circle at 50% 50%,transparent 0 9px,rgba(230,195,120,.12) 9px 10px),linear-gradient(160deg,#241052,#0e0722)}
+.back-soleil{background:radial-gradient(circle at 50% 50%,var(--gold-hi) 0 12%,var(--gold) 13% 16%,transparent 17%),repeating-conic-gradient(from 0deg at 50% 50%,rgba(230,195,120,.42) 0 4deg,transparent 4deg 15deg),linear-gradient(160deg,#3b1650,#160a2c)}
+.back-astres{background:radial-gradient(1.5px 1.5px at 22% 30%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 40% 22%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 58% 38%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 72% 26%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 30% 68%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 52% 78%,var(--gold-hi) 99%,transparent),radial-gradient(1.5px 1.5px at 70% 64%,var(--gold-hi) 99%,transparent),linear-gradient(155deg,transparent 46%,rgba(230,195,120,.35) 46.5% 47%,transparent 47.5%),linear-gradient(25deg,transparent 52%,rgba(230,195,120,.3) 52.5% 53%,transparent 53.5%),linear-gradient(160deg,#1a1d5c,#0b0820)}
+
+.tap-hint{font-size:13px;color:var(--mist);letter-spacing:.04em;text-align:center}
+.reading{display:flex;flex-direction:column;gap:12px}
+.read-row{display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;align-items:start;padding:12px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);text-align:left;width:100%}
+.read-row img,.read-row .thumb{width:52px;aspect-ratio:7/12;border-radius:6px;object-fit:cover;border:1px solid var(--gold-line);background:var(--velvet)}
+.pos{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--violet)}
+.cname{font-family:var(--f-display);font-size:16px;color:var(--gold-hi);margin:2px 0}
+.keys{font-size:12px;letter-spacing:.04em;color:var(--mist)}
+.msg{font-family:var(--f-read);font-size:18px;line-height:1.4;margin-top:6px}
+.daily-read{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.daily-read .cname{font-size:22px}
+.tip{display:inline-flex;gap:8px;align-items:flex-start;text-align:left;padding:10px 14px;border-radius:12px;background:rgba(167,125,255,.12);border:1px solid rgba(167,125,255,.3);font-size:14px}
+
+/* ---- Astres ---- */
+.sign-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.glyph-orb{width:112px;height:112px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--gold-line);background:radial-gradient(circle at 50% 40%,rgba(167,125,255,.35),rgba(20,11,43,.4) 70%);box-shadow:0 0 0 6px rgba(10,6,22,.5),0 0 0 7px var(--gold-faint),0 0 40px -6px var(--violet-glow)}
+.glyph-orb span{font-family:var(--f-sym);font-size:54px;line-height:1;color:var(--gold-hi);text-shadow:0 0 18px var(--violet-glow)}
+.glyph-orb .cjk{font-family:var(--f-cjk);font-size:58px;font-weight:600}
+.glyph-orb .num{font-family:var(--f-display);font-size:50px;font-weight:600}
+.facts{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.fact{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--gold-faint);color:var(--mist)}
+.horo{display:flex;flex-direction:column;gap:14px}
+.horo-item{display:flex;flex-direction:column;gap:2px}
+.horo-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.horo-head b{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.stars{letter-spacing:3px;color:var(--gold);font-size:13px}
+.stars .off{color:rgba(230,195,120,.25)}
+.signs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.signs button{min-height:44px;border-radius:12px;border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);font-family:var(--f-sym);font-size:20px;color:var(--gold)}
+.signs button[aria-current="true"]{border-color:var(--gold);box-shadow:0 0 14px -4px var(--violet-glow)}
+.moon-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.moon-wrap svg{width:min(170px,46vw);height:auto;filter:drop-shadow(0 0 26px rgba(240,230,200,.35))}
+.stat-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.stat{padding:10px 6px;border-radius:12px;border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);text-align:center;min-width:0}
+.stat b{display:block;font-family:var(--f-ui);font-weight:600;font-size:17px;color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--mist);line-height:1.2;display:block}
+
+/* ---- Oracles ---- */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px 14px;min-height:132px;border-radius:var(--r-lg);border:1px solid var(--gold-faint);background:linear-gradient(170deg,rgba(44,27,85,.75),rgba(20,11,43,.8));text-align:left;overflow:hidden;transition:border-color .2s, box-shadow .2s}
+.tile:hover{border-color:var(--gold-line);box-shadow:0 0 24px -8px var(--violet-glow)}
+.tile.wide{grid-column:1 / -1;padding-right:58px;min-height:auto;flex-direction:row;align-items:center}
+.tile .tg{font-size:30px;line-height:1;color:var(--gold);text-shadow:0 0 14px var(--violet-glow);font-family:var(--f-display),var(--f-sym),var(--f-rune)}
+.tile .tn{font-family:var(--f-display);font-size:15px;color:var(--gold-hi);letter-spacing:.04em}
+.tile .td{font-size:12px;color:var(--mist);line-height:1.35}
+.tile .badge{position:absolute;top:10px;right:10px}
+.tile.wide .grow{flex:1;min-width:0}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--gold-faint);color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.badge.ok{background:rgba(168,232,195,.15);color:var(--ok)}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--mist);font-size:14px;min-height:40px;align-self:flex-start}
+.back-link svg{width:16px;height:16px}
+
+.num-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rune-stone{width:120px;height:140px;display:grid;place-items:center;border-radius:46% 54% 48% 52% / 50% 46% 54% 50%;background:radial-gradient(circle at 35% 30%,#6b6188,#3a3254 60%,#241d38);box-shadow:inset -8px -10px 18px rgba(0,0,0,.45),inset 6px 6px 14px rgba(255,255,255,.12),0 14px 30px -10px rgba(0,0,0,.6),0 0 40px -10px var(--violet-glow)}
+.rune-stone span{font-family:var(--f-rune);font-size:64px;color:var(--gold);text-shadow:0 0 12px rgba(230,195,120,.7),0 1px 0 rgba(0,0,0,.6)}
+.pouch{width:120px;height:140px;display:grid;place-items:center;border-radius:40% 40% 46% 46% / 30% 30% 60% 60%;background:radial-gradient(circle at 40% 35%,#5a2f7a,#2a1446 70%);border:1px solid var(--gold-line);box-shadow:0 0 30px -6px var(--violet-glow);font-family:var(--f-rune);font-size:28px;color:var(--gold)}
+.gem{width:96px;height:96px;clip-path:polygon(50% 0,92% 30%,78% 100%,22% 100%,8% 30%);box-shadow:none}
+.swatch{width:96px;height:96px;border-radius:50%;border:2px solid var(--gold-line);box-shadow:0 0 30px -6px var(--violet-glow)}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.duo>div{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;min-width:0}
+.lucky{font-family:var(--f-display);font-size:44px;color:var(--gold-hi);line-height:1}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.field input{min-height:50px;padding:0 16px;border-radius:14px;border:1px solid var(--gold-line);background:rgba(10,6,22,.6);font-size:16px;color:var(--ink);width:100%}
+.field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(230,195,120,.2),0 0 18px -4px var(--violet-glow)}
+.field .err{font-size:13px;color:var(--danger);min-height:0}
+.form{display:flex;flex-direction:column;gap:16px}
+
+.pendulum{width:120px;height:170px;display:block;margin:0 auto;overflow:visible}
+.pendulum g{transform-origin:60px 6px}
+.pendulum.swing g{animation:swing 0.9s ease-in-out 3 alternate}
+@keyframes swing{0%{transform:rotate(-24deg)}100%{transform:rotate(24deg)}}
+.answer{font-family:var(--f-display);font-size:34px;letter-spacing:.06em;text-align:center}
+
+.ring{position:relative;width:140px;height:140px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-size:34px;color:var(--gold-hi)}
+
+/* ---- Profil ---- */
+.id-card{display:flex;align-items:center;gap:16px}
+.id-card .glyph-orb{width:76px;height:76px;flex:0 0 76px}
+.id-card .glyph-orb span{font-size:36px}
+.id-card .who{min-width:0}
+.id-card .name{font-family:var(--f-display);font-size:22px;color:var(--gold-hi);overflow-wrap:anywhere}
+.stats4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.backs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.back-opt{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+.back-opt .mini{position:relative;width:100%;aspect-ratio:7/12;border-radius:8px;overflow:hidden}
+.back-opt .mini .face{border-radius:8px}
+.back-opt span{font-size:11px;line-height:1.2;color:var(--mist)}
+.back-opt[aria-pressed="true"] .mini{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+.back-opt[disabled]{cursor:not-allowed}
+.back-opt[disabled] .mini::after{content:"Niv. " attr(data-lvl);position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,6,22,.72);color:var(--gold);font-size:12px;font-weight:600}
+.journal{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.journal button{flex:0 0 58px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.journal img{width:58px;aspect-ratio:7/12;border-radius:6px;object-fit:cover;border:1px solid var(--gold-line)}
+.journal span{font-size:10px;color:var(--mist);font-variant-numeric:tabular-nums}
+.data-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.data-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.4}
+.data-list li::before{content:"✦";color:var(--gold);font-size:11px;line-height:20px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.foot{text-align:center;font-size:12px;color:var(--dim);line-height:1.5}
+
+/* ---- Navigation ---- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;
+  padding:6px max(10px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  background:linear-gradient(180deg,rgba(14,8,32,.82),rgba(10,6,22,.96));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--gold-faint)}
+.nav-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;min-height:54px;border-radius:14px;color:var(--dim);text-decoration:none;font-size:11px;letter-spacing:.04em;transition:color .2s}
+.nav a svg{width:24px;height:24px}
+.nav a[aria-current="page"]{color:var(--gold-hi)}
+.nav a[aria-current="page"] svg{filter:drop-shadow(0 0 8px var(--violet-glow)) drop-shadow(0 0 2px rgba(230,195,120,.6))}
+
+/* ---- Fenêtres ---- */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto;background:rgba(8,5,18,.55)}
+.overlay[hidden]{display:none!important}
+.onboard{background:transparent}
+.onboard .wrap{width:100%;display:flex;flex-direction:column;justify-content:center;min-height:100%;padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet-back{position:fixed;inset:0;z-index:40;background:rgba(5,3,12,.66);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:90vh;overflow-y:auto;border-radius:24px 24px 0 0;border-top:1px solid var(--gold-line);background:linear-gradient(180deg,#22134a,#120a2a 60%);box-shadow:0 -20px 60px -20px var(--violet-glow);animation:up .35s cubic-bezier(.2,.8,.2,1)}
+.sheet-in{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px;
+  padding:14px max(20px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px))}
+.grab{width:42px;height:4px;border-radius:4px;background:var(--gold-line);align-self:center}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.sheet .big-card{width:min(240px,64vw);aspect-ratio:7/12;align-self:center;border-radius:14px;overflow:hidden;border:2px solid var(--gold);box-shadow:0 0 40px -6px var(--violet-glow);position:relative}
+.sheet .big-card img{width:100%;height:100%;object-fit:cover;display:block}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top, 0px) + 14px);z-index:70;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;background:linear-gradient(180deg,#2c1b55,#1a0f38);border:1px solid var(--gold);box-shadow:0 10px 30px -8px var(--violet-glow);color:var(--gold-hi);font-weight:500;font-size:14px;white-space:nowrap;max-width:calc(100vw - 32px);animation:toast 2.4s ease both}
+.toast b{font-family:var(--f-display);font-size:16px}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-12px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-8px)}}
+
+.breathe{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(8,5,18,.86);padding:24px}
+.breathe .orb{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(251,233,183,.9),rgba(230,195,120,.35) 45%,rgba(167,125,255,.15) 70%,transparent 72%);box-shadow:0 0 60px rgba(167,125,255,.45);animation:breath 8s ease-in-out infinite}
+.breathe p{font-family:var(--f-read);font-style:italic;font-size:24px;color:var(--gold-hi);text-align:center;min-height:1.5em}
+@keyframes breath{0%,100%{transform:scale(.6)}50%{transform:scale(1.15)}}
+
+.levelup{text-align:center;align-items:center}
+
+/* ---- Installation ---- */
+.btn-sm{min-height:40px;padding:0 16px;font-size:14px}
+.install-banner{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px 14px;align-items:center;padding:14px;border-radius:var(--r-lg);border:1px solid var(--gold-line);background:linear-gradient(120deg,rgba(167,125,255,.22),rgba(28,17,58,.75) 60%);box-shadow:0 0 30px -12px var(--violet-glow)}
+.install-banner img,.app-row img{border-radius:22%;box-shadow:0 4px 14px -4px rgba(0,0,0,.6)}
+.install-banner .grow,.app-row .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.install-banner b,.app-row b{font-weight:600;font-size:15px;color:var(--gold-hi)}
+.ib-actions{grid-column:1 / -1;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.ib-close{width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1;color:var(--mist)}
+.app-row{display:flex;align-items:center;gap:14px}
+.app-row .grow{flex:1}
+.app-icon-lg{border-radius:22%;box-shadow:0 0 0 1px var(--gold-line),0 10px 30px -8px var(--violet-glow)}
+.steps{margin:0;padding:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:10px}
+.steps li{counter-increment:st;display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:center;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);font-size:15px;line-height:1.4}
+.steps li::before{content:counter(st);width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--gold-line);font-family:var(--f-display);color:var(--gold)}
+.foot-icon{border-radius:22%;opacity:.85;margin-bottom:6px}
+.levelup .h-title{font-size:28px}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .breathe .orb{transform:scale(.9)}
+}
+@media (min-width:600px){
+  .rituals{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="nebula" aria-hidden="true"></div>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main class="wrap" id="app" hidden></main>
+<nav class="nav" id="nav" aria-label="Navigation" hidden></nav>
+<div class="overlay onboard" id="onboard" hidden><div class="wrap" id="onboard-in"></div></div>
+<div id="sheet-root"></div>
+<div id="toast-root" aria-live="polite"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<script>
+/* ============ CONTENUS DE MADAME VOYANCE ============
+   Tous les textes sont ici : modifiez-les librement. */
+
+/* --- Arcanes majeurs : [nom, mots-clés, message, conseil] --- */
+const MAJORS = [
+  ["Le Mat","Liberté · Élan · Inconnu","Un chemin s'ouvre sans plan ni boussole. Avancez le cœur léger : l'aventure commence quand on accepte de ne pas tout savoir.","Accueillez un imprévu avec curiosité."],
+  ["Le Bateleur","Initiative · Talent · Commencement","Tous les outils sont posés sur la table. Vous avez déjà ce qu'il faut pour lancer le projet qui vous tient à cœur.","Commencez petit, mais commencez aujourd'hui."],
+  ["La Papesse","Intuition · Secret · Patience","La réponse ne viendra pas du bruit extérieur. Elle mûrit en silence, dans ce que vous savez déjà au fond de vous.","Accordez-vous un moment de calme avant de décider."],
+  ["L'Impératrice","Créativité · Abondance · Expression","Une énergie fertile vous entoure. Ce que vous semez maintenant, idées comme relations, a toutes les chances de fleurir.","Exprimez ce que vous ressentez, sans vous censurer."],
+  ["L'Empereur","Structure · Stabilité · Autorité","Le moment est venu de poser des fondations solides. Un cadre clair vous libérera plus qu'il ne vous enfermera.","Fixez-vous une règle simple et tenez-la."],
+  ["Le Pape","Transmission · Conseil · Sagesse","Une personne d'expérience peut éclairer votre route. Écoutez, puis gardez ce qui résonne avec vos propres valeurs.","Demandez l'avis de quelqu'un que vous respectez."],
+  ["L'Amoureux","Choix · Union · Harmonie","Deux voies se présentent. Choisir avec le cœur ne veut pas dire choisir sans réfléchir : écoutez les deux.","Alignez votre décision sur vos valeurs."],
+  ["Le Chariot","Victoire · Volonté · Mouvement","Vous tenez les rênes. En gardant le cap malgré les forces contraires, vous avancez plus vite que prévu.","Concentrez votre énergie sur un seul objectif."],
+  ["La Force","Courage · Douceur · Maîtrise","Votre vraie force est tranquille. C'est par la douceur, et non par la lutte, que vous apprivoiserez la situation.","Répondez avec calme à ce qui vous agace."],
+  ["L'Ermite","Introspection · Recherche · Recul","Une petite lanterne suffit pour avancer dans la nuit. Prenez du recul : la clarté viendra du dedans.","Offrez-vous un moment de solitude, loin des écrans."],
+  ["La Roue de Fortune","Cycle · Chance · Changement","La roue tourne et le vent change. Ce qui semblait bloqué peut se débloquer d'un coup : restez disponible.","Saisissez l'occasion qui passe."],
+  ["La Justice","Équilibre · Vérité · Responsabilité","Chaque action porte ses fruits. L'heure est à la lucidité : regardez les faits, puis décidez avec justesse.","Soyez honnête, avec les autres comme avec vous-même."],
+  ["Le Pendu","Lâcher-prise · Pause · Autre regard","Rien ne sert de forcer. En changeant d'angle, vous verrez ce qui vous échappait jusqu'ici.","Acceptez d'attendre un peu."],
+  ["L'Arcane sans nom","Transformation · Fin · Renouveau","Un chapitre se ferme pour en laisser naître un autre. Ce n'est pas une perte, c'est une place qui se libère.","Laissez partir ce qui ne vous sert plus."],
+  ["La Tempérance","Harmonie · Mesure · Guérison","Le juste milieu est votre allié. Mélangez patience et action, et tout retrouve sa fluidité.","Ralentissez le rythme, juste un peu."],
+  ["Le Diable","Désir · Attachement · Tentation","Une envie ou une habitude prend trop de place. La reconnaître, c'est déjà commencer à s'en libérer.","Repérez ce qui vous retient, sans vous juger."],
+  ["La Maison Dieu","Bouleversement · Révélation · Libération","Une vérité éclate et secoue l'ordre établi. Ce qui tombe n'était pas solide : vous rebâtirez mieux.","Accueillez le changement plutôt que de le retenir."],
+  ["L'Étoile","Espoir · Inspiration · Sérénité","Après l'orage, le ciel s'éclaircit. Une lumière douce vous guide : faites confiance à l'avenir.","Formulez un vœu ce soir, en regardant le ciel."],
+  ["La Lune","Rêves · Illusion · Intuition","Tout n'est pas encore clair, et c'est normal. Écoutez vos rêves et vos ressentis, mais vérifiez avant de conclure.","Notez vos rêves au réveil."],
+  ["Le Soleil","Joie · Réussite · Vitalité","Une belle énergie illumine votre journée. Partagez votre chaleur : elle vous reviendra multipliée.","Faites une chose qui vous met simplement en joie."],
+  ["Le Jugement","Éveil · Appel · Renaissance","Un appel intérieur se fait entendre. C'est le moment de répondre à ce que vous repoussez depuis longtemps.","Pardonnez-vous une ancienne erreur."],
+  ["Le Monde","Accomplissement · Plénitude · Voyage","Un cycle s'achève en beauté. Savourez ce que vous avez accompli avant de partir vers le prochain horizon.","Célébrez une réussite, même petite."]
+];
+const ROMAN = ["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
+
+/* --- Arcanes mineurs : 4 couleurs × 14 cartes : [mots-clés, message] --- */
+const SUITS = {
+  w: { name:"Bâtons", dom:"L'action, la passion et les projets", tip:"Passez à l'action, même modestement.", cards:[
+    ["Inspiration · Énergie · Création","Une étincelle jaillit : une idée, une passion, un élan à saisir sans attendre."],
+    ["Projets · Vision · Décision","Le monde est entre vos mains. Où voulez-vous aller ? Dessinez le plan."],
+    ["Expansion · Anticipation · Horizons","Vos navires prennent la mer. Les premiers résultats de vos efforts arrivent bientôt."],
+    ["Célébration · Foyer · Étape franchie","Un moment de joie à fêter. Une étape franchie mérite d'être célébrée."],
+    ["Rivalité · Compétition · Tensions","Les avis s'opposent et ça bouillonne. Faites de cette énergie un défi stimulant."],
+    ["Victoire · Reconnaissance · Succès","Votre mérite est reconnu. Recevez les compliments sans fausse modestie."],
+    ["Défense · Conviction · Persévérance","Vous tenez votre position face aux obstacles. Votre conviction est votre meilleur atout."],
+    ["Rapidité · Nouvelles · Mouvement","Les choses s'accélèrent et des nouvelles arrivent vite. Gardez votre agenda ouvert."],
+    ["Résilience · Prudence · Dernier effort","La fatigue se fait sentir, mais vous êtes tout près du but. Tenez bon."],
+    ["Surcharge · Responsabilités · Fardeau","Vous portez trop de choses à la fois. Déléguez, ou posez un fardeau en chemin."],
+    ["Enthousiasme · Exploration · Message","Une envie d'aventure ou une nouvelle enthousiasmante vous met en mouvement."],
+    ["Passion · Audace · Voyage","L'énergie est vive, presque impatiente. Osez, mais gardez une direction."],
+    ["Charisme · Confiance · Chaleur","Votre rayonnement attire les regards. Vous inspirez les autres simplement en étant vous-même."],
+    ["Leadership · Vision · Entreprise","Vous avez l'étoffe d'un guide. Menez votre projet avec vision et générosité."]
+  ]},
+  c: { name:"Coupes", dom:"Le cœur, l'amour et les émotions", tip:"Écoutez ce que vous ressentez.", cards:[
+    ["Amour · Émotion · Nouveau sentiment","Une source d'émotion neuve jaillit : une rencontre, une réconciliation ou simplement un cœur qui s'ouvre."],
+    ["Union · Partage · Attirance","Un lien se tisse à égalité. Ce que vous donnez vous est rendu avec la même sincérité."],
+    ["Amitié · Fête · Célébration","Le bonheur se partage mieux à plusieurs. Entourez-vous des personnes qui vous font rire."],
+    ["Lassitude · Repli · Occasion manquée","Vous boudez un peu ce qui vous est offert. Levez les yeux : une coupe vous est tendue."],
+    ["Regret · Déception · Deuil","Vous regardez ce qui s'est renversé. Pourtant, deux coupes restent debout derrière vous."],
+    ["Nostalgie · Enfance · Douceur","Un souvenir tendre refait surface. Il vous rappelle une joie simple que vous pouvez retrouver."],
+    ["Rêverie · Illusions · Choix multiples","Les possibilités brillent de mille feux, mais toutes ne sont pas réelles. Choisissez ce qui est concret."],
+    ["Départ · Quête · Détachement","Il est temps de quitter ce qui ne vous nourrit plus pour chercher quelque chose de plus profond."],
+    ["Satisfaction · Vœu exaucé · Plaisir","C'est la carte du vœu. Un désir cher à votre cœur est en bonne voie."],
+    ["Harmonie familiale · Bonheur · Paix","La paix intérieure et la chaleur d'un foyer vous entourent. Savourez ce bonheur simple."],
+    ["Message · Sensibilité · Créativité","Une nouvelle douce ou une idée créative arrive par surprise. Laissez-vous toucher."],
+    ["Romantisme · Proposition · Charme","Une invitation ou une déclaration se profile. Suivez votre cœur avec élégance."],
+    ["Empathie · Intuition · Bienveillance","Votre sensibilité est un don. Écoutez les autres, sans oublier de vous écouter aussi."],
+    ["Sagesse émotionnelle · Calme · Diplomatie","Vous savez garder la tête froide et le cœur chaud. Votre calme apaise ceux qui vous entourent."]
+  ]},
+  s: { name:"Épées", dom:"La pensée, les décisions et les conflits", tip:"Réfléchissez avant de parler.", cards:[
+    ["Clarté · Vérité · Décision","Une idée tranchante dissipe le brouillard. Vous voyez enfin clair."],
+    ["Indécision · Trêve · Équilibre fragile","Vous hésitez entre deux options. Regarder la situation en face vous aidera à trancher."],
+    ["Chagrin · Séparation · Vérité douloureuse","Une peine demande à être reconnue. S'autoriser à la ressentir, c'est déjà commencer à guérir."],
+    ["Repos · Récupération · Méditation","Votre esprit réclame une pause. Le repos n'est pas de la paresse, c'est une préparation."],
+    ["Conflit · Ego · Victoire amère","Gagner une dispute ne vaut pas toujours ce qu'elle coûte. Choisissez vos combats."],
+    ["Transition · Apaisement · Voyage","Vous laissez les eaux agitées derrière vous. Des rives plus calmes approchent."],
+    ["Ruse · Stratégie · Discrétion","Avancez avec finesse, mais restez honnête. Ce qui est caché finit toujours par se savoir."],
+    ["Blocage · Peur · Limites mentales","Les liens qui vous retiennent sont plus lâches qu'il n'y paraît. Vous pouvez en sortir."],
+    ["Inquiétude · Nuits agitées · Ruminations","Vos pensées tournent en boucle. Au matin, les soucis paraissent souvent plus petits : parlez-en."],
+    ["Fin · Épuisement · Aube","Le plus dur est passé. À l'horizon, le ciel commence déjà à s'éclaircir."],
+    ["Vigilance · Curiosité · Idées neuves","Votre esprit est en éveil. Observez, posez des questions, informez-vous."],
+    ["Rapidité · Ambition · Impulsivité","L'énergie vous pousse à foncer. Allez vite, mais regardez où vous mettez les pieds."],
+    ["Lucidité · Indépendance · Franchise","Votre parole est claire et juste. Dites les choses avec franchise et bienveillance."],
+    ["Logique · Autorité · Justice","La raison guide vos choix aujourd'hui. Une décision réfléchie sera la bonne."]
+  ]},
+  p: { name:"Deniers", dom:"Le travail, l'argent et le corps", tip:"Misez sur le concret.", cards:[
+    ["Opportunité · Prospérité · Concret","Une graine de réussite matérielle vous est offerte : un projet, une offre, une idée qui rapporte."],
+    ["Équilibre · Adaptation · Jonglage","Vous jonglez avec plusieurs obligations. Gardez de la souplesse, et tout tiendra."],
+    ["Travail d'équipe · Savoir-faire · Reconnaissance","Votre compétence est remarquée. À plusieurs, le projet prend une belle forme."],
+    ["Sécurité · Épargne · Contrôle","Vous protégez ce que vous avez. Une prudence utile, tant qu'elle ne devient pas crispation."],
+    ["Difficulté · Manque · Entraide","Une période plus serrée. N'hésitez pas à demander de l'aide : une porte éclairée est tout près."],
+    ["Générosité · Partage · Équité","Donner et recevoir trouvent leur équilibre. Un geste généreux circule aujourd'hui."],
+    ["Patience · Évaluation · Croissance lente","Vos efforts poussent lentement mais sûrement. Prenez le temps d'apprécier le chemin parcouru."],
+    ["Application · Apprentissage · Maîtrise","Le travail soigné porte ses fruits. Chaque geste répété vous rapproche de la maîtrise."],
+    ["Autonomie · Confort · Raffinement","Vous récoltez le fruit de vos efforts. Offrez-vous un plaisir mérité."],
+    ["Héritage · Stabilité · Famille","Une base solide et durable se construit, pour vous et pour ceux que vous aimez."],
+    ["Étude · Projet · Curiosité","Une envie d'apprendre ou un petit projet concret prend forme. Plantez la graine."],
+    ["Persévérance · Fiabilité · Méthode","Lentement mais sûrement. Votre régularité est votre meilleure alliée."],
+    ["Bien-être · Générosité · Sens pratique","Prenez soin de votre corps et de votre maison : votre confort nourrit tout le reste."],
+    ["Réussite · Abondance · Sécurité","Vous avez le sens des affaires et de la stabilité. Vos décisions concrètes portent leurs fruits."]
+  ]}
+};
+const RANKS = ["As","Deux","Trois","Quatre","Cinq","Six","Sept","Huit","Neuf","Dix","Valet","Cavalier","Reine","Roi"];
+
+const SPREADS = {
+  1:  { label:"Carte du jour", pts:15, pos:["Votre carte du jour"] },
+  3:  { label:"Passé · Présent · Futur", pts:20, pos:["Passé","Présent","Futur"] },
+  10: { label:"Croix celtique", pts:30, pos:["La situation","L'obstacle","Les racines","Le passé récent","Le possible","L'avenir proche","Vous-même","L'entourage","Espoirs et craintes","L'issue"] }
+};
+
+/* --- Zodiaque --- */
+const ZODIAC = [
+  {n:"Bélier",g:"♈",d:"21 mars – 19 avril",el:"Feu",pl:"Mars",t:"Audacieux, spontané, toujours prêt à ouvrir la voie."},
+  {n:"Taureau",g:"♉",d:"20 avril – 20 mai",el:"Terre",pl:"Vénus",t:"Patient, sensuel, attaché à la beauté et à la stabilité."},
+  {n:"Gémeaux",g:"♊",d:"21 mai – 20 juin",el:"Air",pl:"Mercure",t:"Curieux, vif, passionné par les idées et les échanges."},
+  {n:"Cancer",g:"♋",d:"21 juin – 22 juillet",el:"Eau",pl:"la Lune",t:"Sensible, protecteur, profondément lié à son foyer."},
+  {n:"Lion",g:"♌",d:"23 juillet – 22 août",el:"Feu",pl:"le Soleil",t:"Rayonnant, généreux, fait pour briller et inspirer."},
+  {n:"Vierge",g:"♍",d:"23 août – 22 septembre",el:"Terre",pl:"Mercure",t:"Précis, attentionné, cherche le geste juste."},
+  {n:"Balance",g:"♎",d:"23 septembre – 22 octobre",el:"Air",pl:"Vénus",t:"Élégant, diplomate, en quête d'harmonie."},
+  {n:"Scorpion",g:"♏",d:"23 octobre – 21 novembre",el:"Eau",pl:"Pluton",t:"Intense, magnétique, capable de grandes transformations."},
+  {n:"Sagittaire",g:"♐",d:"22 novembre – 21 décembre",el:"Feu",pl:"Jupiter",t:"Optimiste, aventurier, attiré par les horizons lointains."},
+  {n:"Capricorne",g:"♑",d:"22 décembre – 19 janvier",el:"Terre",pl:"Saturne",t:"Ambitieux, persévérant, bâtit pour durer."},
+  {n:"Verseau",g:"♒",d:"20 janvier – 18 février",el:"Air",pl:"Uranus",t:"Original, libre, tourné vers l'avenir."},
+  {n:"Poissons",g:"♓",d:"19 février – 20 mars",el:"Eau",pl:"Neptune",t:"Rêveur, intuitif, d'une grande empathie."}
+];
+const HORO = {
+  open: [
+    "{P} vous accompagne et donne le ton de la journée.",
+    "Sous l'influence de {p}, votre énergie trouve un nouveau souffle.",
+    "{P} veille sur vous et adoucit les angles.",
+    "Porté par {p}, le ciel du jour favorise les initiatives réfléchies.",
+    "{P} vous invite à écouter votre petite voix intérieure.",
+    "Avec {p} en soutien, vous voyez plus loin que d'habitude.",
+    "{P} éclaire vos relations d'une lumière nouvelle.",
+    "Aujourd'hui, {p} vous souffle d'avancer à votre rythme."
+  ],
+  amour: [
+    "Un mot tendre aura plus d'effet qu'un long discours.",
+    "Une conversation sincère dissipe un malentendu.",
+    "Les cœurs libres pourraient croiser un regard qui ne laisse pas indifférent.",
+    "En couple, une petite attention surprise ravive la complicité.",
+    "Votre charme opère sans effort : laissez-vous approcher.",
+    "Un souvenir partagé rapproche les cœurs ce soir.",
+    "Prenez le temps d'écouter : l'autre a quelque chose d'important à vous dire.",
+    "Une amitié pourrait prendre une couleur plus tendre.",
+    "Évitez de tout analyser : en amour, l'instinct voit juste aujourd'hui.",
+    "Un message inattendu vous fait sourire.",
+    "Montrez votre vulnérabilité : c'est là que naît la vraie intimité.",
+    "Ne cherchez pas à convaincre, cherchez à comprendre.",
+    "Une soirée simple à deux vaudra toutes les sorties.",
+    "Votre douceur désarme les tensions du moment."
+  ],
+  travail: [
+    "Une idée que vous gardiez de côté trouve enfin sa place.",
+    "Une tâche ennuyeuse se règle plus vite que prévu.",
+    "Un échange avec un collègue débloque la situation.",
+    "Votre rigueur est remarquée, même si personne ne le dit encore.",
+    "Priorisez : trois choses bien faites valent mieux que dix commencées.",
+    "C'est une bonne journée pour demander ce qui vous revient.",
+    "Un imprévu bouscule l'agenda, mais vous savez rebondir.",
+    "Votre créativité fait la différence sur un dossier délicat.",
+    "Évitez les décisions hâtives côté argent : dormez dessus.",
+    "Une proposition mérite d'être étudiée de près.",
+    "Fermez un dossier en suspens : le soulagement sera immédiat.",
+    "Votre sens de l'organisation vous fait gagner un temps précieux.",
+    "Partagez vos idées : elles sont meilleures que vous ne le pensez.",
+    "Une petite victoire professionnelle mérite d'être célébrée."
+  ],
+  energie: [
+    "Une marche au grand air recharge vos batteries.",
+    "Accordez-vous une vraie pause à midi, loin des écrans.",
+    "Votre énergie monte en fin de journée : gardez le meilleur pour la fin.",
+    "Buvez de l'eau, respirez profondément : le corps vous remerciera.",
+    "Une nuit réparatrice vous attend si vous vous couchez tôt.",
+    "Quelques étirements suffisent à libérer les tensions.",
+    "Votre esprit fourmille d'idées : notez-les pour ne pas vous disperser.",
+    "Écoutez votre fatigue au lieu de la combattre.",
+    "Une musique douce apaisera votre soirée.",
+    "La lumière du jour, même timide, sera votre meilleure alliée.",
+    "Relâchez vos épaules : vous portez plus de tension que vous ne le croyez.",
+    "Cuisinez quelque chose de bon : nourrir le corps, c'est nourrir l'âme."
+  ],
+  conseil: [
+    "Faites confiance au temps.",
+    "Un pas après l'autre.",
+    "Dites non sans culpabilité.",
+    "Souriez à un inconnu.",
+    "Rangez un tiroir, vous rangerez vos idées.",
+    "Appelez quelqu'un qui vous manque.",
+    "Osez la question qui vous brûle les lèvres.",
+    "Gardez une heure rien que pour vous.",
+    "Remerciez quelqu'un sincèrement.",
+    "Notez trois petits bonheurs de la journée.",
+    "Laissez une porte ouverte à l'imprévu.",
+    "La patience est votre super-pouvoir aujourd'hui."
+  ]
+};
+
+/* --- Astrologie chinoise --- */
+const CHINESE = [
+  {n:"Rat",h:"鼠",q:"Malin · Charmeur · Débrouillard",t:"Vif d'esprit, le Rat sait saisir les occasions et trouve toujours une solution."},
+  {n:"Bœuf",h:"牛",q:"Patient · Fiable · Travailleur",t:"Solide et constant, le Bœuf avance sans se presser et va toujours au bout."},
+  {n:"Tigre",h:"虎",q:"Courageux · Passionné · Indépendant",t:"Fougueux et magnétique, le Tigre aime les défis et défend ceux qu'il aime."},
+  {n:"Lapin",h:"兔",q:"Doux · Diplomate · Raffiné",t:"Délicat et attentif, le Lapin cultive l'harmonie et le goût des belles choses."},
+  {n:"Dragon",h:"龍",q:"Charismatique · Ambitieux · Lumineux",t:"Plein de vitalité, le Dragon inspire et voit grand."},
+  {n:"Serpent",h:"蛇",q:"Intuitif · Sage · Mystérieux",t:"Profond et réfléchi, le Serpent perçoit ce que les autres ne voient pas."},
+  {n:"Cheval",h:"馬",q:"Libre · Enthousiaste · Énergique",t:"Toujours en mouvement, le Cheval a besoin d'espace et d'aventure."},
+  {n:"Chèvre",h:"羊",q:"Créative · Sensible · Bienveillante",t:"Artiste dans l'âme, la Chèvre apporte douceur et imagination."},
+  {n:"Singe",h:"猴",q:"Inventif · Drôle · Curieux",t:"Ingénieux et joueur, le Singe transforme chaque obstacle en jeu."},
+  {n:"Coq",h:"雞",q:"Franc · Organisé · Fier",t:"Précis et courageux, le Coq dit ce qu'il pense et fait ce qu'il dit."},
+  {n:"Chien",h:"狗",q:"Loyal · Juste · Protecteur",t:"Fidèle et sincère, le Chien veille sur les siens avec un grand sens de la justice."},
+  {n:"Cochon",h:"豬",q:"Généreux · Jovial · Sincère",t:"Bon vivant et chaleureux, le Cochon partage sans compter."}
+];
+const CH_ELEMENTS = ["Métal","Métal","Eau","Eau","Bois","Bois","Feu","Feu","Terre","Terre"];
+const CH_TRINES = [[0,4,8],[1,5,9],[2,6,10],[3,7,11]];
+const CH_DAILY = [
+  "Le {a} en vous a envie de bouger : une initiative sera bien accueillie.",
+  "Journée calme pour le {a} : prenez le temps de souffler.",
+  "Votre nature de {a} attire la chance dans les échanges du jour.",
+  "Le {a} sait attendre son heure. Aujourd'hui, observez avant d'agir.",
+  "Une rencontre favorable pour le {a} pourrait éclairer un projet.",
+  "Votre élément vous soutient : faites confiance à votre instinct de {a}.",
+  "Le {a} trouve aujourd'hui l'équilibre entre travail et plaisir.",
+  "Un petit défi réveille le courage du {a}. Relevez-le.",
+  "Journée douce : le {a} gagne à s'entourer de ses proches.",
+  "Le vent tourne en faveur du {a}. Osez demander."
+];
+
+/* --- Lune --- */
+const MOON_PHASES = [
+  {n:"Nouvelle lune",c:"Le ciel est noir, tout est possible. Posez une intention claire pour le mois qui commence.",r:"Écrivez un souhait sur un papier et gardez-le près de vous."},
+  {n:"Premier croissant",c:"Une énergie neuve se lève. Faites le premier petit pas vers votre intention.",r:"Allumez une bougie et visualisez votre projet en train de grandir."},
+  {n:"Premier quartier",c:"Les premiers obstacles apparaissent : ils testent votre détermination.",r:"Choisissez une action concrète et faites-la avant ce soir."},
+  {n:"Lune gibbeuse croissante",c:"Presque pleine, la lune vous invite à ajuster et peaufiner.",r:"Relisez vos objectifs et corrigez ce qui doit l'être."},
+  {n:"Pleine lune",c:"Tout est illuminé, émotions comprises. Un temps de récolte et de révélations.",r:"Remerciez pour ce que vous avez reçu ce mois-ci."},
+  {n:"Lune gibbeuse décroissante",c:"Le temps est au partage : transmettez ce que vous avez appris.",r:"Offrez un conseil ou un service à quelqu'un."},
+  {n:"Dernier quartier",c:"Faites le tri : gardez l'essentiel, laissez partir le reste.",r:"Désencombrez un petit coin de votre maison."},
+  {n:"Dernier croissant",c:"Le cycle s'achève. Reposez-vous et préparez le prochain renouveau.",r:"Couchez-vous tôt et laissez vos rêves vous parler."}
+];
+
+/* --- Numérologie --- */
+const NUMEROLOGY = {
+  1:{t:"L'Initiative",d:"Vous êtes fait pour ouvrir des chemins. Indépendance, volonté et créativité vous poussent à entreprendre plutôt qu'à suivre."},
+  2:{t:"L'Harmonie",d:"Votre force est l'écoute. Sensible et diplomate, vous savez réunir les gens et créer des liens solides."},
+  3:{t:"L'Expression",d:"Communication, joie et créativité : vous avez le don de rendre la vie plus légère et d'enchanter par les mots."},
+  4:{t:"La Construction",d:"Vous bâtissez pas à pas. Fiable et organisé, vous transformez les idées en réalisations durables."},
+  5:{t:"La Liberté",d:"Le mouvement est votre élément. Curieux et adaptable, vous apprenez en vivant mille expériences."},
+  6:{t:"L'Amour",d:"Vous êtes un pilier pour les autres. Responsable et chaleureux, vous cherchez l'harmonie au foyer et dans le cœur."},
+  7:{t:"La Sagesse",d:"Esprit profond, vous cherchez le sens caché des choses. L'intuition et la réflexion sont vos guides."},
+  8:{t:"La Puissance",d:"Ambition et sens des réalités : vous avez l'étoffe pour réussir et pour gérer de grandes responsabilités."},
+  9:{t:"L'Universel",d:"Généreux et idéaliste, vous êtes tourné vers les autres et le monde. Votre chemin est celui du don."},
+  11:{t:"L'Inspiration",d:"Nombre maître. Votre intuition est remarquable ; vous êtes porteur d'une lumière qui éclaire les autres."},
+  22:{t:"Le Grand Bâtisseur",d:"Nombre maître. Vous unissez vision et sens pratique pour réaliser de grandes œuvres."},
+  33:{t:"Le Guide",d:"Nombre maître. Compassion et dévouement : votre chemin est d'élever et de soigner les cœurs."}
+};
+const PERSONAL_DAY = [null,
+  "Journée de départ : lancez quelque chose de neuf.",
+  "Journée de coopération : écoutez, négociez, partagez.",
+  "Journée d'expression : parlez, créez, riez.",
+  "Journée de travail : organisez, rangez, construisez.",
+  "Journée de changement : sortez de la routine.",
+  "Journée du cœur : prenez soin des vôtres.",
+  "Journée intérieure : réfléchissez, lisez, méditez.",
+  "Journée d'efficacité : décisions, argent, ambitions.",
+  "Journée de bilan : terminez, pardonnez, lâchez prise."
+];
+
+/* --- Runes (futhark ancien) : [glyphe, nom, mots-clés, message] --- */
+const RUNES = [
+  ["ᚠ","Fehu","Abondance · Richesse","Une richesse circule vers vous, matérielle ou intérieure. Partagez-la pour qu'elle grandisse."],
+  ["ᚢ","Uruz","Force · Vitalité","Une force brute vous habite. Mettez-la au service d'un changement que vous désirez."],
+  ["ᚦ","Thurisaz","Protection · Seuil","Avant de franchir le seuil, réfléchissez. Une porte s'ouvre, mais pas à n'importe quel prix."],
+  ["ᚨ","Ansuz","Parole · Message","Les mots ont un pouvoir particulier aujourd'hui. Un conseil, un signe ou un message vous attend."],
+  ["ᚱ","Raidho","Voyage · Chemin","Vous êtes en route. Le voyage, intérieur ou réel, compte autant que la destination."],
+  ["ᚲ","Kenaz","Lumière · Savoir","Une flamme éclaire ce qui était obscur. Une compréhension nouvelle illumine votre esprit."],
+  ["ᚷ","Gebo","Don · Échange","Un cadeau, un partage, un lien équilibré. Ce que vous offrez revient vers vous."],
+  ["ᚹ","Wunjo","Joie · Harmonie","La joie s'installe. Savourez ce moment de bien-être et d'accord avec les autres."],
+  ["ᚺ","Hagalaz","Bouleversement · Nettoyage","Un orage passe et nettoie le terrain. Après lui, tout pourra repousser."],
+  ["ᚾ","Nauthiz","Besoin · Patience","Une contrainte vous enseigne quelque chose. Patience : la nécessité rend inventif."],
+  ["ᛁ","Isa","Immobilité · Pause","La glace fige le mouvement. Ce n'est pas le moment de forcer, mais d'attendre le dégel."],
+  ["ᛃ","Jera","Récolte · Cycle","Ce que vous avez semé arrive à maturité. La récolte vient à son heure."],
+  ["ᛇ","Eihwaz","Endurance · Transformation","Comme l'if, vous traversez les saisons. Votre persévérance vous transforme."],
+  ["ᛈ","Perthro","Mystère · Destin","Le dé roule encore. Laissez une part au mystère : tout ne se contrôle pas."],
+  ["ᛉ","Algiz","Protection · Guidance","Une protection veille sur vous. Suivez votre instinct, il vous garde du danger."],
+  ["ᛊ","Sowilo","Soleil · Succès","La lumière triomphe. Une réussite ou une belle énergie solaire vous porte."],
+  ["ᛏ","Tiwaz","Justice · Courage","Défendez ce qui est juste. Votre courage tranquille fera la différence."],
+  ["ᛒ","Berkano","Naissance · Renouveau","Quelque chose de neuf germe en douceur. Prenez-en soin comme d'une jeune pousse."],
+  ["ᛖ","Ehwaz","Mouvement · Confiance","Un partenariat ou un élan commun vous fait avancer. Faites confiance à votre allié."],
+  ["ᛗ","Mannaz","Soi · Humanité","Regardez-vous avec bienveillance. Vous faites partie d'un tout : les autres sont aussi des miroirs."],
+  ["ᛚ","Laguz","Eau · Intuition","Laissez-vous porter par le courant de vos émotions. Votre intuition est fine aujourd'hui."],
+  ["ᛜ","Ingwaz","Gestation · Achèvement","Un projet mûrit en secret ; il sortira au grand jour quand il sera prêt."],
+  ["ᛞ","Dagaz","Aube · Éveil","La nuit se termine. Une prise de conscience ouvre une journée nouvelle."],
+  ["ᛟ","Othala","Héritage · Racines","Revenez à vos racines. Ce qui vous a été transmis est une force."]
+];
+
+/* --- Pierres et couleurs --- */
+const STONES = [
+  {n:"Améthyste",c:"#9a66d4",v:"Apaise l'esprit et affine l'intuition."},
+  {n:"Quartz rose",c:"#f2b4c6",v:"Ouvre le cœur et invite à la douceur envers soi."},
+  {n:"Citrine",c:"#e8b53d",v:"Attire la joie, la confiance et l'abondance."},
+  {n:"Œil de tigre",c:"#b8852f",v:"Protège et renforce l'assurance."},
+  {n:"Labradorite",c:"#5d8a9e",v:"Bouclier contre les énergies lourdes, éveille la magie."},
+  {n:"Lapis-lazuli",c:"#2f52b0",v:"Favorise la vérité et la communication."},
+  {n:"Pierre de lune",c:"#dde0ee",v:"Accompagne les cycles et la sensibilité."},
+  {n:"Cornaline",c:"#cf5730",v:"Stimule le courage et la créativité."},
+  {n:"Aventurine",c:"#4fa56f",v:"Porte-bonheur, elle attire les occasions favorables."},
+  {n:"Obsidienne",c:"#3a3346",v:"Ancre dans le présent et éloigne le négatif."},
+  {n:"Cristal de roche",c:"#eaf2f6",v:"Amplifie la clarté et les intentions."},
+  {n:"Malachite",c:"#1f8a5c",v:"Soutient les grandes transformations."},
+  {n:"Amazonite",c:"#6fcbbd",v:"Calme les émotions et aide à s'exprimer."},
+  {n:"Grenat",c:"#8e2436",v:"Ravive la passion et l'énergie vitale."},
+  {n:"Turquoise",c:"#3fb8b0",v:"Protège les voyageurs et apporte la sérénité."},
+  {n:"Sodalite",c:"#3557a0",v:"Apaise le mental et aide à prendre du recul."}
+];
+const COLORS = [
+  {n:"Bleu nuit",c:"#1e2a5a",v:"Profondeur et concentration."},
+  {n:"Or",c:"#e2bb62",v:"Rayonnement et confiance."},
+  {n:"Violet",c:"#8a5bd6",v:"Intuition et spiritualité."},
+  {n:"Vert sauge",c:"#8faa8b",v:"Calme et renouveau."},
+  {n:"Rose poudré",c:"#e7b7bf",v:"Tendresse et bienveillance."},
+  {n:"Blanc nacré",c:"#f1ece4",v:"Clarté et nouveau départ."},
+  {n:"Rouge grenat",c:"#9c2435",v:"Passion et courage."},
+  {n:"Turquoise",c:"#3cb6b0",v:"Expression et légèreté."},
+  {n:"Orange ambré",c:"#d9822b",v:"Créativité et chaleur."},
+  {n:"Argent",c:"#bfc4cf",v:"Intuition lunaire et élégance."},
+  {n:"Indigo",c:"#3b3f9e",v:"Sagesse et introspection."},
+  {n:"Vert émeraude",c:"#1d8f63",v:"Chance et équilibre."}
+];
+
+/* --- Pendule --- */
+const PENDULUM = [
+  {a:"Oui",d:"Les étoiles sont favorables."},
+  {a:"Oui",d:"Mais prenez votre temps."},
+  {a:"Oui",d:"Votre cœur le savait déjà."},
+  {a:"Non",d:"Pas pour l'instant."},
+  {a:"Non",d:"Une autre voie vous attend."},
+  {a:"Non",d:"Laissez cette question mûrir."},
+  {a:"Peut-être",d:"La réponse dépend de votre prochain choix."},
+  {a:"Peut-être",d:"Les astres hésitent : reformulez demain."}
+];
+
+/* --- Compatibilité des éléments --- */
+const COMPAT = {
+  "Feu|Feu":[84,"Deux flammes qui se reconnaissent : passion et élan garantis. Veillez seulement à ne pas vous brûler l'un l'autre."],
+  "Terre|Terre":[83,"Deux âmes de terre : fidélité, patience et projets solides. Pensez à ajouter un peu de fantaisie."],
+  "Air|Air":[80,"Deux esprits d'air : des conversations sans fin et une grande liberté. Ancrez parfois vos idées dans le concret."],
+  "Eau|Eau":[85,"Deux âmes d'eau : vous vous comprenez sans un mot. Attention à ne pas vous noyer dans les émotions."],
+  "Air|Feu":[89,"Le vent attise la flamme : une relation vive, stimulante, pleine d'idées et de projets."],
+  "Eau|Terre":[88,"L'eau nourrit la terre : une union douce, fidèle et protectrice."],
+  "Feu|Terre":[66,"Le feu bouscule, la terre rassure : vous vous complétez si chacun respecte le rythme de l'autre."],
+  "Air|Eau":[70,"La pensée rencontre l'émotion : une belle complémentarité, à condition de vraiment s'écouter."],
+  "Eau|Feu":[60,"Vapeur et passion : des émotions intenses qui demandent beaucoup de dialogue."],
+  "Air|Terre":[63,"Les idées rencontrent le concret : vous pouvez bâtir de grandes choses en acceptant vos différences."]
+};
+
+/* --- Niveaux et dos de cartes --- */
+const LEVELS = [
+  {p:0,t:"Âme curieuse"},
+  {p:100,t:"Novice des étoiles"},
+  {p:300,t:"Apprentie lunaire"},
+  {p:700,t:"Lectrice d'arcanes"},
+  {p:1500,t:"Gardienne des runes"},
+  {p:3000,t:"Voyante"},
+  {p:6000,t:"Grande Prêtresse"},
+  {p:12000,t:"Oracle"}
+];
+const BACKS = [
+  {id:"nuit",n:"Nuit étoilée",lvl:0},
+  {id:"lune",n:"Lune d'or",lvl:2},
+  {id:"soleil",n:"Soleil levant",lvl:4},
+  {id:"astres",n:"Constellations",lvl:6}
+];
+
+/* --- Pensées du jour (une par jour, en rotation) --- */
+const THOUGHTS = [
+  "Le calme n'est pas l'absence de tempête. C'est le cœur qui reste tranquille au milieu.",
+  "Ce que vous arrosez grandit. Choisissez bien vos pensées.",
+  "Chaque matin est une page blanche. Écrivez-y une phrase douce.",
+  "On ne voit les étoiles que lorsqu'il fait nuit. Vos moments sombres ont aussi leur lumière.",
+  "Ralentir n'est pas reculer.",
+  "La lune ne se compare pas au soleil. Elle brille à sa manière.",
+  "Un petit pas fait aujourd'hui vaut mieux qu'un grand pas rêvé pour demain.",
+  "Respirez. Ce moment-ci est le seul qui existe vraiment.",
+  "Parlez-vous avec la tendresse que vous offrez aux autres.",
+  "Les graines ne poussent pas plus vite parce qu'on tire sur la tige.",
+  "Il y a de la magie dans les choses ordinaires faites avec attention.",
+  "Votre intuition chuchote. Faites un peu de silence pour l'entendre.",
+  "Laisser partir, c'est faire de la place pour ce qui arrive.",
+  "Le ciel n'est jamais le même deux soirs de suite. Vous non plus, et c'est très bien ainsi.",
+  "Ce qui vous est destiné trouvera son chemin jusqu'à vous.",
+  "Le bonheur ne se cherche pas, il se remarque.",
+  "Une bougie ne perd rien de sa lumière en allumant une autre bougie.",
+  "Vous n'avez pas à tout comprendre aujourd'hui.",
+  "Les rivières contournent les rochers sans jamais renoncer à la mer.",
+  "La gratitude transforme ce que l'on a en assez.",
+  "Accordez de la douceur à vos commencements.",
+  "Même la plus longue nuit finit par l'aube.",
+  "Ce n'est pas la destination qui change une vie, c'est la manière de marcher.",
+  "Le silence est aussi une réponse.",
+  "Ce que vous cherchez vous cherche peut-être aussi.",
+  "La beauté se cache dans les détails que l'on oublie de regarder.",
+  "Votre valeur ne se mesure pas à ce que vous produisez.",
+  "Chaque étoile a mis des siècles à vous envoyer sa lumière. Prenez le temps de la regarder.",
+  "Les saisons ne se pressent pas, et pourtant tout fleurit.",
+  "Faites de la place à l'imprévu : c'est là que se glisse la magie.",
+  "On ne peut pas verser d'une coupe vide. Prenez soin de vous d'abord.",
+  "Votre chemin n'a pas à ressembler à celui des autres.",
+  "Une pensée bienveillante est un cadeau qui ne coûte rien.",
+  "Lâcher prise n'est pas abandonner, c'est faire confiance.",
+  "Rien n'est perdu tant qu'on peut encore apprendre.",
+  "Le vent ne se voit pas, mais il fait danser les arbres. Vos efforts aussi agissent en silence.",
+  "Aujourd'hui, choisissez la légèreté.",
+  "Attendre peut aussi être une façon d'avancer.",
+  "Ce qui est fait avec le cœur ne se perd jamais.",
+  "Il suffit d'une étincelle pour rallumer un feu.",
+  "Regardez tout le chemin que vous avez déjà parcouru.",
+  "Les plus belles choses prennent racine en silence.",
+  "Un sourire offert revient toujours, parfois par un autre chemin.",
+  "Votre sensibilité n'est pas une faiblesse, c'est une boussole.",
+  "La mer se retire pour mieux revenir.",
+  "Prenez soin de vos rêves : ils dessinent votre avenir.",
+  "Une journée imparfaite reste une journée précieuse.",
+  "Ce que vous craignez est souvent plus petit que l'ombre qu'il projette.",
+  "Vous avez le droit de changer d'avis, de cap et de saison.",
+  "La lumière que vous cherchez dehors brille déjà en vous.",
+  "Écoutez le monde, mais écrivez votre propre histoire.",
+  "Le temps consacré à soi n'est jamais du temps perdu.",
+  "Une porte qui se ferme en éclaire souvent une autre.",
+  "Le présent se déballe à chaque respiration.",
+  "Vos racines vous tiennent, vos ailes vous portent.",
+  "Les cailloux du chemin deviennent parfois des pierres précieuses.",
+  "Faites confiance au rythme lent des choses vraies.",
+  "Le cœur sait souvent avant la tête.",
+  "On ne force pas une fleur à éclore. On lui offre du soleil.",
+  "Ce soir, levez les yeux vers le ciel. Il est là pour vous aussi."
+];
+
+/* --- Rituels quotidiens et points --- */
+const RITUALS = [
+  {id:"pensee",  n:"Pensée du jour",   pts:5,  g:"❋", go:["accueil"]},
+  {id:"tarot1",  n:"Carte du jour",    pts:15, g:"I", go:["tarot",1]},
+  {id:"tarot3",  n:"Trois cartes",     pts:20, g:"III", go:["tarot",3]},
+  {id:"tarot10", n:"Croix celtique",   pts:30, g:"X", go:["tarot",10]},
+  {id:"horo",    n:"Horoscope",        pts:10, g:"✶", go:["astres","zodiaque"]},
+  {id:"chinois", n:"Signe chinois",    pts:5,  g:"☯", go:["astres","chinois"]},
+  {id:"lune",    n:"Lune du jour",     pts:5,  g:"☾", go:["astres","lune"]},
+  {id:"numero",  n:"Numérologie",      pts:10, g:"9", go:["oracles","numero"]},
+  {id:"rune",    n:"Rune du jour",     pts:10, g:"ᚱ", go:["oracles","rune"]},
+  {id:"pierre",  n:"Pierre & couleur", pts:5,  g:"◆", go:["oracles","pierre"]},
+  {id:"pendule", n:"Pendule",          pts:5,  g:"▾", go:["oracles","pendule"]},
+  {id:"compat",  n:"Compatibilité",    pts:10, g:"♡", go:["oracles","compat"]}
+];
+const VISIT_PTS = 10, ALL_DONE_PTS = 25;
+const STREAK_BONUS = {3:15, 7:50, 14:100, 30:200, 60:300, 100:500, 365:1000};
+/* ============ PERSONNALISATION ============
+   Images des cartes : remplacez les fichiers du dossier cards/ en gardant les mêmes noms
+   (m00 à m21 pour les arcanes majeurs ; w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14),
+   ou changez simplement la fonction ci-dessous. */
+const cardImg = id => 'cards/' + id + '.webp';
+
+(() => {
+'use strict';
+
+/* ---------- Outils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const VS = '︎';
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function hash(str){
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++){ const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h1 >>> 0) ^ ((h2 & 0x1fffff) << 3) >>> 0;
+}
+function rngFrom(str){
+  let a = hash(str) >>> 0;
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+function shuffle(r, arr){ const a = arr.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const pad = n => String(n).padStart(2, '0');
+const dk = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+function addDays(key, n){ const [y,m,d] = key.split('-').map(Number); const t = new Date(y, m - 1, d + n); return dk(t); }
+const fmtLong = new Intl.DateTimeFormat('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+const fmtBirth = new Intl.DateTimeFormat('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+const fmtShort = new Intl.DateTimeFormat('fr-FR', {day:'numeric', month:'short'});
+const fromKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+
+/* ---------- Stockage local ---------- */
+const KEY = 'madame-voyance:v1';
+let storageOK = true;
+function defaultState(){
+  return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
+          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}}};
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    localStorage.setItem(KEY + ':test', '1'); localStorage.removeItem(KEY + ':test');
+    if (!raw) return defaultState();
+    return Object.assign(defaultState(), JSON.parse(raw));
+  } catch (e) { storageOK = false; return defaultState(); }
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
+let S = load();
+
+/* ---------- Application installable (écran d'accueil, hors ligne) ---------- */
+const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isTouch = (navigator.maxTouchPoints || 0) > 0;
+let installEvt = null;
+if (!inFrame){
+  const head = document.head;
+  const link = (rel, href, extra) => { const l = document.createElement('link'); l.rel = rel; l.href = href; if (extra) Object.assign(l, extra); head.appendChild(l); };
+  const meta = (name, content) => { const m = document.createElement('meta'); m.name = name; m.content = content; head.appendChild(m); };
+  link('apple-touch-icon', 'icons/apple-touch-icon.png');
+  link('icon', 'icons/favicon-64.png', {type: 'image/png'});
+  meta('apple-mobile-web-app-capable', 'yes');
+  meta('mobile-web-app-capable', 'yes');
+  meta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+  meta('apple-mobile-web-app-title', 'Madame Voyance');
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; toast('Madame Voyance est sur votre écran d\'accueil'); render(); });
+}
+const canInstall = () => !inFrame && !standalone() && (!!installEvt || isIOS || isTouch);
+
+/* ---------- Profil et calculs ---------- */
+const userKey = () => S.profile ? (S.profile.name.trim().toLowerCase() + '|' + S.profile.birth) : 'invite';
+const userRng = key => rngFrom(userKey() + '|' + dk() + '|' + key);
+const birthParts = b => { const [y,m,d] = b.split('-').map(Number); return {y, m, d}; };
+
+function signIndex(m, d){
+  const md = m * 100 + d;
+  const starts = [[120,10],[219,11],[321,0],[420,1],[521,2],[621,3],[723,4],[823,5],[923,6],[1023,7],[1122,8],[1222,9]];
+  let s = 9; for (const [v, i] of starts) if (md >= v) s = i; return s;
+}
+function chineseOf(b){
+  const {y, m, d} = birthParts(b);
+  const yy = (m < 2 || (m === 2 && d < 4)) ? y - 1 : y;
+  const animal = ((yy - 4) % 12 + 12) % 12;
+  return {animal, element: CH_ELEMENTS[((yy % 10) + 10) % 10], yin: yy % 2 === 1, year: yy};
+}
+const digitSum = n => String(n).split('').reduce((a, c) => a + (+c || 0), 0);
+function reduceMaster(n){ while (n > 9 && n !== 11 && n !== 22 && n !== 33) n = digitSum(n); return n; }
+function reduce9(n){ while (n > 9) n = digitSum(n); return n; }
+function lifePath(b){ return reduceMaster(digitSum(b.replace(/-/g, ''))); }
+function expressionNumber(name){
+  const clean = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+  let s = 0; for (const ch of clean) s += ((ch.charCodeAt(0) - 97) % 9) + 1;
+  return s ? reduceMaster(s) : 1;
+}
+function personalDay(b){
+  const {m, d} = birthParts(b); const now = new Date();
+  const year = reduce9(digitSum(d) + digitSum(m) + digitSum(now.getFullYear()));
+  const month = reduce9(year + now.getMonth() + 1);
+  return reduce9(month + digitSum(now.getDate()));
+}
+
+/* Lune : âge depuis la nouvelle lune de référence du 6 janvier 2000 */
+const SYNODIC = 29.530588853;
+function moonInfo(date = new Date()){
+  const ref = Date.UTC(2000, 0, 6, 18, 14);
+  const days = (date.getTime() - ref) / 86400000;
+  const age = ((days % SYNODIC) + SYNODIC) % SYNODIC;
+  const frac = age / SYNODIC;
+  const illum = (1 - Math.cos(2 * Math.PI * frac)) / 2;
+  const bounds = [1.84, 5.53, 9.23, 12.92, 16.61, 20.3, 23.99, 27.68];
+  let idx = bounds.findIndex(b => age < b); if (idx === -1) idx = 0;
+  const toFull = age < SYNODIC / 2 ? SYNODIC / 2 - age : SYNODIC * 1.5 - age;
+  const toNew = SYNODIC - age;
+  return {age, frac, illum, idx, nextFull: new Date(date.getTime() + toFull * 86400000), nextNew: new Date(date.getTime() + toNew * 86400000)};
+}
+function moonSVG(frac, size = 160){
+  const r = 70, cx = 80, cy = 80;
+  const k = Math.cos(2 * Math.PI * frac), rx = Math.abs(k * r).toFixed(2);
+  let lit;
+  if (frac < 0.5) lit = `M${cx} ${cy - r} A${r} ${r} 0 0 1 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 0 : 1} ${cx} ${cy - r}Z`;
+  else lit = `M${cx} ${cy - r} A${r} ${r} 0 0 0 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 1 : 0} ${cx} ${cy - r}Z`;
+  return `<svg viewBox="0 0 160 160" width="${size}" height="${size}" role="img" aria-label="Phase de la lune">
+    <defs><radialGradient id="mg" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#fff8e4"/><stop offset=".7" stop-color="#ead9a8"/><stop offset="1" stop-color="#b99a5c"/></radialGradient></defs>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="#231a3d" stroke="rgba(230,195,120,.35)" stroke-width="1"/>
+    <path d="${lit}" fill="url(#mg)"/>
+    <g fill="rgba(120,100,70,.18)"><circle cx="58" cy="62" r="9"/><circle cx="96" cy="98" r="12"/><circle cx="104" cy="52" r="6"/><circle cx="66" cy="110" r="5"/></g>
+  </svg>`;
+}
+
+/* ---------- Jeu de tarot ---------- */
+const DECK78 = (() => {
+  const out = MAJORS.map((c, i) => ({id:'m' + pad(i), name:c[0], num:ROMAN[i], keys:c[1], msg:c[2], tip:c[3], dom:'Arcane majeur : une grande énergie de vie', major:true}));
+  for (const sk of ['w','c','s','p']){
+    const s = SUITS[sk];
+    s.cards.forEach((c, i) => {
+      const of = /^[AEIOUÉ]/.test(s.name) ? "d'" : 'de ';
+      out.push({id: sk + pad(i + 1), name: RANKS[i] + ' ' + of + s.name, keys:c[0], msg:c[1], tip:s.tip, dom:s.dom, major:false});
+    });
+  }
+  return out;
+})();
+const CARD = Object.fromEntries(DECK78.map(c => [c.id, c]));
+function drawSpread(n){
+  const stored = S.today.draws && S.today.draws[n];
+  if (stored) return stored.map(id => CARD[id]);
+  const pool = S.deck === '78' ? DECK78 : DECK78.slice(0, 22);
+  return shuffle(userRng('tarot' + n + '|' + S.deck), pool).slice(0, n);
+}
+
+/* ---------- Points, niveaux, séries ---------- */
+function levelOf(p){ let i = 0; LEVELS.forEach((l, k) => { if (p >= l.p) i = k; }); return i; }
+const isDone = id => !!S.today.done[id];
+let toastQueue = [], toastBusy = false;
+function toast(html){ toastQueue.push(html); if (!toastBusy) nextToast(); }
+function nextToast(){
+  const html = toastQueue.shift(); if (!html){ toastBusy = false; return; }
+  toastBusy = true; const root = $('#toast-root');
+  root.innerHTML = `<div class="toast" role="status">${html}</div>`;
+  setTimeout(() => { root.innerHTML = ''; nextToast(); }, 2300);
+}
+function gain(pts, label){
+  const before = levelOf(S.points);
+  S.points += pts;
+  toast(`<b>+${pts}</b> ✦ ${esc(label)}`);
+  const after = levelOf(S.points);
+  if (after > before) setTimeout(() => levelUp(after), 900);
+}
+function award(id){
+  if (isDone(id)) return false;
+  const r = RITUALS.find(x => x.id === id);
+  S.today.done[id] = true; S.rituals++;
+  gain(r.pts, r.n);
+  if (RITUALS.every(x => S.today.done[x.id]) && !S.today.done.all){
+    S.today.done.all = true;
+    setTimeout(() => gain(ALL_DONE_PTS, 'Tous les rituels du jour'), 400);
+  }
+  save(); updateChip();
+  return true;
+}
+function checkIn(){
+  if (!S.profile) return;
+  const today = dk();
+  if (S.today.d === today) return;
+  S.today = {d: today, done: {}, draws: {}};
+  if (S.lastVisit === addDays(today, -1)) S.streak++; else S.streak = 1;
+  S.best = Math.max(S.best, S.streak);
+  S.lastVisit = today; S.days++;
+  gain(VISIT_PTS, 'Visite du jour');
+  const bonus = STREAK_BONUS[S.streak];
+  if (bonus) setTimeout(() => gain(bonus, `Série de ${S.streak} jours`), 300);
+  save();
+}
+
+/* ---------- Effets : ciel étoilé et étincelles ---------- */
+const sky = $('#sky'), sctx = sky.getContext('2d');
+const fx = $('#fx'), fctx = fx.getContext('2d');
+let W = 0, H = 0, DPR = 1, stars = [], shooting = null, particles = [], fxRunning = false;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
+  for (const c of [sky, fx]){ c.width = W * DPR; c.height = H * DPR; }
+  sctx.setTransform(DPR, 0, 0, DPR, 0, 0); fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const n = Math.round(Math.min(220, W * H / 4200));
+  stars = Array.from({length:n}, () => ({x: Math.random() * W, y: Math.random() * H, r: Math.random() < .9 ? Math.random() * 1 + .3 : Math.random() * 1.4 + 1, p: Math.random() * 6.28, s: .4 + Math.random() * 1.4, gold: Math.random() < .18}));
+  if (reduceMotion) drawSky(0);
+}
+function drawSky(t){
+  sctx.clearRect(0, 0, W, H);
+  for (const st of stars){
+    const a = reduceMotion ? .7 : .35 + .65 * (.5 + .5 * Math.sin(t / 1000 * st.s + st.p));
+    sctx.globalAlpha = a;
+    sctx.fillStyle = st.gold ? '#f5dc9c' : '#e9e2ff';
+    sctx.beginPath(); sctx.arc(st.x, st.y, st.r, 0, 6.283); sctx.fill();
+    if (st.r > 1.4){
+      sctx.globalAlpha = a * .5; sctx.fillRect(st.x - st.r * 3, st.y - .4, st.r * 6, .8); sctx.fillRect(st.x - .4, st.y - st.r * 3, .8, st.r * 6);
+    }
+  }
+  if (shooting){
+    const s = shooting; s.life += 1;
+    const x = s.x + s.vx * s.life, y = s.y + s.vy * s.life;
+    const g = sctx.createLinearGradient(x, y, x - s.vx * 14, y - s.vy * 14);
+    g.addColorStop(0, 'rgba(255,240,200,.9)'); g.addColorStop(1, 'rgba(255,240,200,0)');
+    sctx.globalAlpha = Math.max(0, 1 - s.life / 60); sctx.strokeStyle = g; sctx.lineWidth = 1.6;
+    sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x - s.vx * 14, y - s.vy * 14); sctx.stroke();
+    if (s.life > 60) shooting = null;
+  } else if (!reduceMotion && Math.random() < .0025){
+    shooting = {x: Math.random() * W * .7 + W * .2, y: Math.random() * H * .4, vx: -(4 + Math.random() * 3), vy: 2 + Math.random() * 2, life: 0};
+  }
+  sctx.globalAlpha = 1;
+}
+let lastSky = 0;
+function skyLoop(t){
+  if (!document.hidden && t - lastSky > 33){ drawSky(t); lastSky = t; }
+  requestAnimationFrame(skyLoop);
+}
+function sparkle(x, y, n = 18, spread = 1){
+  if (reduceMotion) return;
+  for (let i = 0; i < n; i++){
+    const a = Math.random() * 6.283, v = (1 + Math.random() * 3.2) * spread;
+    particles.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, life: 0, max: 40 + Math.random() * 30, r: 1.5 + Math.random() * 2.5, gold: Math.random() < .7});
+  }
+  if (!fxRunning){ fxRunning = true; requestAnimationFrame(fxLoop); }
+}
+function sparkleAt(el, n, spread){ const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, n, spread); }
+function fxLoop(){
+  fctx.clearRect(0, 0, W, H);
+  particles = particles.filter(p => p.life < p.max);
+  for (const p of particles){
+    p.life++; p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy = p.vy * .96 + .04;
+    const a = 1 - p.life / p.max, r = p.r * (0.6 + a * .6);
+    fctx.globalAlpha = a; fctx.fillStyle = p.gold ? '#fbe2a0' : '#c9a8ff';
+    fctx.beginPath();
+    fctx.moveTo(p.x, p.y - r * 2); fctx.quadraticCurveTo(p.x, p.y, p.x + r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y + r * 2);
+    fctx.quadraticCurveTo(p.x, p.y, p.x - r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y - r * 2); fctx.fill();
+  }
+  fctx.globalAlpha = 1;
+  if (particles.length) requestAnimationFrame(fxLoop); else { fxRunning = false; fctx.clearRect(0, 0, W, H); }
+}
+
+/* ---------- État d'interface ---------- */
+const VIEWS = ['accueil','tarot','astres','oracles','profil'];
+const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null};
+
+/* ---------- Petits morceaux d'interface ---------- */
+const ICONS = {
+  accueil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 4.5a8 8 0 1 0 3 12.6A6.5 6.5 0 0 1 16.5 4.5z"/><path d="M18.5 3.5l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5L16.5 5.5 18 5z"/></svg>',
+  tarot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3.5" y="5" width="10" height="15" rx="1.5" transform="rotate(-10 8.5 12.5)"/><rect x="10.5" y="4" width="10" height="15" rx="1.5" transform="rotate(8 15.5 11.5)"/><path d="M15.6 9.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="currentColor"/></svg>',
+  astres:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2.5l2 6.5 6.5 3-6.5 3-2 6.5-2-6.5-6.5-3 6.5-3z"/><circle cx="19" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="19" r="1" fill="currentColor"/></svg>',
+  oracles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+  profil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  spark:'<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="currentColor"/></svg>'
+};
+const NAV_LABELS = {accueil:'Accueil', tarot:'Tarot', astres:'Astres', oracles:'Oracles', profil:'Profil'};
+
+function topbar(){
+  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
+    <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span></a></div>`;
+}
+function updateChip(){ const c = $('#pchip'); if (c) c.innerHTML = `${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span>`; }
+function revealBtn(id, label){
+  const r = RITUALS.find(x => x.id === id);
+  return `<button class="btn btn-gold btn-wide" data-act="reveal" data-id="${id}">${label} <span class="pts">+${r.pts}</span></button>`;
+}
+function starRating(n){ return `<span class="stars" aria-label="${n} sur 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5 - n)}</span></span>`; }
+function backFace(id){ return `<span class="face back back-${id}"></span>`; }
+function cardFront(c){ return `<span class="face front"><img src="${cardImg(c.id)}" alt="${esc(c.name)}" loading="lazy"><span class="fallback">${esc(c.name)}</span></span>`; }
+
+/* ---------- Vue : Accueil ---------- */
+function vAccueil(){
+  const p = S.profile, z = ZODIAC[signIndex(birthParts(p.birth).m, birthParts(p.birth).d)];
+  const now = new Date(), h = now.getHours();
+  const hello = h < 5 ? 'Belle nuit' : h < 18 ? 'Bonjour' : 'Bonsoir';
+  const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  const thought = THOUGHTS[(doy + now.getFullYear()) % THOUGHTS.length];
+  const mi = moonInfo();
+  const done = RITUALS.filter(r => isDone(r.id)).length;
+  const lv = levelOf(S.points), next = LEVELS[lv + 1];
+  const pct = next ? Math.round((S.points - LEVELS[lv].p) / (next.p - LEVELS[lv].p) * 100) : 100;
+  const chGlyph = CHINESE[chineseOf(p.birth).animal].h;
+  const lp = lifePath(p.birth);
+  const glyphFor = r => r.id === 'horo' ? z.g + VS : r.id === 'chinois' ? chGlyph : r.id === 'numero' ? lp : r.g;
+  return `<section class="view">
+    ${topbar()}
+    <header class="hero">
+      <h1 class="wordmark gold"><small>Madame</small>Voyance</h1>
+      <div class="date-line"><span>${cap(fmtLong.format(now))}</span><span class="dot"></span><span>${MOON_PHASES[mi.idx].n}</span></div>
+      <div class="greet">${hello}, ${esc(p.name)}</div>
+    </header>
+
+    <article class="frame" aria-labelledby="pt">
+      <div class="h-eyebrow" id="pt" style="text-align:center">Pensée du jour</div>
+      <p class="thought">« ${esc(thought)} »</p>
+      <div class="thought-foot">${isDone('pensee')
+        ? `<button class="btn btn-ghost" data-act="breathe">Respirer encore avec elle</button>`
+        : `<button class="btn btn-gold" data-act="breathe">Respirer avec elle <span class="pts">+5</span></button>`}</div>
+    </article>
+
+    ${canInstall() && !S.installHide ? `<div class="install-banner">
+      <img src="icons/icon-192.png" alt="" width="48" height="48">
+      <div class="grow"><b>Gardez Madame Voyance à portée de main</b><span class="small muted">Sur votre écran d'accueil, comme une vraie app, même hors ligne. +50 points</span></div>
+      <div class="ib-actions"><button class="btn btn-gold btn-sm" data-act="install">${installEvt ? 'Installer' : 'Comment faire'}</button>
+      <button class="ib-close" data-act="install-hide" aria-label="Masquer">×</button></div>
+    </div>` : ''}
+
+    <section class="stack" aria-labelledby="rt">
+      <div class="section-head"><h2 id="rt">Rituels du jour</h2><span class="count">${done} / ${RITUALS.length}</span></div>
+      <div class="rituals">
+        ${RITUALS.map(r => `<button class="rit ${isDone(r.id) ? 'done' : ''}" data-act="go" data-go='${JSON.stringify(r.go)}'>
+          <span class="g">${esc(String(glyphFor(r)))}</span>
+          <span class="t">${esc(r.n)}<br><span class="p">${isDone(r.id) ? '✓ accompli' : '+' + r.pts + ' points'}</span></span>
+        </button>`).join('')}
+      </div>
+      <p class="small muted" style="margin:0;text-align:center">Accomplissez les ${RITUALS.length} rituels pour un bonus de ${ALL_DONE_PTS} points.</p>
+    </section>
+
+    <a class="frame-plain levelbar" href="#profil" style="text-decoration:none;color:inherit">
+      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">${S.points} pts</span></div>
+      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="small muted">${next ? `Encore ${next.p - S.points} points pour devenir ${esc(next.t)}` : 'Vous avez atteint le plus haut niveau.'} · Série : ${S.streak} jour${S.streak > 1 ? 's' : ''}</div>
+    </a>
+  </section>`;
+}
+
+/* ---------- Vue : Tarot ---------- */
+function vTarot(){
+  const n = UI.tarot, sp = SPREADS[n], id = 'tarot' + n, done = isDone(id);
+  const cards = drawSpread(n);
+  const flipped = i => done || UI.flips.has(i);
+  const deckLocked = !!S.today.draws[n];
+  let reading = '';
+  if (done){
+    if (n === 1){
+      const c = cards[0];
+      reading = `<div class="frame daily-read">
+        <div class="pos">${c.major ? 'Arcane ' + c.num : 'Arcane mineur'}</div>
+        <div class="cname">${esc(c.name)}</div>
+        <div class="keys">${esc(c.keys)}</div>
+        <p class="msg" style="margin:6px 0 4px">${esc(c.msg)}</p>
+        <div class="tip"><span>✦</span><span>${esc(c.tip)}</span></div>
+        <div class="small muted">${esc(c.dom)}</div>
+      </div>`;
+    } else {
+      reading = `<div class="reading">${cards.map((c, i) => `<button class="read-row" data-act="card" data-card="${c.id}">
+        <img src="${cardImg(c.id)}" alt="" loading="lazy">
+        <span><span class="pos">${i + 1}. ${esc(sp.pos[i])}</span><div class="cname">${esc(c.name)}</div><div class="keys">${esc(c.keys)}</div><div class="msg">${esc(c.msg)}</div></span>
+      </button>`).join('')}</div>`;
+    }
+  }
+  return `<section class="view">
+    ${topbar()}
+    <div><div class="h-eyebrow">Le tarot</div><h1 class="h-title gold">${esc(sp.label)}</h1></div>
+    <div class="seg" role="group" aria-label="Type de tirage">
+      ${[1,3,10].map(k => `<button data-act="tmode" data-n="${k}" aria-pressed="${k === n}">${k === 1 ? 'Carte du jour' : k === 3 ? '3 cartes' : 'Croix celtique'}</button>`).join('')}
+    </div>
+    <div class="deck-choice">
+      <span class="small muted">${deckLocked ? 'Tirage du jour fixé' : 'Jeu utilisé'}</span>
+      <div class="seg" role="group" aria-label="Jeu de cartes" style="min-width:220px">
+        <button data-act="deck" data-deck="22" aria-pressed="${S.deck === '22'}">22 arcanes</button>
+        <button data-act="deck" data-deck="78" aria-pressed="${S.deck === '78'}">78 cartes</button>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="spread n${n}">
+        ${cards.map((c, i) => `<div class="slot">
+          <button class="tcard ${flipped(i) ? 'flipped' : ''}" data-act="flip" data-i="${i}" data-card="${c.id}" aria-label="${flipped(i) ? esc(c.name) : 'Carte face cachée, ' + esc(sp.pos[i])}">
+            <span class="tc-inner">${backFace(S.back)}${cardFront(c)}</span>
+          </button>
+          ${n > 1 ? `<span class="slot-label">${n === 10 ? (i + 1) + '. ' : ''}${esc(sp.pos[i])}</span>` : ''}
+        </div>`).join('')}
+      </div>
+      ${done ? `<div class="tap-hint">Touchez une carte pour la voir en grand</div>`
+             : `<div class="tap-hint">Concentrez-vous sur votre question, puis touchez ${n === 1 ? 'la carte pour la retourner' : 'chaque carte pour la retourner'} · +${sp.pts} points</div>`}
+    </div>
+    ${reading}
+  </section>`;
+}
+
+/* ---------- Vue : Astres ---------- */
+function horoscopeFor(i){
+  const z = ZODIAC[i], r = rngFrom(dk() + '|horo|' + i);
+  const p = z.pl, P = cap(p);
+  return {open: pick(r, HORO.open).replace('{P}', P).replace('{p}', p),
+    amour: pick(r, HORO.amour), travail: pick(r, HORO.travail), energie: pick(r, HORO.energie), conseil: pick(r, HORO.conseil),
+    s: [2 + Math.floor(r() * 4), 2 + Math.floor(r() * 4), 2 + Math.floor(r() * 4)]};
+}
+function horoBlock(i){
+  const h = horoscopeFor(i);
+  return `<div class="horo">
+    <p class="lead" style="margin:0;text-align:center;font-style:italic">${esc(h.open)}</p>
+    <div class="horo-item"><div class="horo-head"><b>Amour</b>${starRating(h.s[0])}</div><div class="msg" style="margin:0">${esc(h.amour)}</div></div>
+    <div class="horo-item"><div class="horo-head"><b>Travail &amp; argent</b>${starRating(h.s[1])}</div><div class="msg" style="margin:0">${esc(h.travail)}</div></div>
+    <div class="horo-item"><div class="horo-head"><b>Énergie</b>${starRating(h.s[2])}</div><div class="msg" style="margin:0">${esc(h.energie)}</div></div>
+    <div class="tip"><span>✦</span><span><b>Conseil :</b> ${esc(h.conseil)}</span></div>
+  </div>`;
+}
+function vAstres(){
+  const b = S.profile.birth, {m, d} = birthParts(b), si = signIndex(m, d), z = ZODIAC[si];
+  let body = '';
+  if (UI.astres === 'zodiaque'){
+    body = `<div class="sign-hero">
+        <div class="glyph-orb"><span>${z.g}${VS}</span></div>
+        <h2 class="h-title gold" style="font-size:24px">${z.n}</h2>
+        <div class="small muted">${z.d}</div>
+        <div class="facts"><span class="fact">${z.el}</span><span class="fact">Planète : ${cap(z.pl)}</span></div>
+        <p class="small muted" style="margin:4px 0 0;max-width:34ch">${esc(z.t)}</p>
+      </div>
+      ${isDone('horo') ? `<div class="frame">${horoBlock(si)}</div>` : revealBtn('horo', 'Révéler mon horoscope')}
+      <div class="stack"><div class="section-head"><h2>Les autres signes</h2></div>
+        <div class="signs">${ZODIAC.map((s, k) => `<button data-act="sign" data-i="${k}" aria-label="${s.n}" aria-current="${k === si}">${s.g}${VS}</button>`).join('')}</div>
+      </div>`;
+  } else if (UI.astres === 'chinois'){
+    const ch = chineseOf(b), a = CHINESE[ch.animal];
+    const friends = CH_TRINES.find(t => t.includes(ch.animal)).filter(x => x !== ch.animal).map(x => CHINESE[x].n).join(' et ');
+    const msg = pick(userRng('chinois'), CH_DAILY).replace('{a}', a.n);
+    body = `<div class="sign-hero">
+        <div class="glyph-orb"><span class="cjk">${a.h}</span></div>
+        <h2 class="h-title gold" style="font-size:24px">${a.n} de ${ch.element}</h2>
+        <div class="facts"><span class="fact">Année ${ch.year}</span><span class="fact">${ch.yin ? 'Yin' : 'Yang'}</span></div>
+        <div class="keys" style="margin-top:4px">${esc(a.q)}</div>
+        <p class="small muted" style="margin:4px 0 0;max-width:34ch">${esc(a.t)}</p>
+      </div>
+      ${isDone('chinois') ? `<div class="frame stack" style="text-align:center">
+          <div class="h-eyebrow">Message du jour</div>
+          <p class="lead" style="margin:0">${esc(msg)}</p>
+          <div class="small muted">Signes en affinité : ${friends}</div>
+        </div>` : revealBtn('chinois', 'Lire le message du jour')}
+      <p class="small muted" style="margin:0;text-align:center">L'année chinoise est comptée ici à partir du 4 février (début du printemps chinois).</p>`;
+  } else {
+    const mi = moonInfo(), ph = MOON_PHASES[mi.idx];
+    body = `<div class="moon-wrap">
+        ${moonSVG(mi.frac)}
+        <h2 class="h-title gold" style="font-size:24px">${ph.n}</h2>
+        <div class="small muted">Lune visible à ${Math.round(mi.illum * 100)} %</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b>${Math.floor(mi.age)} j</b><span>âge de la lune</span></div>
+        <div class="stat"><b>${fmtShort.format(mi.nextFull)}</b><span>prochaine pleine lune</span></div>
+        <div class="stat"><b>${fmtShort.format(mi.nextNew)}</b><span>prochaine nouvelle lune</span></div>
+      </div>
+      ${isDone('lune') ? `<div class="frame stack">
+          <p class="lead" style="margin:0;text-align:center">${esc(ph.c)}</p>
+          <div class="tip"><span>☾${VS}</span><span><b>Rituel :</b> ${esc(ph.r)}</span></div>
+        </div>` : revealBtn('lune', 'Recevoir le conseil de la lune')}`;
+  }
+  return `<section class="view">
+    ${topbar()}
+    <div><div class="h-eyebrow">Les astres</div><h1 class="h-title gold">Votre ciel du jour</h1></div>
+    <div class="seg" role="group" aria-label="Section">
+      ${[['zodiaque','Zodiaque'],['chinois','Chinois'],['lune','Lune']].map(([k, l]) => `<button data-act="amode" data-m="${k}" aria-pressed="${UI.astres === k}">${l}</button>`).join('')}
+    </div>
+    ${body}
+  </section>`;
+}
+
+/* ---------- Vue : Oracles ---------- */
+const ORACLES = [
+  {id:'numero', n:'Numérologie', g:'9', d:'Votre chemin de vie et le nombre du jour'},
+  {id:'rune', n:'Rune du jour', g:'ᚱ', d:'Une rune tirée de la bourse'},
+  {id:'pierre', n:'Pierre & couleur', g:'◆', d:'Votre talisman et votre chiffre chance'},
+  {id:'pendule', n:'Pendule', g:'▾', d:'Posez une question fermée'},
+  {id:'compat', n:'Compatibilité', g:'♡', d:'Comparez vos astres avec ceux d\'une autre personne', wide:true}
+];
+function vOracles(){
+  if (!UI.oracle){
+    return `<section class="view">
+      ${topbar()}
+      <div><div class="h-eyebrow">Les oracles</div><h1 class="h-title gold">Que voulez-vous savoir ?</h1></div>
+      <div class="tiles">
+        ${ORACLES.map(o => `<button class="tile ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}">
+          <span class="tg">${o.id === 'compat' ? o.g + VS : o.g}</span>
+          <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.n}</span><br><span class="td">${o.d}</span></span>
+          <span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>
+        </button>`).join('')}
+      </div>
+    </section>`;
+  }
+  const o = ORACLES.find(x => x.id === UI.oracle);
+  const head = `${topbar()}<button class="back-link" data-act="oracle" data-id="">${ICONS.back}Tous les oracles</button>
+    <div><div class="h-eyebrow">Oracle</div><h1 class="h-title gold">${o.n}</h1></div>`;
+  return `<section class="view">${head}${oracleBody(o.id)}</section>`;
+}
+function oracleBody(id){
+  const p = S.profile;
+  if (id === 'numero'){
+    const lp = lifePath(p.birth), ex = expressionNumber(p.name), pd = personalDay(p.birth);
+    return `<div class="sign-hero">
+        <div class="glyph-orb"><span class="num">${lp}</span></div>
+        <h2 class="h-title gold" style="font-size:22px">Chemin de vie ${lp} · ${NUMEROLOGY[lp].t}</h2>
+        <p class="lead" style="margin:0;max-width:34ch">${esc(NUMEROLOGY[lp].d)}</p>
+      </div>
+      ${isDone('numero') ? `<div class="num-grid">
+          <div class="frame-plain stack"><div class="h-eyebrow">Jour personnel</div><div class="lucky">${pd}</div><div class="small">${esc(PERSONAL_DAY[pd])}</div></div>
+          <div class="frame-plain stack"><div class="h-eyebrow">Expression</div><div class="lucky">${ex}</div><div class="small">Votre prénom vibre en ${ex} : ${esc(NUMEROLOGY[ex].t.toLowerCase())}.</div></div>
+        </div>` : revealBtn('numero', 'Calculer mes nombres du jour')}
+      <p class="small muted" style="margin:0;text-align:center">Le chemin de vie additionne les chiffres de votre date de naissance. Le jour personnel ajoute la date du jour.</p>`;
+  }
+  if (id === 'rune'){
+    const r = pick(userRng('rune'), RUNES);
+    if (!isDone('rune')) return `<div class="stage"><button class="pouch" data-act="reveal" data-id="rune" aria-label="Tirer une rune">ᚠ ᚱ ᛟ</button>
+      <div class="tap-hint">Fermez les yeux, respirez, puis touchez la bourse · +10 points</div></div>`;
+    return `<div class="stage">
+        <div class="rune-stone"><span>${r[0]}</span></div>
+        <h2 class="h-title gold" style="font-size:24px;margin:0">${r[1]}</h2>
+        <div class="keys">${esc(r[2])}</div>
+      </div>
+      <div class="frame"><p class="lead" style="margin:0;text-align:center">${esc(r[3])}</p></div>`;
+  }
+  if (id === 'pierre'){
+    const rg = userRng('pierre'), st = pick(rg, STONES), co = pick(rg, COLORS), lucky = 1 + Math.floor(rg() * 49);
+    if (!isDone('pierre')) return `<div class="frame stack" style="text-align:center"><p class="lead" style="margin:0">Chaque jour, une pierre, une couleur et un nombre vous accompagnent.</p>${revealBtn('pierre', 'Découvrir mon talisman')}</div>`;
+    return `<div class="duo">
+        <div class="frame-plain"><div class="gem" style="background:radial-gradient(circle at 40% 30%,#fff9,transparent 40%),linear-gradient(160deg,${st.c},#1a1030)"></div><div class="h-eyebrow">Pierre</div><div class="cname">${st.n}</div><div class="small muted">${esc(st.v)}</div></div>
+        <div class="frame-plain"><div class="swatch" style="background:${co.c}"></div><div class="h-eyebrow">Couleur</div><div class="cname">${co.n}</div><div class="small muted">${esc(co.v)}</div></div>
+      </div>
+      <div class="frame" style="text-align:center"><div class="h-eyebrow">Nombre porte-bonheur</div><div class="lucky gold" style="margin-top:8px">${lucky}</div></div>`;
+  }
+  if (id === 'pendule'){
+    const res = UI.pendulum;
+    return `<svg class="pendulum ${res && res.swinging ? 'swing' : ''}" viewBox="0 0 120 170" aria-hidden="true">
+        <circle cx="60" cy="6" r="4" fill="var(--gold)"/>
+        <g><line x1="60" y1="6" x2="60" y2="118" stroke="var(--gold)" stroke-width="1.2"/>
+          <path d="M60 116 L74 132 L60 166 L46 132 Z" fill="url(#pg)" stroke="var(--gold-hi)" stroke-width="1"/></g>
+        <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9c2ff"/><stop offset="1" stop-color="#6a43c2"/></linearGradient></defs>
+      </svg>
+      ${res && !res.swinging ? `<div class="frame" style="text-align:center"><div class="answer gold">${res.a}</div><p class="lead" style="margin:6px 0 0">${esc(res.d)}</p><div class="small muted" style="margin-top:8px">« ${esc(res.q)} »</div></div>` : ''}
+      <form class="form" data-form="pendule" novalidate>
+        <div class="field"><label for="q">Votre question</label><input id="q" name="q" maxlength="140" placeholder="Par exemple : Dois-je accepter cette proposition ?" autocomplete="off"><span class="err" id="q-err"></span></div>
+        <button class="btn btn-gold btn-wide" type="submit">Interroger le pendule ${isDone('pendule') ? '' : '<span class="pts">+5</span>'}</button>
+      </form>
+      <p class="small muted" style="margin:0;text-align:center">Vos questions ne sont jamais enregistrées.</p>`;
+  }
+  if (id === 'compat'){
+    const res = UI.compat;
+    return `<form class="form" data-form="compat" novalidate>
+        <div class="field"><label for="cn">Prénom de l'autre personne</label><input id="cn" name="cn" maxlength="30" placeholder="Facultatif" autocomplete="off"></div>
+        <div class="field"><label for="cb">Sa date de naissance</label><input id="cb" name="cb" type="date" min="1900-01-01" max="${dk()}"><span class="err" id="cb-err"></span></div>
+        <button class="btn btn-gold btn-wide" type="submit">Lire notre compatibilité ${isDone('compat') ? '' : '<span class="pts">+10</span>'}</button>
+      </form>
+      ${res ? compatResult(res) : ''}
+      <p class="small muted" style="margin:0;text-align:center">Ces informations servent au calcul puis sont oubliées : rien n'est enregistré.</p>`;
+  }
+  return '';
+}
+function compatResult(res){
+  const me = S.profile, a = birthParts(me.birth), b = birthParts(res.birth);
+  const za = ZODIAC[signIndex(a.m, a.d)], zb = ZODIAC[signIndex(b.m, b.d)];
+  const key = [za.el, zb.el].sort().join('|'), [base, text] = COMPAT[key];
+  const la = lifePath(me.birth), lb = lifePath(res.birth);
+  const numBonus = la === lb ? 6 : (reduce9(la) % 2 === reduce9(lb) % 2 ? 3 : -2);
+  const jitter = Math.floor(rngFrom([me.birth, res.birth].sort().join('|'))() * 9) - 4;
+  const score = Math.max(42, Math.min(98, base + numBonus + jitter));
+  const circ = 2 * Math.PI * 60;
+  const other = res.name ? esc(res.name) : 'L\'autre personne';
+  return `<div class="frame stack" style="align-items:center;text-align:center">
+    <div class="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
+      <circle cx="70" cy="70" r="60" fill="none" stroke="url(#cg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(circ * score / 100).toFixed(1)} ${circ.toFixed(1)}"/>
+      <defs><linearGradient id="cg"><stop offset="0" stop-color="#a77dff"/><stop offset="1" stop-color="#e6c378"/></linearGradient></defs></svg><b>${score}%</b></div>
+    <div class="facts"><span class="fact">Vous : ${za.n} ${za.g}${VS} · ${za.el}</span><span class="fact">${other} : ${zb.n} ${zb.g}${VS} · ${zb.el}</span></div>
+    <p class="lead" style="margin:0">${esc(text)}</p>
+    <div class="small muted">Chemins de vie ${la} et ${lb} : ${la === lb ? 'le même nombre, une compréhension instinctive.' : numBonus > 0 ? 'des rythmes qui s\'accordent bien.' : 'des rythmes différents qui s\'enrichissent l\'un l\'autre.'}</div>
+  </div>`;
+}
+
+/* ---------- Vue : Profil ---------- */
+function vProfil(){
+  const p = S.profile, bp = birthParts(p.birth), z = ZODIAC[signIndex(bp.m, bp.d)];
+  const lv = levelOf(S.points), next = LEVELS[lv + 1];
+  const pct = next ? Math.round((S.points - LEVELS[lv].p) / (next.p - LEVELS[lv].p) * 100) : 100;
+  const journal = S.journal.slice(-21).reverse();
+  return `<section class="view">
+    ${topbar()}
+    <div class="frame id-card">
+      <div class="glyph-orb"><span>${z.g}${VS}</span></div>
+      <div class="who">
+        <div class="name">${esc(p.name)}</div>
+        <div class="small muted">Naissance : ${fmtBirth.format(fromKey(p.birth))}</div>
+        <div class="small muted">${z.n} · ${CHINESE[chineseOf(p.birth).animal].n} · Chemin de vie ${lifePath(p.birth)}</div>
+      </div>
+    </div>
+
+    <div class="frame-plain levelbar">
+      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">Niveau ${lv + 1} / ${LEVELS.length}</span></div>
+      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="small muted">${next ? `${S.points} / ${next.p} points pour devenir ${esc(next.t)}` : `${S.points} points · niveau maximal atteint`}</div>
+    </div>
+    <div class="stats4">
+      <div class="stat"><b>${S.points}</b><span>points</span></div>
+      <div class="stat"><b>${S.streak} j</b><span>série actuelle</span></div>
+      <div class="stat"><b>${S.best} j</b><span>meilleure série</span></div>
+      <div class="stat"><b>${S.rituals}</b><span>rituels accomplis</span></div>
+    </div>
+
+    <section class="stack"><div class="section-head"><h2>Dos de cartes</h2><span class="count">Débloqués par niveau</span></div>
+      <div class="backs">${BACKS.map(bk => {
+        const locked = lv < bk.lvl;
+        return `<button class="back-opt" data-act="back" data-id="${bk.id}" aria-pressed="${S.back === bk.id}" ${locked ? `disabled data-lvl="${bk.lvl + 1}"` : ''}>
+          <span class="mini" ${locked ? `data-lvl="${bk.lvl + 1}"` : ''}>${backFace(bk.id)}</span><span>${bk.n}</span></button>`;
+      }).join('')}</div>
+    </section>
+
+    <section class="stack"><div class="section-head"><h2>Journal des cartes</h2><span class="count">${S.journal.length} tirage${S.journal.length > 1 ? 's' : ''}</span></div>
+      ${journal.length ? `<div class="journal">${journal.map(j => `<button data-act="card" data-card="${j.id}"><img src="${cardImg(j.id)}" alt="${esc(CARD[j.id].name)}" loading="lazy"><span>${fmtShort.format(fromKey(j.d))}</span></button>`).join('')}</div>`
+        : `<p class="small muted" style="margin:0">Vos cartes du jour s'afficheront ici. <a href="#tarot" style="color:var(--gold)">Tirer ma carte du jour</a></p>`}
+    </section>
+
+    ${inFrame ? '' : `<section class="stack"><div class="section-head"><h2>Application</h2></div>
+      <div class="frame-plain app-row">
+        <img src="icons/icon-192.png" alt="" width="56" height="56">
+        <div class="grow">${standalone()
+          ? `<b>Installée sur cet appareil</b><span class="small muted">Madame Voyance fonctionne aussi sans connexion.</span>`
+          : `<b>Écran d'accueil</b><span class="small muted">Installez l'app pour l'ouvrir d'un geste, même hors ligne. +50 points</span>`}</div>
+        ${standalone() ? '<span class="badge ok">✓</span>' : `<button class="btn btn-gold btn-sm" data-act="install">${installEvt ? 'Installer' : 'Comment faire'}</button>`}
+      </div>
+    </section>`}
+
+    <section class="stack"><div class="section-head"><h2>Mes données</h2></div>
+      <div class="frame-plain stack">
+        <p class="small" style="margin:0">Tout est enregistré uniquement sur cet appareil.${storageOK ? '' : ' <b style="color:var(--danger)">Votre navigateur bloque l\'enregistrement : vos données disparaîtront à la fermeture de la page.</b>'}</p>
+        <button class="btn btn-ghost btn-wide" data-act="edit">Modifier mon prénom ou ma date</button>
+        <button class="btn btn-ghost btn-wide" data-act="privacy">Revoir l'avertissement</button>
+        ${UI.confirmErase
+          ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer prénom, date, points et journal ? Cette action est définitive.</p>
+              <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Tout effacer</button></div></div>`
+          : `<button class="btn btn-danger btn-wide" data-act="erase">Effacer toutes mes données</button>`}
+      </div>
+    </section>
+    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public.</p>
+  </section>`;
+}
+
+/* ---------- Accueil : avertissement et profil ---------- */
+const PRIVACY = `
+  <div class="h-eyebrow" style="text-align:center">Avant de commencer</div>
+  <h1 class="h-title gold" style="text-align:center;margin-bottom:6px">Vos données restent chez vous</h1>
+  <p class="small" style="margin:0">Pour vous offrir des tirages personnels, Madame Voyance utilise :</p>
+  <ul class="data-list">
+    <li><span><b>Votre prénom</b>, pour vous saluer et personnaliser les tirages.</span></li>
+    <li><span><b>Votre date de naissance</b>, pour votre signe, votre signe chinois et votre numérologie.</span></li>
+    <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
+    <li><span><b>Le journal de vos cartes du jour</b> et vos préférences (jeu, dos de carte).</span></li>
+  </ul>
+  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule et les dates saisies pour la compatibilité ne sont pas conservées.</p>
+  <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
+
+function profileForm(isEdit){
+  const p = S.profile || {name:'', birth:''};
+  return `<form class="form" data-form="${isEdit ? 'edit' : 'profile'}" novalidate>
+    <div class="field"><label for="pn">Votre prénom</label><input id="pn" name="pn" maxlength="30" autocomplete="given-name" value="${esc(p.name)}" placeholder="Votre prénom"><span class="err" id="pn-err"></span></div>
+    <div class="field"><label for="pb">Votre date de naissance</label><input id="pb" name="pb" type="date" min="1900-01-01" max="${dk()}" value="${esc(p.birth)}"><span class="err" id="pb-err"></span></div>
+    <button class="btn btn-gold btn-wide" type="submit">${isEdit ? 'Enregistrer' : 'Entrer dans le cercle'}</button>
+  </form>`;
+}
+function showOnboarding(step){
+  const ov = $('#onboard'), inner = $('#onboard-in');
+  $('#app').hidden = true; $('#nav').hidden = true; ov.hidden = false;
+  if (step === 1){
+    inner.innerHTML = `<div class="frame stack">${PRIVACY}
+      ${storageOK ? '' : '<p class="small" style="margin:0;color:var(--danger)">Votre navigateur bloque l\'enregistrement local : l\'application fonctionnera, mais vos données disparaîtront à la fermeture de la page.</p>'}
+      <button class="btn btn-gold btn-wide" data-act="consent">J'ai compris</button></div>`;
+  } else {
+    inner.innerHTML = `<div class="frame stack">
+      <div class="h-eyebrow" style="text-align:center">Faisons connaissance</div>
+      <h1 class="h-title gold" style="text-align:center">Bienvenue dans le cercle</h1>
+      <p class="small muted" style="margin:0;text-align:center">Ces deux informations suffisent à Madame Voyance pour lire vos astres.</p>
+      ${profileForm(false)}</div>`;
+  }
+  ov.scrollTop = 0;
+}
+function validateProfile(form){
+  const name = form.pn.value.trim(), birth = form.pb.value;
+  let ok = true;
+  $('#pn-err').textContent = ''; $('#pb-err').textContent = '';
+  if (!name){ $('#pn-err').textContent = 'Indiquez votre prénom.'; ok = false; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birth) || birth < '1900-01-01' || birth > dk()){ $('#pb-err').textContent = 'Choisissez une date de naissance valide.'; ok = false; }
+  return ok ? {name, birth} : null;
+}
+
+/* ---------- Fenêtres ---------- */
+function openSheet(html){
+  $('#sheet-root').innerHTML = `<div class="sheet-back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${html}<button class="btn btn-ghost btn-wide" data-act="close">Fermer</button></div></div>`;
+}
+function closeSheet(){ $('#sheet-root').innerHTML = ''; }
+function cardSheet(id){
+  const c = CARD[id];
+  openSheet(`<div class="big-card"><img src="${cardImg(c.id)}" alt="${esc(c.name)}"></div>
+    <div class="daily-read"><div class="pos">${c.major ? 'Arcane ' + c.num : 'Arcane mineur'}</div><div class="cname">${esc(c.name)}</div>
+    <div class="keys">${esc(c.keys)}</div><p class="msg" style="margin:4px 0">${esc(c.msg)}</p>
+    <div class="tip"><span>✦</span><span>${esc(c.tip)}</span></div><div class="small muted">${esc(c.dom)}</div></div>`);
+}
+function levelUp(lv){
+  const unlock = BACKS.find(b => b.lvl === lv);
+  openSheet(`<div class="stack levelup"><div class="glyph-orb"><span class="num">${lv + 1}</span></div>
+    <div class="h-eyebrow">Nouveau niveau</div><h2 class="h-title gold">${esc(LEVELS[lv].t)}</h2>
+    ${unlock ? `<p class="lead" style="margin:0">Vous débloquez le dos de cartes « ${unlock.n} ». Choisissez-le dans votre profil.</p>` : `<p class="lead" style="margin:0">Les étoiles saluent votre fidélité.</p>`}</div>`);
+  setTimeout(() => sparkle(innerWidth / 2, innerHeight * .55, 60, 1.6), 200);
+}
+function breathe(){
+  const el = document.createElement('div'); el.className = 'breathe';
+  el.innerHTML = `<div class="orb"></div><p id="bt">Inspirez…</p><button class="btn btn-ghost" id="bstop">Terminer</button>`;
+  document.body.appendChild(el);
+  let t = 0; const bt = el.querySelector('#bt');
+  const iv = setInterval(() => { t++; bt.textContent = t % 2 ? 'Expirez…' : 'Inspirez…'; if (t >= 4) end(); }, 4000);
+  function end(){ clearInterval(iv); el.remove(); if (award('pensee')) sparkle(innerWidth / 2, innerHeight * .4, 40, 1.4); render(); }
+  el.querySelector('#bstop').addEventListener('click', end);
+  el.querySelector('#bstop').focus();
+}
+
+async function installApp(){
+  if (installEvt){
+    const evt = installEvt; installEvt = null;
+    try { evt.prompt(); await evt.userChoice; } catch (e) {}
+    render(); return;
+  }
+  const share = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
+  const steps = isIOS
+    ? [`Dans Safari, touchez le bouton Partager ${share} en bas de l'écran.`, 'Faites défiler et choisissez « Sur l\'écran d\'accueil ».', 'Touchez « Ajouter » : l\'icône apparaît avec vos autres apps.']
+    : ['Ouvrez le menu du navigateur (les trois points ⋮).', 'Choisissez « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ».', 'Confirmez : l\'icône apparaît avec vos autres apps.'];
+  openSheet(`<div class="stack" style="align-items:center;text-align:center">
+      <img src="icons/icon-192.png" alt="Icône Madame Voyance" width="88" height="88" class="app-icon-lg">
+      <div class="h-eyebrow">Sur votre écran d'accueil</div>
+      <h2 class="h-title gold" style="font-size:22px;margin:0">Installer Madame Voyance</h2>
+    </div>
+    <ol class="steps">${steps.map(t => `<li><span>${t}</span></li>`).join('')}</ol>
+    <p class="small muted" style="margin:0;text-align:center">Une fois installée, l'app s'ouvre en plein écran et fonctionne sans connexion. Vous gagnez 50 points à la première ouverture.${isIOS ? ' Sur iPhone, l\'app installée garde ses propres données : vous referez une fois votre profil.' : ''}</p>`);
+}
+
+/* ---------- Rendu et navigation ---------- */
+function render(){
+  if (!S.consent){ showOnboarding(1); return; }
+  if (!S.profile){ showOnboarding(2); return; }
+  $('#onboard').hidden = true; $('#onboard-in').innerHTML = ''; $('#app').hidden = false; $('#nav').hidden = false;
+  const v = UI.view;
+  $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : vAccueil();
+  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === v ? 'page' : 'false'));
+}
+function go(view, sub, keepScroll){
+  if (view === 'tarot' && sub){ if (UI.tarot !== sub) UI.flips = new Set(); UI.tarot = sub; }
+  if (view === 'astres' && sub) UI.astres = sub;
+  if (view === 'oracles') UI.oracle = sub || null;
+  UI.view = view; UI.confirmErase = false;
+  if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
+  render(); if (!keepScroll) window.scrollTo(0, 0);
+}
+function fromHash(){
+  const h = location.hash.slice(1);
+  if (VIEWS.includes(h) && h !== UI.view){ if (h === 'oracles') UI.oracle = null; UI.view = h; UI.confirmErase = false; render(); window.scrollTo(0, 0); }
+}
+
+/* ---------- Actions ---------- */
+document.addEventListener('click', e => {
+  const navA = e.target.closest('.nav a');
+  if (navA && navA.dataset.v === UI.view){ e.preventDefault(); if (UI.view === 'oracles') UI.oracle = null; render(); window.scrollTo(0, 0); return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act;
+  switch (act){
+    case 'consent': S.consent = true; save(); sparkleAt(el, 24); render(); break;
+    case 'go': { const g = JSON.parse(el.dataset.go); go(g[0], g[1]); break; }
+    case 'breathe': breathe(); break;
+    case 'tmode': UI.flips = new Set(); UI.tarot = +el.dataset.n; render(); break;
+    case 'deck':
+      if (S.today.draws[UI.tarot]){ toast('Le tirage du jour est déjà fixé'); break; }
+      S.deck = el.dataset.deck; UI.flips = new Set(); save(); render(); break;
+    case 'flip': {
+      const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
+      if (el.classList.contains('flipped')){ cardSheet(el.dataset.card); break; }
+      UI.flips.add(i); el.classList.add('flipped');
+      el.setAttribute('aria-label', CARD[el.dataset.card].name);
+      setTimeout(() => sparkleAt(el, 22, 1.1), reduceMotion ? 0 : 380);
+      if (UI.flips.size >= n && !isDone(id)){
+        const cards = drawSpread(n);
+        S.today.draws[n] = cards.map(c => c.id);
+        if (n === 1){ S.journal.push({d: dk(), id: cards[0].id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120); }
+        award(id);
+        setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'}); }, reduceMotion ? 0 : 1000);
+      }
+      break;
+    }
+    case 'card': cardSheet(el.dataset.card); break;
+    case 'amode': UI.astres = el.dataset.m; render(); break;
+    case 'sign': {
+      const i = +el.dataset.i, z = ZODIAC[i];
+      openSheet(`<div class="sign-hero"><div class="glyph-orb"><span>${z.g}${VS}</span></div><h2 class="h-title gold" style="font-size:24px">${z.n}</h2><div class="small muted">${z.d} · ${z.el}</div></div>${horoBlock(i)}`);
+      break;
+    }
+    case 'reveal': {
+      const id = el.dataset.id, rect = el.getBoundingClientRect();
+      if (award(id)) sparkle(rect.left + rect.width / 2, rect.top + rect.height / 2, 34, 1.3);
+      render(); break;
+    }
+    case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
+    case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
+    case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
+    case 'privacy': openSheet(`<div class="stack">${PRIVACY}</div>`); break;
+    case 'erase': UI.confirmErase = true; render(); break;
+    case 'erase-no': UI.confirmErase = false; render(); break;
+    case 'erase-yes':
+      try { localStorage.removeItem(KEY); } catch (err) {}
+      S = defaultState(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
+    case 'install': installApp(); break;
+    case 'install-hide': S.installHide = true; save(); render(); break;
+    case 'close': closeSheet(); break;
+  }
+});
+
+document.addEventListener('submit', e => {
+  const f = e.target; if (!f.dataset.form) return;
+  e.preventDefault();
+  const kind = f.dataset.form;
+  if (kind === 'profile' || kind === 'edit'){
+    const p = validateProfile(f); if (!p) return;
+    const first = !S.profile;
+    S.profile = p; save();
+    if (kind === 'edit') closeSheet();
+    if (first){ sparkle(innerWidth / 2, innerHeight / 2, 60, 1.6); checkIn(); installBonus(); UI.view = 'accueil'; history.replaceState(null, '', '#accueil'); }
+    render(); return;
+  }
+  if (kind === 'pendule'){
+    const q = f.q.value.trim();
+    if (!q){ $('#q-err').textContent = 'Écrivez une question à laquelle on peut répondre par oui ou non.'; return; }
+    const norm = q.toLowerCase().replace(/\s+/g, ' ');
+    const r = pick(rngFrom(userKey() + '|' + dk() + '|pendule|' + norm), PENDULUM);
+    UI.pendulum = {q, a: r.a, d: r.d, swinging: !reduceMotion};
+    render();
+    setTimeout(() => {
+      if (!UI.pendulum || UI.pendulum.q !== q) return;
+      UI.pendulum.swinging = false;
+      award('pendule'); render();
+      const ans = document.querySelector('.answer'); if (ans) sparkleAt(ans, 30, 1.2);
+    }, reduceMotion ? 0 : 2800);
+    return;
+  }
+  if (kind === 'compat'){
+    const b = f.cb.value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(b) || b < '1900-01-01' || b > dk()){ $('#cb-err').textContent = 'Choisissez une date de naissance valide.'; return; }
+    UI.compat = {name: f.cn.value.trim().slice(0, 30), birth: b};
+    award('compat'); render();
+    const ring = document.querySelector('.ring'); if (ring){ ring.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'center'}); setTimeout(() => sparkleAt(ring, 34, 1.3), 300); }
+  }
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG'){ const f = t.closest('.face'); if (f) f.classList.add('noimg'); else t.style.visibility = 'hidden'; } }, true);
+document.addEventListener('pointerdown', e => { if (e.target.closest('.btn, .rit, .tile, .seg button, .signs button')) sparkle(e.clientX, e.clientY, 7, .6); });
+window.addEventListener('hashchange', fromHash);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.profile && S.today.d !== dk()){ UI.flips = new Set(); checkIn(); render(); } });
+window.addEventListener('resize', resize);
+
+/* ---------- Démarrage ---------- */
+$('#nav').innerHTML = `<div class="nav-in">${VIEWS.map(v => `<a href="#${v}" data-v="${v}">${ICONS[v]}<span>${NAV_LABELS[v]}</span></a>`).join('')}</div>`;
+resize();
+if (!reduceMotion) requestAnimationFrame(skyLoop);
+const h0 = location.hash.slice(1);
+if (VIEWS.includes(h0)) UI.view = h0;
+if (S.consent && S.profile) checkIn();
+function installBonus(){ if (standalone() && S.profile && !S.installBonus){ S.installBonus = true; gain(50, 'Application installée'); save(); } }
+installBonus();
+render();
+})();
+</script>
+</body>
+</html>
