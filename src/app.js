@@ -1,9 +1,3 @@
-/* ============ PERSONNALISATION ============
-   Images des cartes : remplacez les fichiers du dossier cards/ en gardant les mêmes noms
-   (m00 à m21 pour les arcanes majeurs ; w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14),
-   ou changez simplement la fonction ci-dessous. */
-const cardImg = id => 'cards/' + id + '.webp';
-
 (() => {
 'use strict';
 
@@ -13,6 +7,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const VS = '︎';
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionNeedsPermission = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+const calm = () => !!(S && S.zen);
 
 function hash(str){
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
@@ -41,7 +37,8 @@ const KEY = 'madame-voyance:v1';
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
-          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}}};
+          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
+          zen:reduceMotion, sound:true, tilt:!motionNeedsPermission, seen:{}, gm:{}};
 }
 function load(){
   try {
@@ -53,6 +50,14 @@ function load(){
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
 let S = load();
+let shown = S.points;
+/* Grimoire : on reprend les cartes déjà tirées avant cette version */
+(function backfillSeen(){
+  if (!S.seen || typeof S.seen !== 'object') S.seen = {};
+  if (Object.keys(S.seen).length) return;
+  for (const j of S.journal) if (j && j.id){ const e = S.seen[j.id] || (S.seen[j.id] = {n:0, d:j.d}); e.n++; }
+  for (const k in (S.today.draws || {})) if (S.today.d) for (const id of S.today.draws[k]) if (!S.seen[id]) S.seen[id] = {n:1, d:S.today.d};
+})();
 
 /* ---------- Application installable (écran d'accueil, hors ligne) ---------- */
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -179,8 +184,22 @@ function gain(pts, label){
   const before = levelOf(S.points);
   S.points += pts;
   toast(`<b>+${pts}</b> ✦ ${esc(label)}`);
+  flyPoints(pts);
   const after = levelOf(S.points);
-  if (after > before) setTimeout(() => levelUp(after), 900);
+  if (after > before) setTimeout(() => levelUp(after), calm() ? 300 : 1300);
+}
+/* Grimoire : chaque carte tirée y est rangée ; compléter une famille rapporte un bonus */
+function recordSeen(ids){
+  const fresh = [];
+  for (const id of ids){
+    if (!S.seen[id]){ S.seen[id] = {n:0, d:dk()}; fresh.push(id); }
+    S.seen[id].n++;
+  }
+  if (fresh.length) setTimeout(() => toast(fresh.length === 1 ? `✦ Nouvelle carte au grimoire : <b>${esc(CARD[fresh[0]].name)}</b>` : `✦ <b>${fresh.length}</b> nouvelles cartes au grimoire`), 700);
+  const majors = DECK78.slice(0, 22).every(c => S.seen[c.id]), all = DECK78.every(c => S.seen[c.id]);
+  if (majors && !S.gm.majors){ S.gm.majors = true; setTimeout(() => gain(100, 'Les 22 arcanes majeurs au grimoire'), 1400); }
+  if (all && !S.gm.all){ S.gm.all = true; setTimeout(() => gain(300, 'Grimoire complet'), 1900); }
+  save();
 }
 function award(id){
   if (isDone(id)) return false;
@@ -208,63 +227,121 @@ function checkIn(){
   save();
 }
 
-/* ---------- Effets : ciel étoilé et étincelles ---------- */
+/* ---------- Effets : ciel étoilé, étincelles, sons ---------- */
 const sky = $('#sky'), sctx = sky.getContext('2d');
 const fx = $('#fx'), fctx = fx.getContext('2d');
-let W = 0, H = 0, DPR = 1, stars = [], shooting = null, particles = [], fxRunning = false;
+const nebula = $('.nebula');
+const PAL = ['#fbe2a0','#fff3d6','#c9a8ff','#ff9ad5','#8fe9ff','#ffd27a'];
+const STAR_COLS = ['#e9e2ff','#f5dc9c','#ffb8e2','#a8eeff'];
+const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+let W = 0, H = 0, DPR = 1, stars = [], shooters = [], particles = [], fxRunning = false, skyDirty = true;
+let tiltX = 0, tiltY = 0, tX = 0, tY = 0;
 function resize(){
   DPR = Math.min(window.devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
   for (const c of [sky, fx]){ c.width = W * DPR; c.height = H * DPR; }
   sctx.setTransform(DPR, 0, 0, DPR, 0, 0); fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const n = Math.round(Math.min(220, W * H / 4200));
-  stars = Array.from({length:n}, () => ({x: Math.random() * W, y: Math.random() * H, r: Math.random() < .9 ? Math.random() * 1 + .3 : Math.random() * 1.4 + 1, p: Math.random() * 6.28, s: .4 + Math.random() * 1.4, gold: Math.random() < .18}));
-  if (reduceMotion) drawSky(0);
+  const n = Math.round(Math.min(240, W * H / 3800));
+  stars = Array.from({length:n}, () => {
+    const q = Math.random();
+    return {x: Math.random() * W, y: Math.random() * H, r: Math.random() < .9 ? Math.random() * 1 + .3 : Math.random() * 1.5 + 1.1,
+      p: Math.random() * 6.28, s: .4 + Math.random() * 1.4, z: .25 + Math.random() * .9,
+      c: q < .16 ? STAR_COLS[1] : q < .23 ? STAR_COLS[2] : q < .3 ? STAR_COLS[3] : STAR_COLS[0]};
+  });
+  skyDirty = true;
 }
 function drawSky(t){
+  const still = calm();
   sctx.clearRect(0, 0, W, H);
+  const ox = still ? 0 : tiltX * 16, oy = still ? 0 : tiltY * 16;
   for (const st of stars){
-    const a = reduceMotion ? .7 : .35 + .65 * (.5 + .5 * Math.sin(t / 1000 * st.s + st.p));
-    sctx.globalAlpha = a;
-    sctx.fillStyle = st.gold ? '#f5dc9c' : '#e9e2ff';
-    sctx.beginPath(); sctx.arc(st.x, st.y, st.r, 0, 6.283); sctx.fill();
+    const a = still ? .7 : .35 + .65 * (.5 + .5 * Math.sin(t / 1000 * st.s + st.p));
+    const x = st.x + ox * st.z, y = st.y + oy * st.z;
+    sctx.globalAlpha = a; sctx.fillStyle = st.c;
+    sctx.beginPath(); sctx.arc(x, y, st.r, 0, 6.283); sctx.fill();
     if (st.r > 1.4){
-      sctx.globalAlpha = a * .5; sctx.fillRect(st.x - st.r * 3, st.y - .4, st.r * 6, .8); sctx.fillRect(st.x - .4, st.y - st.r * 3, .8, st.r * 6);
+      sctx.globalAlpha = a * .5; sctx.fillRect(x - st.r * 3.2, y - .4, st.r * 6.4, .8); sctx.fillRect(x - .4, y - st.r * 3.2, .8, st.r * 6.4);
+      sctx.globalAlpha = a * .18; sctx.beginPath(); sctx.arc(x, y, st.r * 3.2, 0, 6.283); sctx.fill();
     }
   }
-  if (shooting){
-    const s = shooting; s.life += 1;
-    const x = s.x + s.vx * s.life, y = s.y + s.vy * s.life;
-    const g = sctx.createLinearGradient(x, y, x - s.vx * 14, y - s.vy * 14);
-    g.addColorStop(0, 'rgba(255,240,200,.9)'); g.addColorStop(1, 'rgba(255,240,200,0)');
-    sctx.globalAlpha = Math.max(0, 1 - s.life / 60); sctx.strokeStyle = g; sctx.lineWidth = 1.6;
-    sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x - s.vx * 14, y - s.vy * 14); sctx.stroke();
-    if (s.life > 60) shooting = null;
-  } else if (!reduceMotion && Math.random() < .0025){
-    shooting = {x: Math.random() * W * .7 + W * .2, y: Math.random() * H * .4, vx: -(4 + Math.random() * 3), vy: 2 + Math.random() * 2, life: 0};
+  if (!still){
+    if (shooters.length < 2 && Math.random() < .004){
+      shooters.push({x: Math.random() * W * .7 + W * .25, y: Math.random() * H * .45, vx: -(5 + Math.random() * 4), vy: 2 + Math.random() * 2.5, life: 0, max: 50 + Math.random() * 30, c: rnd(['255,240,200','255,198,236','191,240,255'])});
+    }
+    for (const sh of shooters){
+      sh.life++;
+      const x = sh.x + sh.vx * sh.life, y = sh.y + sh.vy * sh.life, len = 16;
+      const g = sctx.createLinearGradient(x, y, x - sh.vx * len, y - sh.vy * len);
+      g.addColorStop(0, `rgba(${sh.c},.95)`); g.addColorStop(1, `rgba(${sh.c},0)`);
+      const fade = Math.max(0, 1 - sh.life / sh.max);
+      sctx.globalAlpha = fade; sctx.strokeStyle = g; sctx.lineWidth = 1.8;
+      sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x - sh.vx * len, y - sh.vy * len); sctx.stroke();
+      sctx.fillStyle = `rgba(${sh.c},1)`; sctx.beginPath(); sctx.arc(x, y, 1.8, 0, 6.283); sctx.fill();
+      if (sh.life % 3 === 0 && particles.length < 500) particles.push({x, y, vx: (Math.random() - .5) * .6, vy: Math.random() * .6, life: 0, max: 28, r: .8 + Math.random() * 1.2, c: `rgb(${sh.c})`, g: .01, dr: .98, star: true});
+    }
+    shooters = shooters.filter(sh => sh.life < sh.max);
+    if (shooters.length) runFx();
   }
   sctx.globalAlpha = 1;
 }
 let lastSky = 0;
 function skyLoop(t){
-  if (!document.hidden && t - lastSky > 33){ drawSky(t); lastSky = t; }
+  if (!document.hidden){
+    if (calm()){
+      if (skyDirty){ tiltX = tiltY = 0; drawSky(0); skyDirty = false; nebula.style.setProperty('--tx', 0); nebula.style.setProperty('--ty', 0); }
+    } else if (t - lastSky > 33){
+      tiltX += (tX - tiltX) * .08; tiltY += (tY - tiltY) * .08;
+      nebula.style.setProperty('--tx', tiltX.toFixed(3)); nebula.style.setProperty('--ty', tiltY.toFixed(3));
+      drawSky(t); lastSky = t; skyDirty = true;
+    }
+  }
   requestAnimationFrame(skyLoop);
 }
-function sparkle(x, y, n = 18, spread = 1){
-  if (reduceMotion) return;
-  for (let i = 0; i < n; i++){
+function runFx(){ if (!fxRunning){ fxRunning = true; requestAnimationFrame(fxLoop); } }
+function sparkle(x, y, n = 18, spread = 1, pal){
+  if (calm()) return;
+  const P = pal || PAL;
+  for (let i = 0; i < n && particles.length < 600; i++){
     const a = Math.random() * 6.283, v = (1 + Math.random() * 3.2) * spread;
-    particles.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, life: 0, max: 40 + Math.random() * 30, r: 1.5 + Math.random() * 2.5, gold: Math.random() < .7});
+    particles.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, life: 0, max: 40 + Math.random() * 30, r: 1.5 + Math.random() * 2.5, c: rnd(P), g: .04, dr: .96, star: true});
   }
-  if (!fxRunning){ fxRunning = true; requestAnimationFrame(fxLoop); }
+  runFx();
 }
-function sparkleAt(el, n, spread){ const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, n, spread); }
+function sparkleAt(el, n, spread, pal){ const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, n, spread, pal); }
+function ringAt(x, y, r1, c, w = 3){ if (calm()) return; particles.push({ring: true, x, y, r1, w, life: 0, max: 34, c}); runFx(); }
+/* Particules aspirées vers le centre d'une carte qu'on charge */
+function suck(cx, cy, rad, k){
+  if (calm() || particles.length > 500) return;
+  const a = Math.random() * 6.283, d = rad * (.85 + Math.random() * .6), f = 16 + Math.random() * 6;
+  particles.push({x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, vx: -Math.cos(a) * d / f, vy: -Math.sin(a) * d / f, life: 0, max: f, r: 1 + Math.random() * 1.6 * (1 + k), c: rnd(PAL), g: 0, dr: 1, star: true, fadeIn: true});
+  runFx();
+}
+/* Pluie d'étoiles (passage de niveau) */
+function starRain(ms){
+  if (calm()) return;
+  const end = performance.now() + ms;
+  (function drop(){
+    for (let k = 0; k < 5 && particles.length < 600; k++) particles.push({x: Math.random() * W, y: -12, vx: (Math.random() - .5) * .8, vy: 2 + Math.random() * 3, life: 0, max: 90 + Math.random() * 80, r: 1.6 + Math.random() * 2.6, c: rnd(PAL), g: .03, dr: .995, star: true, tw: Math.random() * 6});
+    runFx();
+    if (performance.now() < end) setTimeout(drop, 70);
+  })();
+}
 function fxLoop(){
   fctx.clearRect(0, 0, W, H);
   particles = particles.filter(p => p.life < p.max);
   for (const p of particles){
-    p.life++; p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy = p.vy * .96 + .04;
-    const a = 1 - p.life / p.max, r = p.r * (0.6 + a * .6);
-    fctx.globalAlpha = a; fctx.fillStyle = p.gold ? '#fbe2a0' : '#c9a8ff';
+    p.life++;
+    const t = p.life / p.max;
+    if (p.ring){
+      const e = 1 - Math.pow(1 - t, 3);
+      fctx.globalAlpha = (1 - t) * .9; fctx.strokeStyle = p.c; fctx.lineWidth = p.w * (1 - t) + .4;
+      fctx.beginPath(); fctx.arc(p.x, p.y, p.r1 * e, 0, 6.283); fctx.stroke();
+      continue;
+    }
+    p.x += p.vx; p.y += p.vy; p.vx *= p.dr; p.vy = p.vy * p.dr + p.g;
+    let a = p.fadeIn ? Math.sin(Math.PI * t) : 1 - t;
+    if (p.tw) a *= .6 + .4 * Math.sin(p.life * .3 + p.tw);
+    const r = p.r * (0.6 + (1 - t) * .6);
+    fctx.globalAlpha = Math.max(0, a); fctx.fillStyle = p.c;
     fctx.beginPath();
     fctx.moveTo(p.x, p.y - r * 2); fctx.quadraticCurveTo(p.x, p.y, p.x + r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y + r * 2);
     fctx.quadraticCurveTo(p.x, p.y, p.x - r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y - r * 2); fctx.fill();
@@ -272,10 +349,177 @@ function fxLoop(){
   fctx.globalAlpha = 1;
   if (particles.length) requestAnimationFrame(fxLoop); else { fxRunning = false; fctx.clearRect(0, 0, W, H); }
 }
+function flashAt(x, y){
+  if (calm()) return;
+  const f = $('#flash'); if (!f) return;
+  f.style.setProperty('--fx', x + 'px'); f.style.setProperty('--fy', y + 'px');
+  f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+}
+function buzz(p){ if (calm()) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+/* Sons créés dans le navigateur, sans fichier : bol tibétain, carillon, souffle */
+const Snd = (() => {
+  let ctx = null, out = null, noise = null, riser = null, armed = false;
+  /* Le navigateur n'autorise le son qu'après un premier geste de l'utilisateur */
+  const arm = () => { armed = true; };
+  ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, arm, {capture: true, once: true}));
+  function ac(){
+    if (!armed || !S.sound || calm()) return null;
+    if (!ctx){
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      try { ctx = new C(); } catch (e) { return null; }
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+      out = ctx.createGain(); out.gain.value = .34; out.connect(comp); comp.connect(ctx.destination);
+      const dl = ctx.createDelay(), fb = ctx.createGain(), lp = ctx.createBiquadFilter(), wet = ctx.createGain();
+      dl.delayTime.value = .21; fb.gain.value = .34; lp.type = 'lowpass'; lp.frequency.value = 2600; wet.gain.value = .5;
+      out.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); wet.connect(comp);
+    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+  function tone(f, t, dur, vol, type, att){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + (att || .01)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .05);
+  }
+  return {
+    unlock(){ ac(); },
+    bowl(f = 196, vol = .2){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      [[1, 1, 5], [2.76, .38, 3.6], [5.4, .16, 2.4], [8.93, .05, 1.6]].forEach(([m, v, d]) => {
+        tone(f * m, t, d, vol * v, 'sine', .04); tone(f * m + .7, t, d, vol * v * .6, 'sine', .04);
+      });
+    },
+    chime(){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      [1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => { tone(f, t + i * .075, 1.9, .085, 'sine', .005); tone(f * 2, t + i * .075, .6, .02, 'triangle', .005); });
+    },
+    ding(){ const c = ac(); if (!c) return; const t = c.currentTime; tone(1760, t, .5, .08, 'sine', .004); tone(2637, t + .07, .7, .07, 'sine', .004); },
+    twinkle(){ const c = ac(); if (!c) return; tone(rnd([2093, 2349, 2637, 3136, 3520]), c.currentTime, .7, .045, 'sine', .004); },
+    riser(dur){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      const g = c.createGain(), o1 = c.createOscillator(), o2 = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain();
+      o1.type = 'sine'; o2.type = 'triangle';
+      o1.frequency.setValueAtTime(260, t); o1.frequency.exponentialRampToValueAtTime(1040, t + dur);
+      o2.frequency.setValueAtTime(390, t); o2.frequency.exponentialRampToValueAtTime(1560, t + dur);
+      lfo.frequency.setValueAtTime(7, t); lfo.frequency.linearRampToValueAtTime(22, t + dur); lg.gain.value = .03;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.07, t + dur);
+      lfo.connect(lg); lg.connect(g.gain); o1.connect(g); o2.connect(g); g.connect(out);
+      [o1, o2, lfo].forEach(o => { o.start(t); o.stop(t + dur + 2); });
+      riser = {g, t};
+    },
+    stopRiser(){ if (!riser || !ctx) return; const t = ctx.currentTime, g = riser.g.gain; try { g.cancelScheduledValues(t); g.setValueAtTime(Math.max(g.value, .0002), t); g.exponentialRampToValueAtTime(.0001, t + .15); } catch (e) {} riser = null; },
+    whoosh(vol = .05){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      if (!noise){ noise = c.createBuffer(1, c.sampleRate * .8, c.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = noise; bp.type = 'bandpass'; bp.Q.value = 1.2;
+      bp.frequency.setValueAtTime(500, t); bp.frequency.exponentialRampToValueAtTime(2200, t + .25); bp.frequency.exponentialRampToValueAtTime(700, t + .6);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .18); g.gain.exponentialRampToValueAtTime(.0001, t + .6);
+      s.connect(bp); bp.connect(g); g.connect(out); s.start(t); s.stop(t + .7);
+    }
+  };
+})();
+
+/* Points : « +10 » qui s'envole et étoiles qui filent jusqu'au compteur */
+let lastTap = null, countRaf = 0;
+function tapPoint(){
+  if (lastTap && performance.now() - lastTap.t < 1600) return lastTap;
+  return {x: W / 2, y: H * .38};
+}
+function floatText(txt, x, y){
+  if (calm()) return;
+  const el = document.createElement('span'); el.className = 'float-pts'; el.textContent = txt;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1400);
+}
+function flyPoints(pts){
+  const o = tapPoint();
+  floatText('+' + pts, o.x, o.y);
+  if (calm() || !document.body.animate){ animateCount(); return; }
+  requestAnimationFrame(() => {
+    const chip = $('#pchip'); let tx = W - 46, ty = 22;
+    if (chip){ const b = chip.getBoundingClientRect(); if (b.bottom > 0 && b.top < H){ tx = b.left + 16; ty = b.top + b.height / 2; } }
+    const n = Math.min(10, 3 + Math.round(pts / 5));
+    let left = n;
+    for (let i = 0; i < n; i++){
+      const s = document.createElement('span'); s.className = 'flystar'; s.textContent = '✦';
+      s.style.setProperty('--c', rnd(PAL)); document.body.appendChild(s);
+      const a = Math.random() * 6.283, d = 30 + Math.random() * 50;
+      const mx = o.x + Math.cos(a) * d, my = o.y + Math.sin(a) * d - 20;
+      const anim = s.animate([
+        {transform: `translate(${o.x - 8}px,${o.y - 8}px) scale(.3)`, opacity: 0},
+        {transform: `translate(${mx - 8}px,${my - 8}px) scale(1.25)`, opacity: 1, offset: .35},
+        {transform: `translate(${tx - 8}px,${ty - 8}px) scale(.45)`, opacity: .9}
+      ], {duration: 720 + i * 55, easing: 'cubic-bezier(.45,0,.7,.2)', delay: i * 25});
+      anim.onfinish = () => {
+        s.remove();
+        if (--left === 0){
+          Snd.ding();
+          const c = $('#pchip'); if (c){ c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+          animateCount();
+        }
+      };
+    }
+  });
+}
+function lvPct(p){ const lv = levelOf(p), next = LEVELS[lv + 1]; return next ? Math.max(0, Math.min(100, Math.round((p - LEVELS[lv].p) / (next.p - LEVELS[lv].p) * 100))) : 100; }
+function paintPoints(){
+  document.querySelectorAll('[data-pts]').forEach(n => { n.textContent = shown; });
+  document.querySelectorAll('[data-lvbar]').forEach(b => { b.style.width = lvPct(shown) + '%'; });
+}
+function animateCount(){
+  cancelAnimationFrame(countRaf);
+  const from = shown, to = S.points, t0 = performance.now(), dur = calm() ? 0 : Math.min(1300, 450 + Math.abs(to - from) * 10);
+  const tick = now => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+    shown = Math.round(from + (to - from) * e); paintPoints();
+    if (k < 1) countRaf = requestAnimationFrame(tick);
+  };
+  countRaf = requestAnimationFrame(tick);
+}
+
+/* Effet de profondeur : le ciel suit l'inclinaison du téléphone (ou la souris) */
+const tiltSupported = typeof DeviceOrientationEvent !== 'undefined' && isTouch;
+let tiltOn = false, tiltAsked = false;
+function onOrient(e){
+  if (e.gamma == null || !S.tilt) return;
+  tX = Math.max(-1, Math.min(1, e.gamma / 30)); tY = Math.max(-1, Math.min(1, ((e.beta || 0) - 45) / 30));
+}
+function enableTilt(fromGesture){
+  if (!tiltSupported || tiltOn || !S.tilt) return;
+  if (motionNeedsPermission){
+    if (!fromGesture) return;
+    DeviceOrientationEvent.requestPermission().then(r => {
+      if (r === 'granted'){ window.addEventListener('deviceorientation', onOrient); tiltOn = true; }
+      else { S.tilt = false; save(); if (UI.view === 'profil') render(); }
+    }).catch(() => {});
+  } else { window.addEventListener('deviceorientation', onOrient); tiltOn = true; }
+}
+
+/* Ciel selon l'heure */
+const TOD_COLORS = {aube:'#1c1036', jour:'#1a1646', crepuscule:'#150b2e', nuit:'#0a0616'};
+function setTod(){
+  const h = new Date().getHours();
+  const tod = h >= 5 && h < 9 ? 'aube' : h >= 9 && h < 17 ? 'jour' : h >= 17 && h < 21 ? 'crepuscule' : 'nuit';
+  if (document.documentElement.dataset.tod !== tod){
+    document.documentElement.dataset.tod = tod;
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = TOD_COLORS[tod];
+  }
+}
+function applyZen(){ document.documentElement.classList.toggle('zen', calm()); skyDirty = true; if (calm()){ tX = tY = 0; } }
+
+/* Pierres précieuses aux coins des cadres dorés */
+const GEMS = '<i class="gemc tl" aria-hidden="true"></i><i class="gemc tr" aria-hidden="true"></i><i class="gemc bl" aria-hidden="true"></i><i class="gemc br" aria-hidden="true"></i>';
+let decoQueued = false;
+function decorate(){ decoQueued = false; document.querySelectorAll('.frame:not([data-gems])').forEach(f => { f.dataset.gems = '1'; f.insertAdjacentHTML('beforeend', GEMS); }); }
+new MutationObserver(() => { if (!decoQueued){ decoQueued = true; requestAnimationFrame(decorate); } }).observe(document.body, {childList: true, subtree: true});
 
 /* ---------- État d'interface ---------- */
 const VIEWS = ['accueil','tarot','astres','oracles','profil'];
-const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null};
+const ROUTES = VIEWS.concat(['grimoire']);
+const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m'};
 
 /* ---------- Petits morceaux d'interface ---------- */
 const ICONS = {
@@ -285,15 +529,39 @@ const ICONS = {
   oracles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
   profil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  sndOn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fill-opacity=".25"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  sndOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fill-opacity=".2"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
   spark:'<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="currentColor"/></svg>'
 };
 const NAV_LABELS = {accueil:'Accueil', tarot:'Tarot', astres:'Astres', oracles:'Oracles', profil:'Profil'};
 
-function topbar(){
-  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
-    <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span></a></div>`;
+/* Lune de fidélité : la série remplit une lune en 7 jours */
+function litPath(frac, cx, cy, r){
+  const k = Math.cos(2 * Math.PI * frac), rx = Math.abs(k * r).toFixed(2);
+  return frac < 0.5
+    ? `M${cx} ${cy - r} A${r} ${r} 0 0 1 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 0 : 1} ${cx} ${cy - r}Z`
+    : `M${cx} ${cy - r} A${r} ${r} 0 0 0 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 1 : 0} ${cx} ${cy - r}Z`;
 }
-function updateChip(){ const c = $('#pchip'); if (c) c.innerHTML = `${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span>`; }
+const streakPos = () => ((Math.max(1, S.streak) - 1) % 7) + 1;
+function moonMini(step, cls){
+  const frac = step / 7 * 0.5;
+  return `<svg viewBox="0 0 20 20" class="${cls || ''}" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="#2a2050" stroke="rgba(230,195,120,.45)" stroke-width=".8"/><path d="${litPath(frac, 10, 10, 8.5)}" fill="#f6e4b0"/></svg>`;
+}
+function moonRow(){
+  const p = streakPos();
+  const moons = Array.from({length:7}, (_, i) => moonMini(i + 1, i + 1 < p ? '' : i + 1 === p ? 'now' : 'off')).join('');
+  const nextB = Object.keys(STREAK_BONUS).map(Number).find(k => k > S.streak);
+  return `<div class="moons" aria-hidden="true">${moons}</div>
+    <div class="small moon-note"><span>${p === 7 ? 'Pleine lune : 7 jours d\'affilée' : `Pleine lune dans ${7 - p} jour${7 - p > 1 ? 's' : ''}`}</span>${nextB ? `<span class="muted">Bonus de ${STREAK_BONUS[nextB]} pts à ${nextB} jours</span>` : ''}</div>`;
+}
+function chipInner(){ return `${ICONS.spark}<span data-pts>${shown}</span><span class="sep"></span>${moonMini(streakPos(), 'mmini')}<span>${S.streak} j</span>`; }
+function topbar(){
+  const on = S.sound && !S.zen;
+  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
+    <div class="tb-right"><button class="snd" data-act="sound" aria-pressed="${on}" aria-label="${on ? 'Couper les sons' : 'Activer les sons'}">${on ? ICONS.sndOn : ICONS.sndOff}</button>
+    <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${chipInner()}</a></div></div>`;
+}
+function updateChip(){ const c = $('#pchip'); if (c) c.innerHTML = chipInner(); }
 function revealBtn(id, label){
   const r = RITUALS.find(x => x.id === id);
   return `<button class="btn btn-gold btn-wide" data-act="reveal" data-id="${id}">${label} <span class="pts">+${r.pts}</span></button>`;
@@ -324,7 +592,7 @@ function vAccueil(){
       <div class="greet">${hello}, ${esc(p.name)}</div>
     </header>
 
-    <article class="frame" aria-labelledby="pt">
+    <article class="frame h-pensee" aria-labelledby="pt">
       <div class="h-eyebrow" id="pt" style="text-align:center">Pensée du jour</div>
       <p class="thought">« ${esc(thought)} »</p>
       <div class="thought-foot"><button class="btn btn-ghost btn-sm" data-act="breathe">Respirer avec elle${isDone('pensee') ? '' : ' <span class="pts">+5</span>'}</button></div>
@@ -340,16 +608,16 @@ function vAccueil(){
     <section class="stack" aria-labelledby="rt">
       <div class="section-head"><h2 id="rt">Votre rituel du jour</h2><span class="count">${done} / ${DAILY.length}</span></div>
       <div class="daily2">
-        <div class="dtile ${cardDone ? 'done' : ''}">
+        <div class="dtile hue-tile h-tarot ${cardDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Carte du jour</span><span class="badge ${cardDone ? 'ok' : ''}">${cardDone ? '✓' : '+' + ptsOf('tarot1')}</span></div>
           <button class="tcard home-card ${cardDone ? 'flipped' : ''}" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(card)}</span>
           </button>
           ${cardDone
             ? `<div class="dt-name">${esc(card.name)}</div><div class="dt-text">${esc(card.msg)}</div><button class="dt-link" data-act="card" data-card="${card.id}">Voir la carte</button>`
-            : `<div class="dt-name">Touchez pour la retourner</div>`}
+            : `<div class="dt-name"><span class="hint-hold"><i></i>Gardez le doigt dessus</span></div>`}
         </div>
-        <div class="dtile ${horoDone ? 'done' : ''}">
+        <div class="dtile hue-tile h-horo ${horoDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Horoscope</span><span class="badge ${horoDone ? 'ok' : ''}">${horoDone ? '✓' : '+' + ptsOf('horo')}</span></div>
           <div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div>
           <div class="dt-name">${z.n}</div>
@@ -366,17 +634,20 @@ function vAccueil(){
     <div class="explore">
       <span class="small muted">Envie d'aller plus loin ?</span>
       <div class="explore-links">
-        <button data-act="go" data-go='["tarot",3]'>Tirage 3 cartes</button>
-        <button data-act="go" data-go='["astres","lune"]'>Lune</button>
-        <button data-act="go" data-go='["oracles"]'>Oracles</button>
+        <button class="h-tarot" data-act="go" data-go='["tarot",3]'>Tirage 3 cartes</button>
+        <button class="h-lune" data-act="go" data-go='["astres","lune"]'>Lune</button>
+        <button class="h-numero" data-act="go" data-go='["oracles"]'>Oracles</button>
+        <button class="h-rune" data-act="go" data-go='["grimoire"]'>Grimoire</button>
       </div>
     </div>
 
     <a class="frame-plain levelbar" href="#profil" style="text-decoration:none;color:inherit">
-      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">${S.points} pts</span></div>
-      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count"><span data-pts>${shown}</span> pts</span></div>
+      <div class="track"><i data-lvbar style="width:${lvPct(shown)}%"></i></div>
       <div class="small muted">${next ? `Encore ${next.p - S.points} points pour devenir ${esc(next.t)}` : 'Vous avez atteint le plus haut niveau.'} · Série : ${S.streak} jour${S.streak > 1 ? 's' : ''}</div>
+      ${moonRow()}
     </a>
+    ${legalLinks()}
   </section>`;
 }
 
@@ -405,7 +676,7 @@ function vTarot(){
       </button>`).join('')}</div>`;
     }
   }
-  return `<section class="view">
+  return `<section class="view h-tarot">
     ${topbar()}
     <div><div class="h-eyebrow">Le tarot</div><h1 class="h-title gold">${esc(sp.label)}</h1></div>
     <div class="seg" role="group" aria-label="Type de tirage">
@@ -428,13 +699,32 @@ function vTarot(){
         </div>`).join('')}
       </div>
       ${done ? `<div class="tap-hint">Touchez une carte pour la voir en grand</div>`
-             : `<div class="tap-hint">Concentrez-vous sur votre question, puis touchez ${n === 1 ? 'la carte pour la retourner' : 'chaque carte pour la retourner'} · +${sp.pts} points</div>`}
+             : `<div class="tap-hint"><span class="hint-hold"><i></i>Concentrez-vous sur votre question, puis gardez le doigt sur ${n === 1 ? 'la carte' : 'chaque carte'} pour la charger d'énergie</span><br>+${sp.pts} points</div>`}
     </div>
     ${reading}
+    ${grimLink()}
   </section>`;
 }
 
 /* ---------- Vue : Astres ---------- */
+function zodiacWheel(si){
+  const R = 43, parts = [];
+  for (let k = 0; k < 72; k++){ const a = k / 72 * 6.2832; parts.push(`<circle cx="${(50 + 48.5 * Math.cos(a)).toFixed(2)}" cy="${(50 + 48.5 * Math.sin(a)).toFixed(2)}" r="${k % 6 === 0 ? .7 : .35}" fill="rgba(230,195,120,.55)"/>`); }
+  ZODIAC.forEach((z, k) => {
+    const a = (k / 12) * 6.2832 - Math.PI / 2, a2 = a + Math.PI / 12;
+    parts.push(`<line x1="${(50 + 37 * Math.cos(a2)).toFixed(2)}" y1="${(50 + 37 * Math.sin(a2)).toFixed(2)}" x2="${(50 + 47 * Math.cos(a2)).toFixed(2)}" y2="${(50 + 47 * Math.sin(a2)).toFixed(2)}" stroke="rgba(230,195,120,.3)" stroke-width=".4"/>`);
+    parts.push(`<text x="${(50 + R * Math.cos(a)).toFixed(2)}" y="${(50 + R * Math.sin(a)).toFixed(2)}" text-anchor="middle" dominant-baseline="central" class="${k === si ? 'me' : ''}">${z.g}${VS}</text>`);
+  });
+  return `<div class="zwheel"><svg class="zring" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="47" stroke="rgba(230,195,120,.4)" stroke-width=".5"/><circle cx="50" cy="50" r="37" stroke="rgba(230,195,120,.3)" stroke-width=".4"/>${parts.join('')}</svg>
+    <div class="glyph-orb"><span>${ZODIAC[si].g}${VS}</span></div></div>`;
+}
+function constellation(i){
+  const c = CONSTEL[i];
+  const lines = c.e.map(([a, b], k) => `<path d="M${c.p[a][0]} ${c.p[a][1]}L${c.p[b][0]} ${c.p[b][1]}" pathLength="1" style="--d:${(k * .2).toFixed(2)}s"/>`).join('');
+  const dots = c.p.map(([x, y], k) => { const big = c.b.includes(k); return `<circle cx="${x}" cy="${y}" r="${big ? 1.9 : 1.2}" class="${big ? 'big' : ''}" style="--d:${(k * .1).toFixed(2)}s"/>`; }).join('');
+  return `<svg class="constel" viewBox="-4 -4 108 68" role="img" aria-label="Constellation ${ZODIAC_DE[i]}">${lines}${dots}</svg>`;
+}
 function horoscopeFor(i){
   const z = ZODIAC[i], r = rngFrom(dk() + '|horo|' + i);
   const p = z.pl, P = cap(p);
@@ -446,9 +736,9 @@ function horoBlock(i){
   const h = horoscopeFor(i);
   return `<div class="horo">
     <p class="lead" style="margin:0;text-align:center;font-style:italic">${esc(h.open)}</p>
-    <div class="horo-item"><div class="horo-head"><b>Amour</b>${starRating(h.s[0])}</div><div class="msg" style="margin:0">${esc(h.amour)}</div></div>
-    <div class="horo-item"><div class="horo-head"><b>Travail &amp; argent</b>${starRating(h.s[1])}</div><div class="msg" style="margin:0">${esc(h.travail)}</div></div>
-    <div class="horo-item"><div class="horo-head"><b>Énergie</b>${starRating(h.s[2])}</div><div class="msg" style="margin:0">${esc(h.energie)}</div></div>
+    <div class="horo-item amour"><div class="horo-head"><b>Amour</b>${starRating(h.s[0])}</div><div class="msg" style="margin:0">${esc(h.amour)}</div></div>
+    <div class="horo-item travail"><div class="horo-head"><b>Travail &amp; argent</b>${starRating(h.s[1])}</div><div class="msg" style="margin:0">${esc(h.travail)}</div></div>
+    <div class="horo-item energie"><div class="horo-head"><b>Énergie</b>${starRating(h.s[2])}</div><div class="msg" style="margin:0">${esc(h.energie)}</div></div>
     <div class="tip"><span>✦</span><span><b>Conseil :</b> ${esc(h.conseil)}</span></div>
   </div>`;
 }
@@ -457,12 +747,13 @@ function vAstres(){
   let body = '';
   if (UI.astres === 'zodiaque'){
     body = `<div class="sign-hero">
-        <div class="glyph-orb"><span>${z.g}${VS}</span></div>
+        ${zodiacWheel(si)}
         <h2 class="h-title gold" style="font-size:24px">${z.n}</h2>
         <div class="small muted">${z.d}</div>
         <div class="facts"><span class="fact">${z.el}</span><span class="fact">Planète : ${cap(z.pl)}</span></div>
         <p class="small muted" style="margin:4px 0 0;max-width:34ch">${esc(z.t)}</p>
       </div>
+      <figure class="frame-plain constel-box">${constellation(si)}<figcaption>La constellation ${ZODIAC_DE[si]}</figcaption></figure>
       ${isDone('horo') ? `<div class="frame">${horoBlock(si)}</div>` : revealBtn('horo', 'Révéler mon horoscope')}
       <div class="stack"><div class="section-head"><h2>Les autres signes</h2></div>
         <div class="signs">${ZODIAC.map((s, k) => `<button data-act="sign" data-i="${k}" aria-label="${s.n}" aria-current="${k === si}">${s.g}${VS}</button>`).join('')}</div>
@@ -501,7 +792,8 @@ function vAstres(){
           <div class="tip"><span>☾${VS}</span><span><b>Rituel :</b> ${esc(ph.r)}</span></div>
         </div>` : revealBtn('lune', 'Recevoir le conseil de la lune')}`;
   }
-  return `<section class="view">
+  const hue = UI.astres === 'chinois' ? 'h-chinois' : UI.astres === 'lune' ? 'h-lune' : 'h-horo';
+  return `<section class="view ${hue}">
     ${topbar()}
     <div><div class="h-eyebrow">Les astres</div><h1 class="h-title gold">Votre ciel du jour</h1></div>
     <div class="seg" role="group" aria-label="Section">
@@ -521,11 +813,12 @@ const ORACLES = [
 ];
 function vOracles(){
   if (!UI.oracle){
-    return `<section class="view">
+    const stoneC = pick(userRng('pierre'), STONES).c;
+    return `<section class="view h-numero">
       ${topbar()}
       <div><div class="h-eyebrow">Les oracles</div><h1 class="h-title gold">Que voulez-vous savoir ?</h1></div>
       <div class="tiles">
-        ${ORACLES.map(o => `<button class="tile ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}">
+        ${ORACLES.map((o, k) => `<button class="tile hue-tile h-${o.id} ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}" style="--d:${(k * 1.3).toFixed(1)}s${o.id === 'pierre' ? ';--ha:' + stoneC : ''}">
           <span class="tg">${o.id === 'compat' ? o.g + VS : o.g}</span>
           <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.n}</span><br><span class="td">${o.d}</span></span>
           <span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>
@@ -536,7 +829,7 @@ function vOracles(){
   const o = ORACLES.find(x => x.id === UI.oracle);
   const head = `${topbar()}<button class="back-link" data-act="oracle" data-id="">${ICONS.back}Tous les oracles</button>
     <div><div class="h-eyebrow">Oracle</div><h1 class="h-title gold">${o.n}</h1></div>`;
-  return `<section class="view">${head}${oracleBody(o.id)}</section>`;
+  return `<section class="view h-${o.id}">${head}${oracleBody(o.id)}</section>`;
 }
 function oracleBody(id){
   const p = S.profile;
@@ -620,6 +913,78 @@ function compatResult(res){
   </div>`;
 }
 
+/* ---------- Vue : Grimoire ---------- */
+const GSUITS = [['m','Majeurs'],['w','Bâtons'],['c','Coupes'],['s','Épées'],['p','Deniers']];
+const SHORT_RANK = ['As','2','3','4','5','6','7','8','9','10','Valet','Cavalier','Reine','Roi'];
+const seenCount = ids => ids.filter(c => S.seen[c.id]).length;
+function grimLink(){
+  const n = seenCount(DECK78), pct = Math.round(n / 78 * 100);
+  return `<button class="frame-plain grim-link h-rune" data-act="go" data-go='["grimoire"]'>
+    <span class="gl-ico" aria-hidden="true">✦</span>
+    <span class="grow"><b>Mon grimoire</b><span class="small muted">${n} carte${n > 1 ? 's' : ''} sur 78 découvertes</span><span class="track"><i style="width:${pct}%"></i></span></span>
+    <span aria-hidden="true" style="color:var(--gold)">›</span></button>`;
+}
+function vGrimoire(){
+  const k = UI.gsuit || 'm', cards = DECK78.filter(c => c.id[0] === k);
+  const nAll = seenCount(DECK78), nMaj = seenCount(DECK78.slice(0, 22)), nSuit = seenCount(cards);
+  return `<section class="view s-${k}">
+    ${topbar()}
+    <button class="back-link" data-act="go" data-go='["tarot"]'>${ICONS.back}Retour au tarot</button>
+    <div><div class="h-eyebrow">Votre collection</div><h1 class="h-title gold">Grimoire</h1></div>
+    <p class="small muted" style="margin:0">Chaque carte que vous tirez vient s'y ranger. Les 22 arcanes majeurs rapportent ${S.gm.majors ? '<b style="color:var(--ok)">✓ 100 points</b>' : '100 points'}, le jeu complet ${S.gm.all ? '<b style="color:var(--ok)">✓ 300 points</b>' : '300 points'}.</p>
+    <div class="gprog">
+      <div class="stat"><b>${nAll} / 78</b><span>cartes découvertes</span></div>
+      <div class="stat"><b>${nMaj} / 22</b><span>arcanes majeurs</span></div>
+    </div>
+    <div class="seg gsegs" role="group" aria-label="Famille de cartes">
+      ${GSUITS.map(([id, l]) => `<button data-act="gsuit" data-s="${id}" aria-pressed="${k === id}">${l}</button>`).join('')}
+    </div>
+    <div class="section-head"><h2>${k === 'm' ? 'Arcanes majeurs' : esc(SUITS[k].name)}</h2><span class="count">${nSuit} / ${cards.length}</span></div>
+    ${k !== 'm' && S.deck !== '78' ? `<p class="small muted" style="margin:-12px 0 0">Les arcanes mineurs n'apparaissent qu'avec le jeu de 78 cartes, à choisir dans l'onglet Tarot.</p>` : ''}
+    <div class="ggrid">${cards.map((c, i) => {
+      const e = S.seen[c.id], label = c.major ? c.num : SHORT_RANK[i];
+      return e
+        ? `<button class="gslot" data-act="card" data-card="${c.id}"><span class="gc"><img src="${cardImg(c.id)}" alt="" loading="lazy">${e.n > 1 ? `<span class="cnt">×${e.n}</span>` : ''}</span><span class="gn">${esc(c.name)}</span></button>`
+        : `<button class="gslot locked" data-act="glocked" aria-label="Carte pas encore découverte"><span class="gc">${backFace(S.back)}<span class="q">${label}</span></span><span class="gn">?</span></button>`;
+    }).join('')}</div>
+  </section>`;
+}
+function switchRow(k, title, sub, on){
+  return `<button class="sw-row" role="switch" aria-checked="${!!on}" data-act="toggle" data-k="${k}"><span class="grow"><b>${title}</b><span class="small muted">${sub}</span></span><i class="sw" aria-hidden="true"></i></button>`;
+}
+
+/* ---------- Crédits et mentions légales ---------- */
+const todo = v => v ? esc(v) : '<i class="muted">à compléter</i>';
+function legalLinks(){
+  return `<footer class="mini-foot"><button data-act="legal" data-t="credits">Crédits</button><span aria-hidden="true">·</span><button data-act="legal" data-t="mentions">Mentions légales</button><span aria-hidden="true">·</span><button data-act="privacy">Vos données</button></footer>`;
+}
+function legalSheet(t){
+  if (t === 'credits'){
+    openSheet(`<div class="legal-doc">
+      <div class="h-eyebrow">À propos</div><h2 class="h-title gold" style="font-size:22px;margin:0">Crédits</h2>
+      <dl>
+        <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
+        <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
+        <dt>Illustrations des cartes</dt><dd>Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Œuvre du domaine public.</dd>
+        <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
+        <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
+        <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
+      </dl>
+      <p class="small muted" style="margin:0">Madame Voyance est un divertissement : ses messages n'ont aucune valeur prédictive.</p></div>`);
+    return;
+  }
+  openSheet(`<div class="legal-doc">
+    <div class="h-eyebrow">Informations</div><h2 class="h-title gold" style="font-size:22px;margin:0">Mentions légales</h2>
+    <dl>
+      <dt>Éditeur</dt><dd>${todo(LEGAL.editeur)}, particulier<br>Contact : <span style="user-select:all">${todo(LEGAL.contact)}</span></dd>
+      <dt>Directeur de la publication</dt><dd>${todo(LEGAL.directeur)}</dd>
+      <dt>Hébergement</dt><dd>GitHub Pages, GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</dd>
+      <dt>Données personnelles</dt><dd>L'éditeur ne collecte aucune donnée. Prénom, date de naissance, points, journal, grimoire et préférences sont enregistrés uniquement dans le navigateur de votre appareil, sans compte, sans cookie et sans mesure d'audience. Vous pouvez tout effacer depuis l'onglet Profil. L'hébergeur et Google Fonts reçoivent l'adresse IP de l'appareil lors du chargement de la page, selon leurs propres politiques de confidentialité.</dd>
+      <dt>Nature du service</dt><dd>Application gratuite de divertissement. Les tirages, horoscopes et oracles ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.</dd>
+      <dt>Propriété intellectuelle</dt><dd>Textes, design et code © ${esc(LEGAL.annee)} ${LEGAL.editeur ? esc(LEGAL.editeur) : 'l\'éditeur'}. Illustrations des cartes : domaine public.</dd>
+    </dl></div>`);
+}
+
 /* ---------- Vue : Profil ---------- */
 function vProfil(){
   const p = S.profile, bp = birthParts(p.birth), z = ZODIAC[signIndex(bp.m, bp.d)];
@@ -639,11 +1004,11 @@ function vProfil(){
 
     <div class="frame-plain levelbar">
       <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">Niveau ${lv + 1} / ${LEVELS.length}</span></div>
-      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="track"><i data-lvbar style="width:${lvPct(shown)}%"></i></div>
       <div class="small muted">${next ? `${S.points} / ${next.p} points pour devenir ${esc(next.t)}` : `${S.points} points · niveau maximal atteint`}</div>
     </div>
     <div class="stats4">
-      <div class="stat"><b>${S.points}</b><span>points</span></div>
+      <div class="stat"><b data-pts>${shown}</b><span>points</span></div>
       <div class="stat"><b>${S.streak} j</b><span>série actuelle</span></div>
       <div class="stat"><b>${S.best} j</b><span>meilleure série</span></div>
       <div class="stat"><b>${S.rituals}</b><span>rituels accomplis</span></div>
@@ -655,6 +1020,16 @@ function vProfil(){
         return `<button class="back-opt" data-act="back" data-id="${bk.id}" aria-pressed="${S.back === bk.id}" ${locked ? `disabled data-lvl="${bk.lvl + 1}"` : ''}>
           <span class="mini" ${locked ? `data-lvl="${bk.lvl + 1}"` : ''}>${backFace(bk.id)}</span><span>${bk.n}</span></button>`;
       }).join('')}</div>
+    </section>
+
+    ${grimLink()}
+
+    <section class="stack"><div class="section-head"><h2>Ambiance</h2></div>
+      <div class="frame-plain stack">
+        ${switchRow('sound', 'Sons doux', 'Bol tibétain, carillon et souffle', S.sound && !S.zen)}
+        ${switchRow('zen', 'Mode zen', 'Coupe les animations, les sons et les vibrations', S.zen)}
+        ${tiltSupported ? switchRow('tilt', 'Effet de profondeur', 'Le ciel bouge quand vous inclinez le téléphone', S.tilt && !S.zen) : ''}
+      </div>
     </section>
 
     <section class="stack"><div class="section-head"><h2>Journal des cartes</h2><span class="count">${S.journal.length} tirage${S.journal.length > 1 ? 's' : ''}</span></div>
@@ -681,6 +1056,12 @@ function vProfil(){
           ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer prénom, date, points et journal ? Cette action est définitive.</p>
               <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Tout effacer</button></div></div>`
           : `<button class="btn btn-danger btn-wide" data-act="erase">Effacer toutes mes données</button>`}
+        <div class="legal-box">
+          <div class="h-eyebrow">Informations légales</div>
+          <p class="small muted" style="margin:0">Aucun compte, aucun cookie, aucune mesure d'audience. Le site est hébergé par GitHub Pages et les polices viennent de Google Fonts : ces deux services voient l'adresse IP de votre appareil quand la page se charge, comme pour tout site web.</p>
+          <button class="legal-row" data-act="legal" data-t="mentions"><span>Mentions légales</span><span aria-hidden="true">›</span></button>
+          <button class="legal-row" data-act="legal" data-t="credits"><span>Crédits</span><span aria-hidden="true">›</span></button>
+        </div>
       </div>
     </section>
     <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public.</p>
@@ -696,7 +1077,7 @@ const PRIVACY = `
     <li><span><b>Votre prénom</b>, pour vous saluer et personnaliser les tirages.</span></li>
     <li><span><b>Votre date de naissance</b>, pour votre signe, votre signe chinois et votre numérologie.</span></li>
     <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
-    <li><span><b>Le journal de vos cartes du jour</b> et vos préférences (jeu, dos de carte).</span></li>
+    <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
   <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule et les dates saisies pour la compatibilité ne sont pas conservées.</p>
   <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
@@ -736,6 +1117,7 @@ function validateProfile(form){
 
 /* ---------- Fenêtres ---------- */
 function openSheet(html){
+  Snd.whoosh(.04);
   $('#sheet-root').innerHTML = `<div class="sheet-back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${html}<button class="btn btn-ghost btn-wide" data-act="close">Fermer</button></div></div>`;
 }
 function closeSheet(){ $('#sheet-root').innerHTML = ''; }
@@ -748,17 +1130,29 @@ function cardSheet(id){
 }
 function levelUp(lv){
   const unlock = BACKS.find(b => b.lvl === lv);
-  openSheet(`<div class="stack levelup"><div class="glyph-orb"><span class="num">${lv + 1}</span></div>
-    <div class="h-eyebrow">Nouveau niveau</div><h2 class="h-title gold">${esc(LEVELS[lv].t)}</h2>
-    ${unlock ? `<p class="lead" style="margin:0">Vous débloquez le dos de cartes « ${unlock.n} ». Choisissez-le dans votre profil.</p>` : `<p class="lead" style="margin:0">Les étoiles saluent votre fidélité.</p>`}</div>`);
-  setTimeout(() => sparkle(innerWidth / 2, innerHeight * .55, 60, 1.6), 200);
+  const old = document.querySelector('.lvl-ov'); if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'lvl-ov h-tarot'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Nouveau niveau');
+  el.innerHTML = `<div class="rays" aria-hidden="true"></div><div class="lvl-in">
+    <div class="h-eyebrow">Nouveau niveau</div>
+    <div class="glyph-orb lvl-orb"><span class="num">${lv + 1}</span></div>
+    <h2 class="h-title gold">${esc(LEVELS[lv].t)}</h2>
+    ${unlock ? `<div class="lvl-back"><span class="mini">${backFace(unlock.id)}</span><span class="small" style="text-align:left">Dos de cartes « ${esc(unlock.n)} » débloqué.<br><span class="muted">Choisissez-le dans votre profil.</span></span></div>`
+             : `<p class="lead" style="margin:0">Les étoiles saluent votre fidélité.</p>`}
+    <button class="btn btn-gold" data-act="lvl-close">Continuer</button></div>`;
+  document.body.appendChild(el);
+  el.querySelector('[data-act="lvl-close"]').focus({preventScroll: true});
+  Snd.bowl(146.8, .24); setTimeout(() => Snd.chime(), 350); buzz([30, 60, 30, 60, 90]);
+  setTimeout(() => { const o = el.querySelector('.lvl-orb'); if (o){ const b = o.getBoundingClientRect(); ringAt(b.left + b.width / 2, b.top + b.height / 2, 220, '#ffe6a8', 4); sparkleAt(o, 70, 1.9); } }, 260);
+  starRain(2600);
 }
 function breathe(){
   const el = document.createElement('div'); el.className = 'breathe';
   el.innerHTML = `<div class="orb"></div><p id="bt">Inspirez…</p><button class="btn btn-ghost" id="bstop">Terminer</button>`;
   document.body.appendChild(el);
   let t = 0; const bt = el.querySelector('#bt');
-  const iv = setInterval(() => { t++; bt.textContent = t % 2 ? 'Expirez…' : 'Inspirez…'; if (t >= 4) end(); }, 4000);
+  Snd.bowl(196, .16);
+  const iv = setInterval(() => { t++; bt.textContent = t % 2 ? 'Expirez…' : 'Inspirez…'; if (t >= 4) end(); else Snd.bowl(t % 2 ? 164.8 : 196, .13); }, 4000);
   function end(){ clearInterval(iv); el.remove(); if (award('pensee')) sparkle(innerWidth / 2, innerHeight * .4, 40, 1.4); render(); }
   el.querySelector('#bstop').addEventListener('click', end);
   el.querySelector('#bstop').focus();
@@ -788,9 +1182,9 @@ function render(){
   if (!S.consent){ showOnboarding(1); return; }
   if (!S.profile){ showOnboarding(2); return; }
   $('#onboard').hidden = true; $('#onboard-in').innerHTML = ''; $('#app').hidden = false; $('#nav').hidden = false;
-  const v = UI.view;
-  $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : vAccueil();
-  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === v ? 'page' : 'false'));
+  const v = UI.view, navV = v === 'grimoire' ? 'tarot' : v;
+  $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : v === 'grimoire' ? vGrimoire() : vAccueil();
+  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === navV ? 'page' : 'false'));
 }
 function go(view, sub, keepScroll){
   if (view === 'tarot' && sub){ if (UI.tarot !== sub) UI.flips = new Set(); UI.tarot = sub; }
@@ -802,11 +1196,83 @@ function go(view, sub, keepScroll){
 }
 function fromHash(){
   const h = location.hash.slice(1);
-  if (VIEWS.includes(h) && h !== UI.view){ if (h === 'oracles') UI.oracle = null; UI.view = h; UI.confirmErase = false; render(); window.scrollTo(0, 0); }
+  if (ROUTES.includes(h) && h !== UI.view){ if (h === 'oracles') UI.oracle = null; UI.view = h; UI.confirmErase = false; render(); window.scrollTo(0, 0); }
+}
+
+/* ---------- Tirage : charger la carte, puis la révéler ---------- */
+function flipTarot(el){
+  const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
+  UI.flips.add(i); el.classList.add('flipped');
+  el.setAttribute('aria-label', CARD[el.dataset.card].name);
+  if (UI.flips.size >= n && !isDone(id)){
+    const cards = drawSpread(n);
+    S.today.draws[n] = cards.map(c => c.id);
+    if (n === 1){ S.journal.push({d: dk(), id: cards[0].id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120); }
+    recordSeen(cards.map(c => c.id));
+    award(id);
+    setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: calm() ? 'auto' : 'smooth', block:'start'}); }, calm() ? 0 : 1200);
+  }
+}
+function flipHome(el){
+  el.classList.add('flipped');
+  const c = drawSpread(1)[0];
+  S.today.draws[1] = [c.id];
+  S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
+  recordSeen([c.id]);
+  award('tarot1');
+  setTimeout(render, calm() ? 0 : 1200);
+}
+function doFlip(el){ if (el.dataset.act === 'homeflip') flipHome(el); else flipTarot(el); }
+function revealFx(el){
+  const b = el.getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2, m = Math.max(b.width, b.height);
+  lastTap = {x: cx, y: cy, t: performance.now()};
+  if (calm()) return;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 850);
+  flashAt(cx, cy);
+  ringAt(cx, cy, m * 1.2, '#ffe6a8', 4); setTimeout(() => ringAt(cx, cy, m * 1.9, '#c9a8ff', 3), 120); setTimeout(() => ringAt(cx, cy, m * 2.6, '#8fe9ff', 2), 240);
+  setTimeout(() => sparkle(cx, cy, 56, 1.7), 300);
+  Snd.chime(); Snd.bowl(174.6, .15); buzz([18, 40, 70]);
+}
+let chg = null, eatClick = false, downAt = null;
+function chargeK(c, now){ return c.rel == null ? Math.min(1, (now - c.t0) / c.full) : Math.min(1, c.k0 + (now - c.rel) / c.rest * (1 - c.k0)); }
+function startCharge(el, quick){
+  if (chg || el.classList.contains('flipped')) return;
+  if (calm()){ revealFx(el); doFlip(el); return; }
+  const now = performance.now();
+  const c = chg = {el, t0: now, full: 1400, rel: quick ? now : null, k0: 0, rest: 650, down: !quick};
+  el.classList.add('charging');
+  Snd.riser(quick ? .65 : 1.4); buzz(12);
+  const step = t => {
+    if (chg !== c) return;
+    const k = chargeK(c, t);
+    el.style.setProperty('--charge', k.toFixed(3));
+    const b = el.getBoundingClientRect();
+    if (Math.random() < .55 + k * .45) suck(b.left + b.width / 2, b.top + b.height / 2, Math.max(b.width, b.height) * .8, k);
+    if (k >= 1) finishCharge(c); else requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function releaseCharge(){
+  const c = chg; if (!c || !c.down) return;
+  c.down = false;
+  if (c.rel == null){ const now = performance.now(); c.k0 = chargeK(c, now); c.rel = now; c.rest = 450; }
+}
+function abortCharge(){
+  const c = chg; if (!c) return;
+  chg = null; c.el.classList.remove('charging'); c.el.style.removeProperty('--charge'); Snd.stopRiser();
+}
+function finishCharge(c){
+  chg = null;
+  const el = c.el;
+  el.classList.remove('charging'); el.style.removeProperty('--charge'); Snd.stopRiser();
+  if (c.down) eatClick = true;
+  revealFx(el);
+  doFlip(el);
 }
 
 /* ---------- Actions ---------- */
 document.addEventListener('click', e => {
+  if (eatClick){ eatClick = false; if (e.target.closest('.tcard')){ e.preventDefault(); return; } }
   const navA = e.target.closest('.nav a');
   if (navA && navA.dataset.v === UI.view){ e.preventDefault(); if (UI.view === 'oracles') UI.oracle = null; render(); window.scrollTo(0, 0); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
@@ -819,53 +1285,50 @@ document.addEventListener('click', e => {
     case 'deck':
       if (S.today.draws[UI.tarot]){ toast('Le tirage du jour est déjà fixé'); break; }
       S.deck = el.dataset.deck; UI.flips = new Set(); save(); render(); break;
-    case 'flip': {
-      const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
-      if (el.classList.contains('flipped')){ cardSheet(el.dataset.card); break; }
-      UI.flips.add(i); el.classList.add('flipped');
-      el.setAttribute('aria-label', CARD[el.dataset.card].name);
-      setTimeout(() => sparkleAt(el, 22, 1.1), reduceMotion ? 0 : 380);
-      if (UI.flips.size >= n && !isDone(id)){
-        const cards = drawSpread(n);
-        S.today.draws[n] = cards.map(c => c.id);
-        if (n === 1){ S.journal.push({d: dk(), id: cards[0].id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120); }
-        award(id);
-        setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'}); }, reduceMotion ? 0 : 1000);
-      }
-      break;
-    }
-    case 'homeflip': {
-      if (isDone('tarot1')){ cardSheet(el.dataset.card); break; }
-      el.classList.add('flipped');
-      setTimeout(() => sparkleAt(el, 26, 1.2), reduceMotion ? 0 : 380);
-      const c = drawSpread(1)[0];
-      S.today.draws[1] = [c.id];
-      S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
-      award('tarot1');
-      setTimeout(render, reduceMotion ? 0 : 1000);
+    case 'flip': case 'homeflip': {
+      if (el.classList.contains('flipped') || (act === 'homeflip' && isDone('tarot1'))){ cardSheet(el.dataset.card); break; }
+      if (!chg) startCharge(el, true);
       break;
     }
     case 'card': cardSheet(el.dataset.card); break;
     case 'amode': UI.astres = el.dataset.m; render(); break;
     case 'sign': {
       const i = +el.dataset.i, z = ZODIAC[i];
-      openSheet(`<div class="sign-hero"><div class="glyph-orb"><span>${z.g}${VS}</span></div><h2 class="h-title gold" style="font-size:24px">${z.n}</h2><div class="small muted">${z.d} · ${z.el}</div></div>${horoBlock(i)}`);
+      openSheet(`<div class="h-horo stack"><div class="sign-hero"><div class="glyph-orb"><span>${z.g}${VS}</span></div><h2 class="h-title gold" style="font-size:24px">${z.n}</h2><div class="small muted">${z.d} · ${z.el}</div></div><figure class="constel-box" style="padding:0">${constellation(i)}</figure>${horoBlock(i)}</div>`);
       break;
     }
     case 'reveal': {
-      const id = el.dataset.id, rect = el.getBoundingClientRect();
-      if (award(id)) sparkle(rect.left + rect.width / 2, rect.top + rect.height / 2, 34, 1.3);
+      const id = el.dataset.id, rect = el.getBoundingClientRect(), cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      if (award(id)){ sparkle(cx, cy, 40, 1.4); ringAt(cx, cy, Math.max(rect.width, 120), '#ffe6a8'); if (id === 'rune') Snd.bowl(130.8, .22); else Snd.chime(); buzz(25); }
       render(); break;
     }
+    case 'sound':
+      if (S.zen){ toast('Le mode zen coupe les sons. Désactivez-le dans le profil.'); break; }
+      S.sound = !S.sound; save(); render(); if (S.sound){ Snd.unlock(); Snd.ding(); } break;
+    case 'toggle': {
+      const k = el.dataset.k;
+      if (k === 'sound' && S.zen){ S.zen = false; S.sound = true; }
+      else if (k === 'tilt' && S.zen){ S.zen = false; S.tilt = true; }
+      else S[k] = !S[k];
+      applyZen(); save();
+      if (k === 'tilt'){ if (S.tilt) enableTilt(true); else { tX = tY = 0; } }
+      if (k === 'sound' && S.sound){ Snd.unlock(); Snd.ding(); }
+      if (k === 'zen' && !S.zen){ sparkleAt(el, 30, 1.2); Snd.chime(); }
+      render(); break;
+    }
+    case 'lvl-close': { const o = el.closest('.lvl-ov'); if (o) o.remove(); break; }
+    case 'gsuit': UI.gsuit = el.dataset.s; render(); break;
+    case 'glocked': toast('Cette carte ne s\'est pas encore montrée à vous'); break;
     case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
+    case 'legal': legalSheet(el.dataset.t); break;
     case 'privacy': openSheet(`<div class="stack">${PRIVACY}</div>`); break;
     case 'erase': UI.confirmErase = true; render(); break;
     case 'erase-no': UI.confirmErase = false; render(); break;
     case 'erase-yes':
       try { localStorage.removeItem(KEY); } catch (err) {}
-      S = defaultState(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
+      S = defaultState(); shown = 0; applyZen(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
     case 'install': installApp(); break;
     case 'install-hide': S.installHide = true; save(); render(); break;
     case 'close': closeSheet(); break;
@@ -889,14 +1352,14 @@ document.addEventListener('submit', e => {
     if (!q){ $('#q-err').textContent = 'Écrivez une question à laquelle on peut répondre par oui ou non.'; return; }
     const norm = q.toLowerCase().replace(/\s+/g, ' ');
     const r = pick(rngFrom(userKey() + '|' + dk() + '|pendule|' + norm), PENDULUM);
-    UI.pendulum = {q, a: r.a, d: r.d, swinging: !reduceMotion};
+    UI.pendulum = {q, a: r.a, d: r.d, swinging: !calm()};
     render();
     setTimeout(() => {
       if (!UI.pendulum || UI.pendulum.q !== q) return;
       UI.pendulum.swinging = false;
       award('pendule'); render();
-      const ans = document.querySelector('.answer'); if (ans) sparkleAt(ans, 30, 1.2);
-    }, reduceMotion ? 0 : 2800);
+      const ans = document.querySelector('.answer'); if (ans){ sparkleAt(ans, 36, 1.3); Snd.chime(); buzz(25); }
+    }, calm() ? 0 : 2800);
     return;
   }
   if (kind === 'compat'){
@@ -904,13 +1367,48 @@ document.addEventListener('submit', e => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(b) || b < '1900-01-01' || b > dk()){ $('#cb-err').textContent = 'Choisissez une date de naissance valide.'; return; }
     UI.compat = {name: f.cn.value.trim().slice(0, 30), birth: b};
     award('compat'); render();
-    const ring = document.querySelector('.ring'); if (ring){ ring.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'center'}); setTimeout(() => sparkleAt(ring, 34, 1.3), 300); }
+    const ring = document.querySelector('.ring'); if (ring){ ring.scrollIntoView({behavior: calm() ? 'auto' : 'smooth', block:'center'}); setTimeout(() => { sparkleAt(ring, 40, 1.4, ['#ff9ad5','#ffc0a8','#fbe2a0','#fff3d6']); Snd.chime(); }, 300); }
   }
 });
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG'){ const f = t.closest('.face'); if (f) f.classList.add('noimg'); else t.style.visibility = 'hidden'; } }, true);
-document.addEventListener('pointerdown', e => { if (e.target.closest('.btn, .rit, .tile, .seg button, .signs button')) sparkle(e.clientX, e.clientY, 7, .6); });
+const TOUCHY = '.btn, .tile, .seg button, .signs button, .explore-links button, .read-row, .gslot, .grim-link, .sw-row, .snd, .back-opt';
+const RIPPLE = '.btn, .seg button, .signs button, .explore-links button';
+const SKY_SKIP = 'button, a, input, label, form, .frame, .frame-plain, .tile, .dtile, .sheet, .nav, .stat, .tcard, .lvl-ov, .breathe, .overlay .frame';
+document.addEventListener('pointerdown', e => {
+  eatClick = false;
+  lastTap = {x: e.clientX, y: e.clientY, t: performance.now()};
+  if (S.sound && !S.zen) Snd.unlock();
+  const card = e.target.closest('.tcard');
+  if (card && !card.classList.contains('flipped') && e.button === 0 && !(card.dataset.act === 'homeflip' && isDone('tarot1'))){
+    downAt = {x: e.clientX, y: e.clientY, id: e.pointerId};
+    startCharge(card, false);
+    return;
+  }
+  const t = e.target.closest(TOUCHY);
+  if (t){
+    sparkle(e.clientX, e.clientY, 7, .6);
+    if (!calm() && t.matches(RIPPLE)){
+      const b = t.getBoundingClientRect(), d = Math.max(b.width, b.height) * 2.4, r = document.createElement('span');
+      r.className = 'ripple'; r.style.width = r.style.height = d + 'px'; r.style.left = (e.clientX - b.left) + 'px'; r.style.top = (e.clientY - b.top) + 'px';
+      t.appendChild(r); setTimeout(() => r.remove(), 700);
+    }
+    return;
+  }
+  if (!e.target.closest(SKY_SKIP)){ sparkle(e.clientX, e.clientY, 16, .9); Snd.twinkle(); }
+});
+document.addEventListener('pointermove', e => {
+  if (chg && chg.down && downAt && e.pointerId === downAt.id && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 14) abortCharge();
+  if (e.pointerType === 'mouse' && S.tilt && !calm()){ tX = (e.clientX / W - .5) * 1.2; tY = (e.clientY / H - .5) * 1.2; }
+});
+document.addEventListener('pointerup', e => {
+  releaseCharge(); downAt = null;
+  if (!calm()){ const t = e.target.closest(TOUCHY); if (t){ t.classList.remove('boing'); void t.offsetWidth; t.classList.add('boing'); setTimeout(() => t.classList.remove('boing'), 520); } }
+  if (motionNeedsPermission && S.tilt && !tiltOn && !tiltAsked){ tiltAsked = true; enableTilt(true); }
+});
+document.addEventListener('pointercancel', () => { abortCharge(); downAt = null; });
+document.addEventListener('contextmenu', e => { if (e.target.closest('.tcard')) e.preventDefault(); });
 window.addEventListener('hashchange', fromHash);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.profile && S.today.d !== dk()){ UI.flips = new Set(); checkIn(); render(); } });
 window.addEventListener('resize', resize);
@@ -918,9 +1416,12 @@ window.addEventListener('resize', resize);
 /* ---------- Démarrage ---------- */
 $('#nav').innerHTML = `<div class="nav-in">${VIEWS.map(v => `<a href="#${v}" data-v="${v}">${ICONS[v]}<span>${NAV_LABELS[v]}</span></a>`).join('')}</div>`;
 resize();
-if (!reduceMotion) requestAnimationFrame(skyLoop);
+setTod(); setInterval(setTod, 5 * 60 * 1000);
+applyZen();
+requestAnimationFrame(skyLoop);
+enableTilt(false);
 const h0 = location.hash.slice(1);
-if (VIEWS.includes(h0)) UI.view = h0;
+if (ROUTES.includes(h0)) UI.view = h0;
 if (S.consent && S.profile) checkIn();
 function installBonus(){ if (standalone() && S.profile && !S.installBonus){ S.installBonus = true; gain(50, 'Application installée'); save(); } }
 installBonus();

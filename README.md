@@ -10,9 +10,10 @@ L'application est installable sur l'écran d'accueil (iPhone et Android) et fonc
 
 | Dossier | Contenu |
 |---|---|
-| `src/data.js` | Tous les textes : arcanes, horoscopes, runes, pierres, pensées, niveaux, points |
+| `src/data.js` | Tous les textes : arcanes, horoscopes, runes, pierres, pensées, niveaux, points, constellations, mentions légales (`LEGAL`) |
 | `src/app.js` | Logique de l'application |
 | `src/head.html` | Styles et polices |
+| `src/fx.css` | Couleurs par rituel, ciel vivant, animations, mode zen |
 | `cards/` | Illustrations des 78 cartes (`m00`–`m21`, puis `w`, `c`, `s`, `p` + `01`–`14`) |
 | `icons/` | Icône de l'application |
 | `build.py` | Assemble le site dans `docs/` |

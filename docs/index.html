@@ -351,23 +351,286 @@ input{font:inherit;color:inherit}
 .foot-icon{border-radius:22%;opacity:.85;margin-bottom:6px}
 .levelup .h-title{font-size:28px}
 
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
-  .breathe .orb{transform:scale(.9)}
-}
 @media (min-width:600px){
   .rituals{grid-template-columns:repeat(3,1fr)}
 }
 </style>
+<style>
+/* ============ AMBIANCE « JUICY » : couleurs, ciel vivant, effets ============
+   Chaque rituel a sa paire de couleurs (--ha saturée, --hb claire).
+   Le ciel suit l'heure (data-tod sur <html>). Le mode zen (classe .zen) coupe tout mouvement. */
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --sky-top{syntax:'<color>';inherits:true;initial-value:#0a0616}
+@property --sky-bot{syntax:'<color>';inherits:true;initial-value:#140b2b}
+@property --neb-a{syntax:'<color>';inherits:true;initial-value:rgba(120,70,220,.4)}
+@property --neb-b{syntax:'<color>';inherits:true;initial-value:rgba(200,60,170,.24)}
+@property --neb-c{syntax:'<color>';inherits:true;initial-value:rgba(50,90,200,.3)}
+
+:root{
+  --ha:#8b5cff; --hb:#ffd27a;
+  --rose:#ff9ad5; --cyan:#8fe9ff; --pearl:#fff3d6;
+  --sky-top:#0a0616; --sky-bot:#140b2b;
+  --neb-a:rgba(120,70,220,.40); --neb-b:rgba(200,60,170,.24); --neb-c:rgba(50,90,200,.30);
+  transition:--sky-top 4s ease,--sky-bot 4s ease,--neb-a 4s ease,--neb-b 4s ease,--neb-c 4s ease;
+}
+html[data-tod="aube"]{--sky-top:#1c1036;--sky-bot:#3b1b42;--neb-a:rgba(255,140,170,.36);--neb-b:rgba(255,190,130,.26);--neb-c:rgba(150,100,230,.34)}
+html[data-tod="jour"]{--sky-top:#1a1646;--sky-bot:#2a2263;--neb-a:rgba(170,140,255,.40);--neb-b:rgba(110,190,255,.24);--neb-c:rgba(230,150,255,.28)}
+html[data-tod="crepuscule"]{--sky-top:#150b2e;--sky-bot:#3b1236;--neb-a:rgba(255,120,80,.30);--neb-b:rgba(235,70,160,.32);--neb-c:rgba(120,60,210,.36)}
+html[data-tod="nuit"]{--sky-top:#0a0616;--sky-bot:#150b2e;--neb-a:rgba(120,70,220,.42);--neb-b:rgba(200,60,170,.24);--neb-c:rgba(40,90,210,.32)}
+
+/* Couleurs par rituel */
+.h-tarot{--ha:#8b5cff;--hb:#ffd27a}
+.h-horo{--ha:#2f6bff;--hb:#7fe6ff}
+.h-chinois{--ha:#e0405a;--hb:#ffc861}
+.h-lune{--ha:#8796ff;--hb:#eef0ff}
+.h-numero{--ha:#ff4fa6;--hb:#ffb6e2}
+.h-rune{--ha:#14a374;--hb:#9cf0c4}
+.h-pierre{--ha:#ff8a4c;--hb:#ffd9a8}
+.h-pendule{--ha:#1fb8ae;--hb:#b9fff6}
+.h-compat{--ha:#ff5f86;--hb:#ffc0a8}
+.h-pensee{--ha:#a77dff;--hb:#fbe9b7}
+.s-m{--ha:#8b5cff;--hb:#ffd27a}
+.s-w{--ha:#ff6a2b;--hb:#ffd08a}
+.s-c{--ha:#2f74ff;--hb:#9fd8ff}
+.s-s{--ha:#5aa9d6;--hb:#e4f4ff}
+.s-p{--ha:#22a865;--hb:#ffd76a}
+
+/* ---- Ciel vivant ---- */
+.nebula{position:fixed;inset:-6%;z-index:0;pointer-events:none;overflow:hidden;
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-bot) 100%);
+  transform:translate3d(calc(var(--tx,0) * -12px),calc(var(--ty,0) * -12px),0)}
+.nb{position:absolute;border-radius:50%;will-change:transform}
+.n1{width:95vmax;height:75vmax;left:-30vmax;top:-25vmax;background:radial-gradient(closest-side,var(--neb-a),transparent);animation:drift1 70s ease-in-out infinite alternate}
+.n2{width:85vmax;height:70vmax;right:-35vmax;top:22vh;background:radial-gradient(closest-side,var(--neb-b),transparent);animation:drift2 90s ease-in-out infinite alternate}
+.n3{width:110vmax;height:75vmax;left:-15vmax;bottom:-40vmax;background:radial-gradient(closest-side,var(--neb-c),transparent);animation:drift3 80s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(16vmax,12vmax) scale(1.18)}}
+@keyframes drift2{to{transform:translate(-18vmax,-8vmax) scale(1.1)}}
+@keyframes drift3{to{transform:translate(10vmax,-14vmax) scale(1.2)}}
+.aurora{position:absolute;left:-25%;right:-25%;top:4%;height:40vh;opacity:0;mix-blend-mode:screen;filter:blur(20px);
+  background:linear-gradient(100deg,transparent 12%,rgba(90,255,200,.18) 32%,rgba(140,120,255,.2) 50%,rgba(255,110,200,.16) 66%,transparent 86%);
+  transform:skewY(-9deg) translateX(-10%);animation:aurora 48s ease-in-out infinite}
+@keyframes aurora{0%,58%{opacity:0;transform:skewY(-9deg) translateX(-10%)}70%{opacity:1}84%{opacity:.75;transform:skewY(-5deg) translateX(8%)}100%{opacity:0;transform:skewY(-4deg) translateX(14%)}}
+#fx{z-index:90}
+
+/* ---- Or holographique ---- */
+.gold{background:
+    linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 45%,rgba(90,40,0,.22)),
+    linear-gradient(100deg,var(--gold-lo) 0%,var(--gold) 16%,var(--gold-hi) 30%,#fff7e6 38%,#ffc6ec 45%,#bfe8ff 52%,var(--gold-hi) 60%,var(--gold) 76%,var(--gold-lo) 100%);
+  background-size:100% 100%,280% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px var(--violet-glow));animation:holo 7s ease-in-out infinite alternate}
+@keyframes holo{from{background-position:0 0,0% 0}to{background-position:0 0,100% 0}}
+
+/* ---- Cadres précieux ---- */
+.frame{box-shadow:0 0 0 4px rgba(10,6,22,.55),0 0 0 5px var(--gold-faint),0 18px 50px -18px color-mix(in srgb,var(--ha) 70%,transparent),0 0 60px -30px color-mix(in srgb,var(--hb) 60%,transparent)}
+.frame::before{z-index:3}
+.frame::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;z-index:2;
+  background:conic-gradient(from var(--ang),var(--gold-lo),var(--gold-hi) 10%,var(--gold) 20%,color-mix(in srgb,var(--ha) 75%,#fff) 32%,var(--gold-lo) 44%,var(--gold-hi) 58%,color-mix(in srgb,var(--hb) 85%,#fff) 70%,var(--gold) 84%,var(--gold-lo));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  animation:ring-spin 10s linear infinite}
+@keyframes ring-spin{to{--ang:360deg}}
+.gemc{position:absolute;width:9px;height:9px;z-index:3;pointer-events:none;transform:rotate(45deg);border-radius:2px;
+  background:linear-gradient(135deg,#fff 0%,color-mix(in srgb,var(--hb) 70%,#fff) 22%,var(--ha) 60%,#26104a 100%);
+  box-shadow:0 0 0 1px var(--gold),0 0 10px color-mix(in srgb,var(--ha) 90%,transparent);animation:gem-tw 4.5s ease-in-out infinite}
+.gemc.tl{top:1px;left:1px}.gemc.tr{top:1px;right:1px;animation-delay:-1.1s}.gemc.bl{bottom:1px;left:1px;animation-delay:-2.2s}.gemc.br{bottom:1px;right:1px;animation-delay:-3.3s}
+@keyframes gem-tw{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7) saturate(1.3)}}
+
+/* ---- Tuiles colorées (vitraux) ---- */
+.hue-tile{border-color:color-mix(in srgb,var(--hb) 42%,transparent);
+  background:radial-gradient(130% 100% at 0% 0%,color-mix(in srgb,var(--ha) 58%,transparent) 0%,transparent 58%),
+    radial-gradient(110% 90% at 100% 100%,color-mix(in srgb,var(--hb) 24%,transparent),transparent 62%),
+    linear-gradient(170deg,rgba(40,24,80,.82),rgba(16,9,36,.9));
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 16px 40px -22px var(--ha)}
+.hue-tile:hover{border-color:color-mix(in srgb,var(--hb) 70%,transparent);box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 0 28px -8px var(--ha)}
+.hue-tile::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);transform:translateX(-130%);animation:sheen 8s ease-in-out infinite;animation-delay:var(--d,0s)}
+@keyframes sheen{0%,70%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.hue-tile .tg{background:linear-gradient(160deg,#fff,var(--hb) 45%,color-mix(in srgb,var(--ha) 60%,#fff));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 10px var(--ha))}
+.hue-tile .tn{color:#fff6e4}
+.hue-tile .badge{background:color-mix(in srgb,var(--ha) 35%,transparent);color:#fff}
+.hue-tile .badge.ok{background:rgba(168,232,195,.18);color:var(--ok)}
+.dtile.hue-tile{position:relative;overflow:visible}
+.dtile.hue-tile::after{display:none}
+
+/* Éléments teintés par la couleur du rituel */
+.glyph-orb{background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--ha) 62%,transparent),rgba(20,11,43,.45) 72%);
+  box-shadow:0 0 0 6px rgba(10,6,22,.5),0 0 0 7px color-mix(in srgb,var(--hb) 30%,transparent),0 0 44px -4px var(--ha)}
+.glyph-orb span{text-shadow:0 0 18px var(--ha),0 0 2px #fff}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,color-mix(in srgb,var(--ha) 55%,transparent),color-mix(in srgb,var(--ha) 22%,transparent));box-shadow:0 0 0 1px color-mix(in srgb,var(--hb) 55%,transparent) inset,0 0 18px -4px var(--ha);color:#fff6e4}
+.tip{background:color-mix(in srgb,var(--ha) 18%,transparent);border-color:color-mix(in srgb,var(--ha) 45%,transparent)}
+.pos{color:color-mix(in srgb,var(--ha) 40%,#fff)}
+.explore-links button{border-color:color-mix(in srgb,var(--hb) 35%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--ha) 34%,transparent),rgba(20,11,43,.6));color:#f4ecff}
+.horo-item.amour b,.horo-item.amour .stars{color:#ff9ac4}
+.horo-item.travail b,.horo-item.travail .stars{color:#ffd27a}
+.horo-item.energie b,.horo-item.energie .stars{color:#8fe9ff}
+.horo-item .stars .off{color:rgba(255,255,255,.18)}
+.track{height:10px;background:rgba(255,255,255,.07)}
+.track i{position:relative;overflow:hidden;background:linear-gradient(90deg,#8b5cff,#ff6fb5 50%,var(--gold-hi));box-shadow:0 0 14px rgba(255,111,181,.5);transition:width .2s linear}
+.track i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:sheen-bar 2.6s ease-in-out infinite}
+@keyframes sheen-bar{0%,40%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* Barre d'onglets : une couleur par onglet */
+.nav a[data-v="accueil"]{--nc:#ffd27a}.nav a[data-v="tarot"]{--nc:#c9a8ff}.nav a[data-v="astres"]{--nc:#7fe6ff}.nav a[data-v="oracles"]{--nc:#ff9ad5}.nav a[data-v="profil"]{--nc:#9cf0c4}
+.nav a{position:relative}
+.nav a[aria-current="page"]{color:var(--nc)}
+.nav a[aria-current="page"] svg{filter:drop-shadow(0 0 8px var(--nc)) drop-shadow(0 0 2px #fff8)}
+.nav a[aria-current="page"]::after{content:"";position:absolute;bottom:1px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--nc);box-shadow:0 0 8px var(--nc)}
+
+/* ---- Barre du haut : son et points ---- */
+.tb-right{display:flex;align-items:center;gap:8px}
+.snd{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--gold-faint);background:rgba(20,11,43,.7);color:var(--gold-hi)}
+.snd svg{width:18px;height:18px}
+.snd[aria-pressed="false"]{color:var(--dim)}
+.chip svg.mmini{width:14px;height:14px}
+.chip.bump{animation:bump .55s cubic-bezier(.3,1.8,.5,1)}
+@keyframes bump{0%{scale:1}35%{scale:1.22}100%{scale:1}}
+
+/* ---- Toucher : onde dorée et rebond ---- */
+.btn,.seg button,.explore-links button,.signs button{position:relative;overflow:hidden;isolation:isolate}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:-1;transform:translate(-50%,-50%) scale(0);
+  background:radial-gradient(circle,rgba(255,240,200,.6),rgba(255,200,240,.25) 45%,rgba(255,240,200,0) 70%);animation:ripple .65s ease-out forwards}
+.btn-gold .ripple{background:radial-gradient(circle,rgba(255,255,255,.85),rgba(255,255,255,0) 70%)}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.btn:active,.seg button:active,.explore-links button:active,.signs button:active{transform:none;scale:1.04 .9}
+.tile:active,.read-row:active,.gslot:active{scale:.97}
+.boing{animation:boing .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes boing{0%{scale:1.04 .9}35%{scale:.95 1.07}65%{scale:1.02 .98}100%{scale:1 1}}
+
+/* ---- Cartes : charge, révélation ---- */
+.spread{max-width:100%}
+#app{overflow-x:clip}
+.tcard{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.tcard img{-webkit-user-drag:none;-webkit-touch-callout:none}
+.tcard::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:-1;opacity:0;filter:blur(14px);
+  background:conic-gradient(from var(--ang),transparent 0 8%,var(--hb) 16%,transparent 28%,var(--ha) 42%,transparent 56%,var(--rose) 68%,transparent 80%,var(--cyan) 90%,transparent)}
+.tcard.charging{scale:calc(1 + var(--charge,0) * .07);animation:shake .08s linear infinite}
+.tcard.charging::before{inset:-20%;opacity:calc(.3 + var(--charge,0) * .7);animation:ring-spin 1.1s linear infinite}
+.tcard.charging .tc-inner{animation:none;filter:brightness(calc(1 + var(--charge,0) * .4))}
+@keyframes shake{0%{translate:0 0}25%{translate:calc(var(--charge,0) * 3px) calc(var(--charge,0) * -2px)}50%{translate:calc(var(--charge,0) * -3px) calc(var(--charge,0) * 2px)}75%{translate:calc(var(--charge,0) * 2px) calc(var(--charge,0) * 1px)}100%{translate:0 0}}
+.tc-inner{transition:transform 1s cubic-bezier(.3,1.45,.5,1)}
+.tcard.pop{animation:card-pop .8s cubic-bezier(.3,1.7,.5,1)}
+@keyframes card-pop{0%{scale:1.07}30%{scale:1.17}100%{scale:1}}
+.tcard.flipped .face.front{box-shadow:0 0 26px -2px var(--ha),0 0 2px var(--gold-hi)}
+#flash{position:fixed;inset:0;z-index:84;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at var(--fx,50%) var(--fy,40%),rgba(255,248,226,.9),rgba(255,214,150,.4) 22%,rgba(200,150,255,.18) 42%,transparent 65%)}
+#flash.on{animation:flash .6s ease-out}
+@keyframes flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.hint-hold{display:inline-flex;align-items:center;gap:8px}
+.hint-hold i{width:10px;height:10px;border-radius:50%;background:var(--hb);box-shadow:0 0 0 0 var(--hb);animation:pulse-dot 1.8s ease-out infinite}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hb) 70%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+
+/* ---- Points qui volent ---- */
+.flystar{position:fixed;left:0;top:0;z-index:88;pointer-events:none;font-size:16px;line-height:1;color:var(--c);text-shadow:0 0 8px var(--c),0 0 2px #fff;will-change:transform}
+.float-pts{position:fixed;z-index:88;pointer-events:none;font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;
+  background:linear-gradient(180deg,#fff,var(--gold-hi) 40%,var(--gold) 70%,#ff9ad5);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 10px rgba(255,180,230,.7));animation:float-up 1.3s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes float-up{0%{opacity:0;transform:translate(-50%,-30%) scale(.4)}18%{opacity:1;transform:translate(-50%,-70%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-260%) scale(1)}}
+
+/* ---- Passage de niveau ---- */
+.lvl-ov{position:fixed;inset:0;z-index:80;display:grid;place-items:center;overflow:hidden;
+  padding:calc(24px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px));
+  background:radial-gradient(circle at 50% 42%,rgba(110,60,200,.7),rgba(40,16,70,.9) 45%,rgba(8,5,18,.96) 75%);animation:fade-in .4s ease both}
+@keyframes fade-in{from{opacity:0}}
+.rays{position:absolute;left:50%;top:42%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,rgba(255,220,150,.18) 0 5deg,transparent 5deg 15deg);
+  -webkit-mask:radial-gradient(circle,#000 0 12%,transparent 55%);mask:radial-gradient(circle,#000 0 12%,transparent 55%);animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lvl-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;max-width:360px}
+.lvl-in > *{animation:rise-pop .7s cubic-bezier(.3,1.5,.5,1) both}
+.lvl-in > *:nth-child(2){animation-delay:.12s}.lvl-in > *:nth-child(3){animation-delay:.24s}.lvl-in > *:nth-child(4){animation-delay:.36s}.lvl-in > *:nth-child(5){animation-delay:.48s}.lvl-in > *:nth-child(6){animation-delay:.6s}
+@keyframes rise-pop{from{opacity:0;transform:translateY(18px) scale(.8)}}
+.lvl-orb{width:132px;height:132px}
+.lvl-orb .num{font-size:62px}
+.lvl-in .h-title{font-size:32px}
+.lvl-back{display:flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:16px;border:1px solid var(--gold-line);background:rgba(20,11,43,.7)}
+.lvl-back .mini{position:relative;width:48px;aspect-ratio:7/12;border-radius:7px;overflow:hidden;flex:0 0 48px}
+.lvl-back .mini .face{border-radius:7px}
+
+/* ---- Lune de fidélité ---- */
+.moons{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:center;justify-items:center;padding-top:4px}
+.moons svg{width:100%;max-width:34px;height:auto;display:block;overflow:visible}
+.moons .off circle{fill:rgba(42,32,80,.6);stroke-dasharray:2 1.6}
+.moons .off path{display:none}
+.moons .now{filter:drop-shadow(0 0 8px rgba(255,236,180,.85));animation:moon-now 2.4s ease-in-out infinite}
+@keyframes moon-now{50%{scale:1.15}}
+.moon-note{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--gold-hi)}
+
+/* ---- Grimoire ---- */
+.grim-link{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:var(--r-md);text-align:left}
+.grim-link .gl-ico{flex:0 0 38px;height:38px;display:grid;place-items:center;border-radius:10px;font-size:20px;background:linear-gradient(160deg,var(--ha),#2a1050);box-shadow:0 0 16px -4px var(--ha);color:#fff}
+.grim-link .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.grim-link b{font-family:var(--f-display);font-weight:600;color:var(--gold-hi);font-size:15px}
+.grim-link .track{height:6px}
+.ggrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.gslot{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;text-align:center}
+.gslot .gc{position:relative;display:block;width:100%;aspect-ratio:7/12;border-radius:9px;overflow:hidden;border:1.5px solid color-mix(in srgb,var(--hb) 70%,transparent);box-shadow:0 0 16px -6px var(--ha);background:var(--velvet)}
+.gslot .gc img{width:100%;height:100%;object-fit:cover;display:block}
+.gslot .gc .face{border-radius:8px}
+.gslot.locked .gc{border-color:rgba(255,255,255,.12);box-shadow:none}
+.gslot.locked .gc .face{filter:grayscale(.6) brightness(.45)}
+.gslot .q{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-size:24px;color:color-mix(in srgb,var(--hb) 60%,transparent)}
+.gslot .cnt{position:absolute;right:4px;top:4px;padding:1px 6px;border-radius:999px;font-size:10px;font-weight:600;background:rgba(10,6,22,.75);color:var(--gold-hi)}
+.gslot .gn{font-size:10.5px;line-height:1.2;color:var(--mist);overflow-wrap:anywhere}
+.gslot:not(.locked) .gn{color:#f4ecff}
+.gprog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.gsegs{grid-auto-columns:auto;overflow-x:auto;scrollbar-width:none}
+.gsegs::-webkit-scrollbar{display:none}
+.gsegs button{padding:0 12px;white-space:nowrap}
+
+/* ---- Astres : roue et constellation ---- */
+.zwheel{position:relative;width:min(250px,70vw);aspect-ratio:1;display:grid;place-items:center;margin-bottom:4px}
+.zring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;animation:spin 160s linear infinite}
+.zring text{font-family:var(--f-sym);font-size:7.2px;fill:color-mix(in srgb,var(--hb) 55%,#8a7cad)}
+.zring text.me{fill:#fff6dc;font-size:9px;filter:drop-shadow(0 0 2px var(--hb))}
+.zring circle{fill:none}
+.zwheel .glyph-orb{position:relative}
+.constel-box{margin:0;display:flex;flex-direction:column;gap:6px;align-items:center;padding:14px 12px 10px}
+.constel{width:100%;max-width:360px;height:auto;display:block;overflow:visible;filter:drop-shadow(0 0 3px rgba(255,236,190,.6))}
+.constel path{fill:none;stroke:color-mix(in srgb,var(--hb) 80%,#fff);stroke-width:.45;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:.85;animation:draw .7s ease forwards;animation-delay:calc(.5s + var(--d))}
+.constel circle{fill:#fff6dc;transform-box:fill-box;transform-origin:center;scale:0;animation:star-in .5s cubic-bezier(.3,1.8,.5,1) forwards,star-tw 3.5s ease-in-out infinite;animation-delay:var(--d),calc(1.5s + var(--d))}
+.constel circle.big{fill:#ffe3a0}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes star-in{to{scale:1}}
+@keyframes star-tw{50%{opacity:.55}}
+.constel-box figcaption{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist)}
+
+/* ---- Réglages d'ambiance ---- */
+.sw-row{display:flex;align-items:center;gap:14px;width:100%;min-height:52px;text-align:left}
+.sw-row .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sw-row b{font-weight:600;font-size:15px;color:var(--gold-hi)}
+.sw{flex:0 0 46px;height:28px;border-radius:999px;position:relative;background:rgba(255,255,255,.1);border:1px solid var(--gold-faint);transition:background .25s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--mist);transition:transform .25s cubic-bezier(.3,1.5,.5,1),background .25s}
+.sw-row[aria-checked="true"] .sw{background:linear-gradient(90deg,#8b5cff,#ff6fb5)}
+.sw-row[aria-checked="true"] .sw::after{transform:translateX(18px);background:#fff}
+
+/* Respiration plus colorée */
+.breathe .orb{background:radial-gradient(circle at 50% 45%,rgba(255,250,230,.95),rgba(255,190,230,.55) 30%,rgba(140,120,255,.35) 55%,rgba(110,230,255,.12) 70%,transparent 72%);box-shadow:0 0 80px rgba(255,140,220,.45),0 0 140px rgba(120,120,255,.35)}
+
+/* ---- Crédits et mentions légales (discrets) ---- */
+.mini-foot{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:2px 6px;margin-top:-6px;font-size:11px;color:var(--dim)}
+.mini-foot button{min-height:32px;padding:0 4px;color:var(--dim);letter-spacing:.04em}
+.mini-foot button:hover,.mini-foot button:focus-visible{color:var(--gold)}
+.legal-box{display:flex;flex-direction:column;gap:6px;padding-top:12px;margin-top:4px;border-top:1px solid var(--gold-faint)}
+.legal-row{display:flex;justify-content:space-between;align-items:center;min-height:40px;font-size:13px;color:var(--mist);text-align:left}
+.legal-row:hover{color:var(--gold-hi)}
+.legal-doc{display:flex;flex-direction:column;gap:12px}
+.legal-doc dl{margin:0;display:flex;flex-direction:column;gap:3px}
+.legal-doc dt{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.legal-doc dd{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink)}
+
+/* ---- Mode zen : aucun mouvement ---- */
+html.zen *,html.zen *::before,html.zen *::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+html.zen .breathe .orb{transform:scale(.9)}
+html.zen .aurora{display:none}
+</style>
 </head>
 <body>
-<div class="nebula" aria-hidden="true"></div>
+<div class="nebula" aria-hidden="true"><i class="nb n1"></i><i class="nb n2"></i><i class="nb n3"></i><i class="aurora"></i></div>
 <canvas id="sky" aria-hidden="true"></canvas>
 <main class="wrap" id="app" hidden></main>
 <nav class="nav" id="nav" aria-label="Navigation" hidden></nav>
 <div class="overlay onboard" id="onboard" hidden><div class="wrap" id="onboard-in"></div></div>
 <div id="sheet-root"></div>
 <div id="toast-root" aria-live="polite"></div>
+<div id="flash" aria-hidden="true"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
 <script>
 /* ============ CONTENUS DE MADAME VOYANCE ============
@@ -489,6 +752,22 @@ const ZODIAC = [
   {n:"Capricorne",g:"♑",d:"22 décembre – 19 janvier",el:"Terre",pl:"Saturne",t:"Ambitieux, persévérant, bâtit pour durer."},
   {n:"Verseau",g:"♒",d:"20 janvier – 18 février",el:"Air",pl:"Uranus",t:"Original, libre, tourné vers l'avenir."},
   {n:"Poissons",g:"♓",d:"19 février – 20 mars",el:"Eau",pl:"Neptune",t:"Rêveur, intuitif, d'une grande empathie."}
+];
+/* Constellations stylisées (repère 100 × 60) : p = étoiles, e = traits, b = étoiles brillantes */
+const ZODIAC_DE = ["du Bélier","du Taureau","des Gémeaux","du Cancer","du Lion","de la Vierge","de la Balance","du Scorpion","du Sagittaire","du Capricorne","du Verseau","des Poissons"];
+const CONSTEL = [
+  {p:[[14,34],[42,22],[54,26],[86,42]], e:[[0,1],[1,2],[2,3]], b:[1]},
+  {p:[[52,46],[40,36],[14,12],[64,36],[84,12],[92,54]], e:[[0,1],[1,2],[0,3],[3,4]], b:[1]},
+  {p:[[28,8],[46,8],[24,28],[48,26],[18,52],[52,52],[10,40],[62,42]], e:[[0,2],[2,4],[1,3],[3,5],[2,3],[2,6],[3,7]], b:[0,1]},
+  {p:[[50,28],[50,6],[28,54],[74,48],[40,12]], e:[[0,1],[0,2],[0,3],[1,4]], b:[]},
+  {p:[[20,46],[24,32],[34,24],[42,14],[34,6],[24,8],[62,24],[60,40],[88,38]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[2,6],[0,7],[7,8],[8,6],[6,7]], b:[0]},
+  {p:[[10,18],[26,22],[40,20],[48,32],[64,28],[82,22],[58,52],[74,44]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[3,6],[4,7]], b:[6]},
+  {p:[[50,8],[28,28],[72,26],[22,52],[78,50]], e:[[0,1],[0,2],[1,2],[1,3],[2,4]], b:[0]},
+  {p:[[18,14],[10,6],[24,6],[26,22],[36,28],[44,34],[50,42],[58,50],[70,54],[82,50],[88,40],[82,32]], e:[[1,0],[2,0],[0,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11]], b:[4]},
+  {p:[[22,40],[40,42],[42,26],[30,20],[52,12],[60,28],[72,22],[68,42],[56,50]], e:[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[2,5],[5,6],[6,7],[7,8],[8,1],[5,7]], b:[5]},
+  {p:[[12,16],[22,24],[36,44],[52,50],[70,40],[86,22],[80,14],[60,26],[40,28]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,1]], b:[5]},
+  {p:[[14,22],[28,14],[42,20],[54,14],[62,28],[54,42],[66,52],[80,46],[90,54]], e:[[0,1],[1,2],[2,3],[2,4],[4,5],[5,6],[6,7],[7,8]], b:[2]},
+  {p:[[10,14],[18,6],[26,12],[20,20],[44,30],[62,40],[80,52],[78,36],[84,24],[92,30],[86,40]], e:[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,7]], b:[6]}
 ];
 const HORO = {
   open: [
@@ -821,6 +1100,14 @@ const RITUALS = [
 const DAILY = ['tarot1', 'horo'];
 const VISIT_PTS = 10, DAILY_BONUS = 20;
 const STREAK_BONUS = {3:15, 7:50, 14:100, 30:200, 60:300, 100:500, 365:1000};
+/* --- Mentions légales : complétez ces trois champs avant de publier --- */
+const LEGAL = {
+  editeur: "Aurélien Marck",              /* Personne ou société qui publie le site */
+  contact: "aurelien.marck@gmail.com",    /* Adresse e-mail de contact */
+  directeur: "Aurélien Marck",            /* Directeur de la publication */
+  developpement: "Aurélien Marck, avec l'aide de Claude (Anthropic)",
+  annee: "2026"
+};
 /* ============ PERSONNALISATION ============
    Images des cartes : remplacez les fichiers du dossier cards/ en gardant les mêmes noms
    (m00 à m21 pour les arcanes majeurs ; w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14),
@@ -836,6 +1123,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const VS = '︎';
 const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionNeedsPermission = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+const calm = () => !!(S && S.zen);
 
 function hash(str){
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
@@ -864,7 +1153,8 @@ const KEY = 'madame-voyance:v1';
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
-          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}}};
+          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
+          zen:reduceMotion, sound:true, tilt:!motionNeedsPermission, seen:{}, gm:{}};
 }
 function load(){
   try {
@@ -876,6 +1166,14 @@ function load(){
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
 let S = load();
+let shown = S.points;
+/* Grimoire : on reprend les cartes déjà tirées avant cette version */
+(function backfillSeen(){
+  if (!S.seen || typeof S.seen !== 'object') S.seen = {};
+  if (Object.keys(S.seen).length) return;
+  for (const j of S.journal) if (j && j.id){ const e = S.seen[j.id] || (S.seen[j.id] = {n:0, d:j.d}); e.n++; }
+  for (const k in (S.today.draws || {})) if (S.today.d) for (const id of S.today.draws[k]) if (!S.seen[id]) S.seen[id] = {n:1, d:S.today.d};
+})();
 
 /* ---------- Application installable (écran d'accueil, hors ligne) ---------- */
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -1001,8 +1299,22 @@ function gain(pts, label){
   const before = levelOf(S.points);
   S.points += pts;
   toast(`<b>+${pts}</b> ✦ ${esc(label)}`);
+  flyPoints(pts);
   const after = levelOf(S.points);
-  if (after > before) setTimeout(() => levelUp(after), 900);
+  if (after > before) setTimeout(() => levelUp(after), calm() ? 300 : 1300);
+}
+/* Grimoire : chaque carte tirée y est rangée ; compléter une famille rapporte un bonus */
+function recordSeen(ids){
+  const fresh = [];
+  for (const id of ids){
+    if (!S.seen[id]){ S.seen[id] = {n:0, d:dk()}; fresh.push(id); }
+    S.seen[id].n++;
+  }
+  if (fresh.length) setTimeout(() => toast(fresh.length === 1 ? `✦ Nouvelle carte au grimoire : <b>${esc(CARD[fresh[0]].name)}</b>` : `✦ <b>${fresh.length}</b> nouvelles cartes au grimoire`), 700);
+  const majors = DECK78.slice(0, 22).every(c => S.seen[c.id]), all = DECK78.every(c => S.seen[c.id]);
+  if (majors && !S.gm.majors){ S.gm.majors = true; setTimeout(() => gain(100, 'Les 22 arcanes majeurs au grimoire'), 1400); }
+  if (all && !S.gm.all){ S.gm.all = true; setTimeout(() => gain(300, 'Grimoire complet'), 1900); }
+  save();
 }
 function award(id){
   if (isDone(id)) return false;
@@ -1030,63 +1342,121 @@ function checkIn(){
   save();
 }
 
-/* ---------- Effets : ciel étoilé et étincelles ---------- */
+/* ---------- Effets : ciel étoilé, étincelles, sons ---------- */
 const sky = $('#sky'), sctx = sky.getContext('2d');
 const fx = $('#fx'), fctx = fx.getContext('2d');
-let W = 0, H = 0, DPR = 1, stars = [], shooting = null, particles = [], fxRunning = false;
+const nebula = $('.nebula');
+const PAL = ['#fbe2a0','#fff3d6','#c9a8ff','#ff9ad5','#8fe9ff','#ffd27a'];
+const STAR_COLS = ['#e9e2ff','#f5dc9c','#ffb8e2','#a8eeff'];
+const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+let W = 0, H = 0, DPR = 1, stars = [], shooters = [], particles = [], fxRunning = false, skyDirty = true;
+let tiltX = 0, tiltY = 0, tX = 0, tY = 0;
 function resize(){
   DPR = Math.min(window.devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight;
   for (const c of [sky, fx]){ c.width = W * DPR; c.height = H * DPR; }
   sctx.setTransform(DPR, 0, 0, DPR, 0, 0); fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const n = Math.round(Math.min(220, W * H / 4200));
-  stars = Array.from({length:n}, () => ({x: Math.random() * W, y: Math.random() * H, r: Math.random() < .9 ? Math.random() * 1 + .3 : Math.random() * 1.4 + 1, p: Math.random() * 6.28, s: .4 + Math.random() * 1.4, gold: Math.random() < .18}));
-  if (reduceMotion) drawSky(0);
+  const n = Math.round(Math.min(240, W * H / 3800));
+  stars = Array.from({length:n}, () => {
+    const q = Math.random();
+    return {x: Math.random() * W, y: Math.random() * H, r: Math.random() < .9 ? Math.random() * 1 + .3 : Math.random() * 1.5 + 1.1,
+      p: Math.random() * 6.28, s: .4 + Math.random() * 1.4, z: .25 + Math.random() * .9,
+      c: q < .16 ? STAR_COLS[1] : q < .23 ? STAR_COLS[2] : q < .3 ? STAR_COLS[3] : STAR_COLS[0]};
+  });
+  skyDirty = true;
 }
 function drawSky(t){
+  const still = calm();
   sctx.clearRect(0, 0, W, H);
+  const ox = still ? 0 : tiltX * 16, oy = still ? 0 : tiltY * 16;
   for (const st of stars){
-    const a = reduceMotion ? .7 : .35 + .65 * (.5 + .5 * Math.sin(t / 1000 * st.s + st.p));
-    sctx.globalAlpha = a;
-    sctx.fillStyle = st.gold ? '#f5dc9c' : '#e9e2ff';
-    sctx.beginPath(); sctx.arc(st.x, st.y, st.r, 0, 6.283); sctx.fill();
+    const a = still ? .7 : .35 + .65 * (.5 + .5 * Math.sin(t / 1000 * st.s + st.p));
+    const x = st.x + ox * st.z, y = st.y + oy * st.z;
+    sctx.globalAlpha = a; sctx.fillStyle = st.c;
+    sctx.beginPath(); sctx.arc(x, y, st.r, 0, 6.283); sctx.fill();
     if (st.r > 1.4){
-      sctx.globalAlpha = a * .5; sctx.fillRect(st.x - st.r * 3, st.y - .4, st.r * 6, .8); sctx.fillRect(st.x - .4, st.y - st.r * 3, .8, st.r * 6);
+      sctx.globalAlpha = a * .5; sctx.fillRect(x - st.r * 3.2, y - .4, st.r * 6.4, .8); sctx.fillRect(x - .4, y - st.r * 3.2, .8, st.r * 6.4);
+      sctx.globalAlpha = a * .18; sctx.beginPath(); sctx.arc(x, y, st.r * 3.2, 0, 6.283); sctx.fill();
     }
   }
-  if (shooting){
-    const s = shooting; s.life += 1;
-    const x = s.x + s.vx * s.life, y = s.y + s.vy * s.life;
-    const g = sctx.createLinearGradient(x, y, x - s.vx * 14, y - s.vy * 14);
-    g.addColorStop(0, 'rgba(255,240,200,.9)'); g.addColorStop(1, 'rgba(255,240,200,0)');
-    sctx.globalAlpha = Math.max(0, 1 - s.life / 60); sctx.strokeStyle = g; sctx.lineWidth = 1.6;
-    sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x - s.vx * 14, y - s.vy * 14); sctx.stroke();
-    if (s.life > 60) shooting = null;
-  } else if (!reduceMotion && Math.random() < .0025){
-    shooting = {x: Math.random() * W * .7 + W * .2, y: Math.random() * H * .4, vx: -(4 + Math.random() * 3), vy: 2 + Math.random() * 2, life: 0};
+  if (!still){
+    if (shooters.length < 2 && Math.random() < .004){
+      shooters.push({x: Math.random() * W * .7 + W * .25, y: Math.random() * H * .45, vx: -(5 + Math.random() * 4), vy: 2 + Math.random() * 2.5, life: 0, max: 50 + Math.random() * 30, c: rnd(['255,240,200','255,198,236','191,240,255'])});
+    }
+    for (const sh of shooters){
+      sh.life++;
+      const x = sh.x + sh.vx * sh.life, y = sh.y + sh.vy * sh.life, len = 16;
+      const g = sctx.createLinearGradient(x, y, x - sh.vx * len, y - sh.vy * len);
+      g.addColorStop(0, `rgba(${sh.c},.95)`); g.addColorStop(1, `rgba(${sh.c},0)`);
+      const fade = Math.max(0, 1 - sh.life / sh.max);
+      sctx.globalAlpha = fade; sctx.strokeStyle = g; sctx.lineWidth = 1.8;
+      sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x - sh.vx * len, y - sh.vy * len); sctx.stroke();
+      sctx.fillStyle = `rgba(${sh.c},1)`; sctx.beginPath(); sctx.arc(x, y, 1.8, 0, 6.283); sctx.fill();
+      if (sh.life % 3 === 0 && particles.length < 500) particles.push({x, y, vx: (Math.random() - .5) * .6, vy: Math.random() * .6, life: 0, max: 28, r: .8 + Math.random() * 1.2, c: `rgb(${sh.c})`, g: .01, dr: .98, star: true});
+    }
+    shooters = shooters.filter(sh => sh.life < sh.max);
+    if (shooters.length) runFx();
   }
   sctx.globalAlpha = 1;
 }
 let lastSky = 0;
 function skyLoop(t){
-  if (!document.hidden && t - lastSky > 33){ drawSky(t); lastSky = t; }
+  if (!document.hidden){
+    if (calm()){
+      if (skyDirty){ tiltX = tiltY = 0; drawSky(0); skyDirty = false; nebula.style.setProperty('--tx', 0); nebula.style.setProperty('--ty', 0); }
+    } else if (t - lastSky > 33){
+      tiltX += (tX - tiltX) * .08; tiltY += (tY - tiltY) * .08;
+      nebula.style.setProperty('--tx', tiltX.toFixed(3)); nebula.style.setProperty('--ty', tiltY.toFixed(3));
+      drawSky(t); lastSky = t; skyDirty = true;
+    }
+  }
   requestAnimationFrame(skyLoop);
 }
-function sparkle(x, y, n = 18, spread = 1){
-  if (reduceMotion) return;
-  for (let i = 0; i < n; i++){
+function runFx(){ if (!fxRunning){ fxRunning = true; requestAnimationFrame(fxLoop); } }
+function sparkle(x, y, n = 18, spread = 1, pal){
+  if (calm()) return;
+  const P = pal || PAL;
+  for (let i = 0; i < n && particles.length < 600; i++){
     const a = Math.random() * 6.283, v = (1 + Math.random() * 3.2) * spread;
-    particles.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, life: 0, max: 40 + Math.random() * 30, r: 1.5 + Math.random() * 2.5, gold: Math.random() < .7});
+    particles.push({x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 1, life: 0, max: 40 + Math.random() * 30, r: 1.5 + Math.random() * 2.5, c: rnd(P), g: .04, dr: .96, star: true});
   }
-  if (!fxRunning){ fxRunning = true; requestAnimationFrame(fxLoop); }
+  runFx();
 }
-function sparkleAt(el, n, spread){ const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, n, spread); }
+function sparkleAt(el, n, spread, pal){ const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 2, n, spread, pal); }
+function ringAt(x, y, r1, c, w = 3){ if (calm()) return; particles.push({ring: true, x, y, r1, w, life: 0, max: 34, c}); runFx(); }
+/* Particules aspirées vers le centre d'une carte qu'on charge */
+function suck(cx, cy, rad, k){
+  if (calm() || particles.length > 500) return;
+  const a = Math.random() * 6.283, d = rad * (.85 + Math.random() * .6), f = 16 + Math.random() * 6;
+  particles.push({x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, vx: -Math.cos(a) * d / f, vy: -Math.sin(a) * d / f, life: 0, max: f, r: 1 + Math.random() * 1.6 * (1 + k), c: rnd(PAL), g: 0, dr: 1, star: true, fadeIn: true});
+  runFx();
+}
+/* Pluie d'étoiles (passage de niveau) */
+function starRain(ms){
+  if (calm()) return;
+  const end = performance.now() + ms;
+  (function drop(){
+    for (let k = 0; k < 5 && particles.length < 600; k++) particles.push({x: Math.random() * W, y: -12, vx: (Math.random() - .5) * .8, vy: 2 + Math.random() * 3, life: 0, max: 90 + Math.random() * 80, r: 1.6 + Math.random() * 2.6, c: rnd(PAL), g: .03, dr: .995, star: true, tw: Math.random() * 6});
+    runFx();
+    if (performance.now() < end) setTimeout(drop, 70);
+  })();
+}
 function fxLoop(){
   fctx.clearRect(0, 0, W, H);
   particles = particles.filter(p => p.life < p.max);
   for (const p of particles){
-    p.life++; p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy = p.vy * .96 + .04;
-    const a = 1 - p.life / p.max, r = p.r * (0.6 + a * .6);
-    fctx.globalAlpha = a; fctx.fillStyle = p.gold ? '#fbe2a0' : '#c9a8ff';
+    p.life++;
+    const t = p.life / p.max;
+    if (p.ring){
+      const e = 1 - Math.pow(1 - t, 3);
+      fctx.globalAlpha = (1 - t) * .9; fctx.strokeStyle = p.c; fctx.lineWidth = p.w * (1 - t) + .4;
+      fctx.beginPath(); fctx.arc(p.x, p.y, p.r1 * e, 0, 6.283); fctx.stroke();
+      continue;
+    }
+    p.x += p.vx; p.y += p.vy; p.vx *= p.dr; p.vy = p.vy * p.dr + p.g;
+    let a = p.fadeIn ? Math.sin(Math.PI * t) : 1 - t;
+    if (p.tw) a *= .6 + .4 * Math.sin(p.life * .3 + p.tw);
+    const r = p.r * (0.6 + (1 - t) * .6);
+    fctx.globalAlpha = Math.max(0, a); fctx.fillStyle = p.c;
     fctx.beginPath();
     fctx.moveTo(p.x, p.y - r * 2); fctx.quadraticCurveTo(p.x, p.y, p.x + r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y + r * 2);
     fctx.quadraticCurveTo(p.x, p.y, p.x - r * 2, p.y); fctx.quadraticCurveTo(p.x, p.y, p.x, p.y - r * 2); fctx.fill();
@@ -1094,10 +1464,177 @@ function fxLoop(){
   fctx.globalAlpha = 1;
   if (particles.length) requestAnimationFrame(fxLoop); else { fxRunning = false; fctx.clearRect(0, 0, W, H); }
 }
+function flashAt(x, y){
+  if (calm()) return;
+  const f = $('#flash'); if (!f) return;
+  f.style.setProperty('--fx', x + 'px'); f.style.setProperty('--fy', y + 'px');
+  f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+}
+function buzz(p){ if (calm()) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+/* Sons créés dans le navigateur, sans fichier : bol tibétain, carillon, souffle */
+const Snd = (() => {
+  let ctx = null, out = null, noise = null, riser = null, armed = false;
+  /* Le navigateur n'autorise le son qu'après un premier geste de l'utilisateur */
+  const arm = () => { armed = true; };
+  ['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, arm, {capture: true, once: true}));
+  function ac(){
+    if (!armed || !S.sound || calm()) return null;
+    if (!ctx){
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      try { ctx = new C(); } catch (e) { return null; }
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+      out = ctx.createGain(); out.gain.value = .34; out.connect(comp); comp.connect(ctx.destination);
+      const dl = ctx.createDelay(), fb = ctx.createGain(), lp = ctx.createBiquadFilter(), wet = ctx.createGain();
+      dl.delayTime.value = .21; fb.gain.value = .34; lp.type = 'lowpass'; lp.frequency.value = 2600; wet.gain.value = .5;
+      out.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); wet.connect(comp);
+    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+  function tone(f, t, dur, vol, type, att){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + (att || .01)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .05);
+  }
+  return {
+    unlock(){ ac(); },
+    bowl(f = 196, vol = .2){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      [[1, 1, 5], [2.76, .38, 3.6], [5.4, .16, 2.4], [8.93, .05, 1.6]].forEach(([m, v, d]) => {
+        tone(f * m, t, d, vol * v, 'sine', .04); tone(f * m + .7, t, d, vol * v * .6, 'sine', .04);
+      });
+    },
+    chime(){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      [1318.5, 1568, 1760, 2093, 2637].forEach((f, i) => { tone(f, t + i * .075, 1.9, .085, 'sine', .005); tone(f * 2, t + i * .075, .6, .02, 'triangle', .005); });
+    },
+    ding(){ const c = ac(); if (!c) return; const t = c.currentTime; tone(1760, t, .5, .08, 'sine', .004); tone(2637, t + .07, .7, .07, 'sine', .004); },
+    twinkle(){ const c = ac(); if (!c) return; tone(rnd([2093, 2349, 2637, 3136, 3520]), c.currentTime, .7, .045, 'sine', .004); },
+    riser(dur){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      const g = c.createGain(), o1 = c.createOscillator(), o2 = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain();
+      o1.type = 'sine'; o2.type = 'triangle';
+      o1.frequency.setValueAtTime(260, t); o1.frequency.exponentialRampToValueAtTime(1040, t + dur);
+      o2.frequency.setValueAtTime(390, t); o2.frequency.exponentialRampToValueAtTime(1560, t + dur);
+      lfo.frequency.setValueAtTime(7, t); lfo.frequency.linearRampToValueAtTime(22, t + dur); lg.gain.value = .03;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.07, t + dur);
+      lfo.connect(lg); lg.connect(g.gain); o1.connect(g); o2.connect(g); g.connect(out);
+      [o1, o2, lfo].forEach(o => { o.start(t); o.stop(t + dur + 2); });
+      riser = {g, t};
+    },
+    stopRiser(){ if (!riser || !ctx) return; const t = ctx.currentTime, g = riser.g.gain; try { g.cancelScheduledValues(t); g.setValueAtTime(Math.max(g.value, .0002), t); g.exponentialRampToValueAtTime(.0001, t + .15); } catch (e) {} riser = null; },
+    whoosh(vol = .05){
+      const c = ac(); if (!c) return; const t = c.currentTime;
+      if (!noise){ noise = c.createBuffer(1, c.sampleRate * .8, c.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      const s = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = noise; bp.type = 'bandpass'; bp.Q.value = 1.2;
+      bp.frequency.setValueAtTime(500, t); bp.frequency.exponentialRampToValueAtTime(2200, t + .25); bp.frequency.exponentialRampToValueAtTime(700, t + .6);
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .18); g.gain.exponentialRampToValueAtTime(.0001, t + .6);
+      s.connect(bp); bp.connect(g); g.connect(out); s.start(t); s.stop(t + .7);
+    }
+  };
+})();
+
+/* Points : « +10 » qui s'envole et étoiles qui filent jusqu'au compteur */
+let lastTap = null, countRaf = 0;
+function tapPoint(){
+  if (lastTap && performance.now() - lastTap.t < 1600) return lastTap;
+  return {x: W / 2, y: H * .38};
+}
+function floatText(txt, x, y){
+  if (calm()) return;
+  const el = document.createElement('span'); el.className = 'float-pts'; el.textContent = txt;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1400);
+}
+function flyPoints(pts){
+  const o = tapPoint();
+  floatText('+' + pts, o.x, o.y);
+  if (calm() || !document.body.animate){ animateCount(); return; }
+  requestAnimationFrame(() => {
+    const chip = $('#pchip'); let tx = W - 46, ty = 22;
+    if (chip){ const b = chip.getBoundingClientRect(); if (b.bottom > 0 && b.top < H){ tx = b.left + 16; ty = b.top + b.height / 2; } }
+    const n = Math.min(10, 3 + Math.round(pts / 5));
+    let left = n;
+    for (let i = 0; i < n; i++){
+      const s = document.createElement('span'); s.className = 'flystar'; s.textContent = '✦';
+      s.style.setProperty('--c', rnd(PAL)); document.body.appendChild(s);
+      const a = Math.random() * 6.283, d = 30 + Math.random() * 50;
+      const mx = o.x + Math.cos(a) * d, my = o.y + Math.sin(a) * d - 20;
+      const anim = s.animate([
+        {transform: `translate(${o.x - 8}px,${o.y - 8}px) scale(.3)`, opacity: 0},
+        {transform: `translate(${mx - 8}px,${my - 8}px) scale(1.25)`, opacity: 1, offset: .35},
+        {transform: `translate(${tx - 8}px,${ty - 8}px) scale(.45)`, opacity: .9}
+      ], {duration: 720 + i * 55, easing: 'cubic-bezier(.45,0,.7,.2)', delay: i * 25});
+      anim.onfinish = () => {
+        s.remove();
+        if (--left === 0){
+          Snd.ding();
+          const c = $('#pchip'); if (c){ c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+          animateCount();
+        }
+      };
+    }
+  });
+}
+function lvPct(p){ const lv = levelOf(p), next = LEVELS[lv + 1]; return next ? Math.max(0, Math.min(100, Math.round((p - LEVELS[lv].p) / (next.p - LEVELS[lv].p) * 100))) : 100; }
+function paintPoints(){
+  document.querySelectorAll('[data-pts]').forEach(n => { n.textContent = shown; });
+  document.querySelectorAll('[data-lvbar]').forEach(b => { b.style.width = lvPct(shown) + '%'; });
+}
+function animateCount(){
+  cancelAnimationFrame(countRaf);
+  const from = shown, to = S.points, t0 = performance.now(), dur = calm() ? 0 : Math.min(1300, 450 + Math.abs(to - from) * 10);
+  const tick = now => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+    shown = Math.round(from + (to - from) * e); paintPoints();
+    if (k < 1) countRaf = requestAnimationFrame(tick);
+  };
+  countRaf = requestAnimationFrame(tick);
+}
+
+/* Effet de profondeur : le ciel suit l'inclinaison du téléphone (ou la souris) */
+const tiltSupported = typeof DeviceOrientationEvent !== 'undefined' && isTouch;
+let tiltOn = false, tiltAsked = false;
+function onOrient(e){
+  if (e.gamma == null || !S.tilt) return;
+  tX = Math.max(-1, Math.min(1, e.gamma / 30)); tY = Math.max(-1, Math.min(1, ((e.beta || 0) - 45) / 30));
+}
+function enableTilt(fromGesture){
+  if (!tiltSupported || tiltOn || !S.tilt) return;
+  if (motionNeedsPermission){
+    if (!fromGesture) return;
+    DeviceOrientationEvent.requestPermission().then(r => {
+      if (r === 'granted'){ window.addEventListener('deviceorientation', onOrient); tiltOn = true; }
+      else { S.tilt = false; save(); if (UI.view === 'profil') render(); }
+    }).catch(() => {});
+  } else { window.addEventListener('deviceorientation', onOrient); tiltOn = true; }
+}
+
+/* Ciel selon l'heure */
+const TOD_COLORS = {aube:'#1c1036', jour:'#1a1646', crepuscule:'#150b2e', nuit:'#0a0616'};
+function setTod(){
+  const h = new Date().getHours();
+  const tod = h >= 5 && h < 9 ? 'aube' : h >= 9 && h < 17 ? 'jour' : h >= 17 && h < 21 ? 'crepuscule' : 'nuit';
+  if (document.documentElement.dataset.tod !== tod){
+    document.documentElement.dataset.tod = tod;
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = TOD_COLORS[tod];
+  }
+}
+function applyZen(){ document.documentElement.classList.toggle('zen', calm()); skyDirty = true; if (calm()){ tX = tY = 0; } }
+
+/* Pierres précieuses aux coins des cadres dorés */
+const GEMS = '<i class="gemc tl" aria-hidden="true"></i><i class="gemc tr" aria-hidden="true"></i><i class="gemc bl" aria-hidden="true"></i><i class="gemc br" aria-hidden="true"></i>';
+let decoQueued = false;
+function decorate(){ decoQueued = false; document.querySelectorAll('.frame:not([data-gems])').forEach(f => { f.dataset.gems = '1'; f.insertAdjacentHTML('beforeend', GEMS); }); }
+new MutationObserver(() => { if (!decoQueued){ decoQueued = true; requestAnimationFrame(decorate); } }).observe(document.body, {childList: true, subtree: true});
 
 /* ---------- État d'interface ---------- */
 const VIEWS = ['accueil','tarot','astres','oracles','profil'];
-const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null};
+const ROUTES = VIEWS.concat(['grimoire']);
+const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m'};
 
 /* ---------- Petits morceaux d'interface ---------- */
 const ICONS = {
@@ -1107,15 +1644,39 @@ const ICONS = {
   oracles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
   profil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  sndOn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fill-opacity=".25"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  sndOff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fill-opacity=".2"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
   spark:'<svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="currentColor"/></svg>'
 };
 const NAV_LABELS = {accueil:'Accueil', tarot:'Tarot', astres:'Astres', oracles:'Oracles', profil:'Profil'};
 
-function topbar(){
-  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
-    <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span></a></div>`;
+/* Lune de fidélité : la série remplit une lune en 7 jours */
+function litPath(frac, cx, cy, r){
+  const k = Math.cos(2 * Math.PI * frac), rx = Math.abs(k * r).toFixed(2);
+  return frac < 0.5
+    ? `M${cx} ${cy - r} A${r} ${r} 0 0 1 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 0 : 1} ${cx} ${cy - r}Z`
+    : `M${cx} ${cy - r} A${r} ${r} 0 0 0 ${cx} ${cy + r} A${rx} ${r} 0 0 ${k > 0 ? 1 : 0} ${cx} ${cy - r}Z`;
 }
-function updateChip(){ const c = $('#pchip'); if (c) c.innerHTML = `${ICONS.spark}<span>${S.points}</span><span class="sep"></span><span>${S.streak} j</span>`; }
+const streakPos = () => ((Math.max(1, S.streak) - 1) % 7) + 1;
+function moonMini(step, cls){
+  const frac = step / 7 * 0.5;
+  return `<svg viewBox="0 0 20 20" class="${cls || ''}" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="#2a2050" stroke="rgba(230,195,120,.45)" stroke-width=".8"/><path d="${litPath(frac, 10, 10, 8.5)}" fill="#f6e4b0"/></svg>`;
+}
+function moonRow(){
+  const p = streakPos();
+  const moons = Array.from({length:7}, (_, i) => moonMini(i + 1, i + 1 < p ? '' : i + 1 === p ? 'now' : 'off')).join('');
+  const nextB = Object.keys(STREAK_BONUS).map(Number).find(k => k > S.streak);
+  return `<div class="moons" aria-hidden="true">${moons}</div>
+    <div class="small moon-note"><span>${p === 7 ? 'Pleine lune : 7 jours d\'affilée' : `Pleine lune dans ${7 - p} jour${7 - p > 1 ? 's' : ''}`}</span>${nextB ? `<span class="muted">Bonus de ${STREAK_BONUS[nextB]} pts à ${nextB} jours</span>` : ''}</div>`;
+}
+function chipInner(){ return `${ICONS.spark}<span data-pts>${shown}</span><span class="sep"></span>${moonMini(streakPos(), 'mmini')}<span>${S.streak} j</span>`; }
+function topbar(){
+  const on = S.sound && !S.zen;
+  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
+    <div class="tb-right"><button class="snd" data-act="sound" aria-pressed="${on}" aria-label="${on ? 'Couper les sons' : 'Activer les sons'}">${on ? ICONS.sndOn : ICONS.sndOff}</button>
+    <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${chipInner()}</a></div></div>`;
+}
+function updateChip(){ const c = $('#pchip'); if (c) c.innerHTML = chipInner(); }
 function revealBtn(id, label){
   const r = RITUALS.find(x => x.id === id);
   return `<button class="btn btn-gold btn-wide" data-act="reveal" data-id="${id}">${label} <span class="pts">+${r.pts}</span></button>`;
@@ -1146,7 +1707,7 @@ function vAccueil(){
       <div class="greet">${hello}, ${esc(p.name)}</div>
     </header>
 
-    <article class="frame" aria-labelledby="pt">
+    <article class="frame h-pensee" aria-labelledby="pt">
       <div class="h-eyebrow" id="pt" style="text-align:center">Pensée du jour</div>
       <p class="thought">« ${esc(thought)} »</p>
       <div class="thought-foot"><button class="btn btn-ghost btn-sm" data-act="breathe">Respirer avec elle${isDone('pensee') ? '' : ' <span class="pts">+5</span>'}</button></div>
@@ -1162,16 +1723,16 @@ function vAccueil(){
     <section class="stack" aria-labelledby="rt">
       <div class="section-head"><h2 id="rt">Votre rituel du jour</h2><span class="count">${done} / ${DAILY.length}</span></div>
       <div class="daily2">
-        <div class="dtile ${cardDone ? 'done' : ''}">
+        <div class="dtile hue-tile h-tarot ${cardDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Carte du jour</span><span class="badge ${cardDone ? 'ok' : ''}">${cardDone ? '✓' : '+' + ptsOf('tarot1')}</span></div>
           <button class="tcard home-card ${cardDone ? 'flipped' : ''}" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(card)}</span>
           </button>
           ${cardDone
             ? `<div class="dt-name">${esc(card.name)}</div><div class="dt-text">${esc(card.msg)}</div><button class="dt-link" data-act="card" data-card="${card.id}">Voir la carte</button>`
-            : `<div class="dt-name">Touchez pour la retourner</div>`}
+            : `<div class="dt-name"><span class="hint-hold"><i></i>Gardez le doigt dessus</span></div>`}
         </div>
-        <div class="dtile ${horoDone ? 'done' : ''}">
+        <div class="dtile hue-tile h-horo ${horoDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Horoscope</span><span class="badge ${horoDone ? 'ok' : ''}">${horoDone ? '✓' : '+' + ptsOf('horo')}</span></div>
           <div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div>
           <div class="dt-name">${z.n}</div>
@@ -1188,17 +1749,20 @@ function vAccueil(){
     <div class="explore">
       <span class="small muted">Envie d'aller plus loin ?</span>
       <div class="explore-links">
-        <button data-act="go" data-go='["tarot",3]'>Tirage 3 cartes</button>
-        <button data-act="go" data-go='["astres","lune"]'>Lune</button>
-        <button data-act="go" data-go='["oracles"]'>Oracles</button>
+        <button class="h-tarot" data-act="go" data-go='["tarot",3]'>Tirage 3 cartes</button>
+        <button class="h-lune" data-act="go" data-go='["astres","lune"]'>Lune</button>
+        <button class="h-numero" data-act="go" data-go='["oracles"]'>Oracles</button>
+        <button class="h-rune" data-act="go" data-go='["grimoire"]'>Grimoire</button>
       </div>
     </div>
 
     <a class="frame-plain levelbar" href="#profil" style="text-decoration:none;color:inherit">
-      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">${S.points} pts</span></div>
-      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count"><span data-pts>${shown}</span> pts</span></div>
+      <div class="track"><i data-lvbar style="width:${lvPct(shown)}%"></i></div>
       <div class="small muted">${next ? `Encore ${next.p - S.points} points pour devenir ${esc(next.t)}` : 'Vous avez atteint le plus haut niveau.'} · Série : ${S.streak} jour${S.streak > 1 ? 's' : ''}</div>
+      ${moonRow()}
     </a>
+    ${legalLinks()}
   </section>`;
 }
 
@@ -1227,7 +1791,7 @@ function vTarot(){
       </button>`).join('')}</div>`;
     }
   }
-  return `<section class="view">
+  return `<section class="view h-tarot">
     ${topbar()}
     <div><div class="h-eyebrow">Le tarot</div><h1 class="h-title gold">${esc(sp.label)}</h1></div>
     <div class="seg" role="group" aria-label="Type de tirage">
@@ -1250,13 +1814,32 @@ function vTarot(){
         </div>`).join('')}
       </div>
       ${done ? `<div class="tap-hint">Touchez une carte pour la voir en grand</div>`
-             : `<div class="tap-hint">Concentrez-vous sur votre question, puis touchez ${n === 1 ? 'la carte pour la retourner' : 'chaque carte pour la retourner'} · +${sp.pts} points</div>`}
+             : `<div class="tap-hint"><span class="hint-hold"><i></i>Concentrez-vous sur votre question, puis gardez le doigt sur ${n === 1 ? 'la carte' : 'chaque carte'} pour la charger d'énergie</span><br>+${sp.pts} points</div>`}
     </div>
     ${reading}
+    ${grimLink()}
   </section>`;
 }
 
 /* ---------- Vue : Astres ---------- */
+function zodiacWheel(si){
+  const R = 43, parts = [];
+  for (let k = 0; k < 72; k++){ const a = k / 72 * 6.2832; parts.push(`<circle cx="${(50 + 48.5 * Math.cos(a)).toFixed(2)}" cy="${(50 + 48.5 * Math.sin(a)).toFixed(2)}" r="${k % 6 === 0 ? .7 : .35}" fill="rgba(230,195,120,.55)"/>`); }
+  ZODIAC.forEach((z, k) => {
+    const a = (k / 12) * 6.2832 - Math.PI / 2, a2 = a + Math.PI / 12;
+    parts.push(`<line x1="${(50 + 37 * Math.cos(a2)).toFixed(2)}" y1="${(50 + 37 * Math.sin(a2)).toFixed(2)}" x2="${(50 + 47 * Math.cos(a2)).toFixed(2)}" y2="${(50 + 47 * Math.sin(a2)).toFixed(2)}" stroke="rgba(230,195,120,.3)" stroke-width=".4"/>`);
+    parts.push(`<text x="${(50 + R * Math.cos(a)).toFixed(2)}" y="${(50 + R * Math.sin(a)).toFixed(2)}" text-anchor="middle" dominant-baseline="central" class="${k === si ? 'me' : ''}">${z.g}${VS}</text>`);
+  });
+  return `<div class="zwheel"><svg class="zring" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="47" stroke="rgba(230,195,120,.4)" stroke-width=".5"/><circle cx="50" cy="50" r="37" stroke="rgba(230,195,120,.3)" stroke-width=".4"/>${parts.join('')}</svg>
+    <div class="glyph-orb"><span>${ZODIAC[si].g}${VS}</span></div></div>`;
+}
+function constellation(i){
+  const c = CONSTEL[i];
+  const lines = c.e.map(([a, b], k) => `<path d="M${c.p[a][0]} ${c.p[a][1]}L${c.p[b][0]} ${c.p[b][1]}" pathLength="1" style="--d:${(k * .2).toFixed(2)}s"/>`).join('');
+  const dots = c.p.map(([x, y], k) => { const big = c.b.includes(k); return `<circle cx="${x}" cy="${y}" r="${big ? 1.9 : 1.2}" class="${big ? 'big' : ''}" style="--d:${(k * .1).toFixed(2)}s"/>`; }).join('');
+  return `<svg class="constel" viewBox="-4 -4 108 68" role="img" aria-label="Constellation ${ZODIAC_DE[i]}">${lines}${dots}</svg>`;
+}
 function horoscopeFor(i){
   const z = ZODIAC[i], r = rngFrom(dk() + '|horo|' + i);
   const p = z.pl, P = cap(p);
@@ -1268,9 +1851,9 @@ function horoBlock(i){
   const h = horoscopeFor(i);
   return `<div class="horo">
     <p class="lead" style="margin:0;text-align:center;font-style:italic">${esc(h.open)}</p>
-    <div class="horo-item"><div class="horo-head"><b>Amour</b>${starRating(h.s[0])}</div><div class="msg" style="margin:0">${esc(h.amour)}</div></div>
-    <div class="horo-item"><div class="horo-head"><b>Travail &amp; argent</b>${starRating(h.s[1])}</div><div class="msg" style="margin:0">${esc(h.travail)}</div></div>
-    <div class="horo-item"><div class="horo-head"><b>Énergie</b>${starRating(h.s[2])}</div><div class="msg" style="margin:0">${esc(h.energie)}</div></div>
+    <div class="horo-item amour"><div class="horo-head"><b>Amour</b>${starRating(h.s[0])}</div><div class="msg" style="margin:0">${esc(h.amour)}</div></div>
+    <div class="horo-item travail"><div class="horo-head"><b>Travail &amp; argent</b>${starRating(h.s[1])}</div><div class="msg" style="margin:0">${esc(h.travail)}</div></div>
+    <div class="horo-item energie"><div class="horo-head"><b>Énergie</b>${starRating(h.s[2])}</div><div class="msg" style="margin:0">${esc(h.energie)}</div></div>
     <div class="tip"><span>✦</span><span><b>Conseil :</b> ${esc(h.conseil)}</span></div>
   </div>`;
 }
@@ -1279,12 +1862,13 @@ function vAstres(){
   let body = '';
   if (UI.astres === 'zodiaque'){
     body = `<div class="sign-hero">
-        <div class="glyph-orb"><span>${z.g}${VS}</span></div>
+        ${zodiacWheel(si)}
         <h2 class="h-title gold" style="font-size:24px">${z.n}</h2>
         <div class="small muted">${z.d}</div>
         <div class="facts"><span class="fact">${z.el}</span><span class="fact">Planète : ${cap(z.pl)}</span></div>
         <p class="small muted" style="margin:4px 0 0;max-width:34ch">${esc(z.t)}</p>
       </div>
+      <figure class="frame-plain constel-box">${constellation(si)}<figcaption>La constellation ${ZODIAC_DE[si]}</figcaption></figure>
       ${isDone('horo') ? `<div class="frame">${horoBlock(si)}</div>` : revealBtn('horo', 'Révéler mon horoscope')}
       <div class="stack"><div class="section-head"><h2>Les autres signes</h2></div>
         <div class="signs">${ZODIAC.map((s, k) => `<button data-act="sign" data-i="${k}" aria-label="${s.n}" aria-current="${k === si}">${s.g}${VS}</button>`).join('')}</div>
@@ -1323,7 +1907,8 @@ function vAstres(){
           <div class="tip"><span>☾${VS}</span><span><b>Rituel :</b> ${esc(ph.r)}</span></div>
         </div>` : revealBtn('lune', 'Recevoir le conseil de la lune')}`;
   }
-  return `<section class="view">
+  const hue = UI.astres === 'chinois' ? 'h-chinois' : UI.astres === 'lune' ? 'h-lune' : 'h-horo';
+  return `<section class="view ${hue}">
     ${topbar()}
     <div><div class="h-eyebrow">Les astres</div><h1 class="h-title gold">Votre ciel du jour</h1></div>
     <div class="seg" role="group" aria-label="Section">
@@ -1343,11 +1928,12 @@ const ORACLES = [
 ];
 function vOracles(){
   if (!UI.oracle){
-    return `<section class="view">
+    const stoneC = pick(userRng('pierre'), STONES).c;
+    return `<section class="view h-numero">
       ${topbar()}
       <div><div class="h-eyebrow">Les oracles</div><h1 class="h-title gold">Que voulez-vous savoir ?</h1></div>
       <div class="tiles">
-        ${ORACLES.map(o => `<button class="tile ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}">
+        ${ORACLES.map((o, k) => `<button class="tile hue-tile h-${o.id} ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}" style="--d:${(k * 1.3).toFixed(1)}s${o.id === 'pierre' ? ';--ha:' + stoneC : ''}">
           <span class="tg">${o.id === 'compat' ? o.g + VS : o.g}</span>
           <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.n}</span><br><span class="td">${o.d}</span></span>
           <span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>
@@ -1358,7 +1944,7 @@ function vOracles(){
   const o = ORACLES.find(x => x.id === UI.oracle);
   const head = `${topbar()}<button class="back-link" data-act="oracle" data-id="">${ICONS.back}Tous les oracles</button>
     <div><div class="h-eyebrow">Oracle</div><h1 class="h-title gold">${o.n}</h1></div>`;
-  return `<section class="view">${head}${oracleBody(o.id)}</section>`;
+  return `<section class="view h-${o.id}">${head}${oracleBody(o.id)}</section>`;
 }
 function oracleBody(id){
   const p = S.profile;
@@ -1442,6 +2028,78 @@ function compatResult(res){
   </div>`;
 }
 
+/* ---------- Vue : Grimoire ---------- */
+const GSUITS = [['m','Majeurs'],['w','Bâtons'],['c','Coupes'],['s','Épées'],['p','Deniers']];
+const SHORT_RANK = ['As','2','3','4','5','6','7','8','9','10','Valet','Cavalier','Reine','Roi'];
+const seenCount = ids => ids.filter(c => S.seen[c.id]).length;
+function grimLink(){
+  const n = seenCount(DECK78), pct = Math.round(n / 78 * 100);
+  return `<button class="frame-plain grim-link h-rune" data-act="go" data-go='["grimoire"]'>
+    <span class="gl-ico" aria-hidden="true">✦</span>
+    <span class="grow"><b>Mon grimoire</b><span class="small muted">${n} carte${n > 1 ? 's' : ''} sur 78 découvertes</span><span class="track"><i style="width:${pct}%"></i></span></span>
+    <span aria-hidden="true" style="color:var(--gold)">›</span></button>`;
+}
+function vGrimoire(){
+  const k = UI.gsuit || 'm', cards = DECK78.filter(c => c.id[0] === k);
+  const nAll = seenCount(DECK78), nMaj = seenCount(DECK78.slice(0, 22)), nSuit = seenCount(cards);
+  return `<section class="view s-${k}">
+    ${topbar()}
+    <button class="back-link" data-act="go" data-go='["tarot"]'>${ICONS.back}Retour au tarot</button>
+    <div><div class="h-eyebrow">Votre collection</div><h1 class="h-title gold">Grimoire</h1></div>
+    <p class="small muted" style="margin:0">Chaque carte que vous tirez vient s'y ranger. Les 22 arcanes majeurs rapportent ${S.gm.majors ? '<b style="color:var(--ok)">✓ 100 points</b>' : '100 points'}, le jeu complet ${S.gm.all ? '<b style="color:var(--ok)">✓ 300 points</b>' : '300 points'}.</p>
+    <div class="gprog">
+      <div class="stat"><b>${nAll} / 78</b><span>cartes découvertes</span></div>
+      <div class="stat"><b>${nMaj} / 22</b><span>arcanes majeurs</span></div>
+    </div>
+    <div class="seg gsegs" role="group" aria-label="Famille de cartes">
+      ${GSUITS.map(([id, l]) => `<button data-act="gsuit" data-s="${id}" aria-pressed="${k === id}">${l}</button>`).join('')}
+    </div>
+    <div class="section-head"><h2>${k === 'm' ? 'Arcanes majeurs' : esc(SUITS[k].name)}</h2><span class="count">${nSuit} / ${cards.length}</span></div>
+    ${k !== 'm' && S.deck !== '78' ? `<p class="small muted" style="margin:-12px 0 0">Les arcanes mineurs n'apparaissent qu'avec le jeu de 78 cartes, à choisir dans l'onglet Tarot.</p>` : ''}
+    <div class="ggrid">${cards.map((c, i) => {
+      const e = S.seen[c.id], label = c.major ? c.num : SHORT_RANK[i];
+      return e
+        ? `<button class="gslot" data-act="card" data-card="${c.id}"><span class="gc"><img src="${cardImg(c.id)}" alt="" loading="lazy">${e.n > 1 ? `<span class="cnt">×${e.n}</span>` : ''}</span><span class="gn">${esc(c.name)}</span></button>`
+        : `<button class="gslot locked" data-act="glocked" aria-label="Carte pas encore découverte"><span class="gc">${backFace(S.back)}<span class="q">${label}</span></span><span class="gn">?</span></button>`;
+    }).join('')}</div>
+  </section>`;
+}
+function switchRow(k, title, sub, on){
+  return `<button class="sw-row" role="switch" aria-checked="${!!on}" data-act="toggle" data-k="${k}"><span class="grow"><b>${title}</b><span class="small muted">${sub}</span></span><i class="sw" aria-hidden="true"></i></button>`;
+}
+
+/* ---------- Crédits et mentions légales ---------- */
+const todo = v => v ? esc(v) : '<i class="muted">à compléter</i>';
+function legalLinks(){
+  return `<footer class="mini-foot"><button data-act="legal" data-t="credits">Crédits</button><span aria-hidden="true">·</span><button data-act="legal" data-t="mentions">Mentions légales</button><span aria-hidden="true">·</span><button data-act="privacy">Vos données</button></footer>`;
+}
+function legalSheet(t){
+  if (t === 'credits'){
+    openSheet(`<div class="legal-doc">
+      <div class="h-eyebrow">À propos</div><h2 class="h-title gold" style="font-size:22px;margin:0">Crédits</h2>
+      <dl>
+        <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
+        <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
+        <dt>Illustrations des cartes</dt><dd>Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Œuvre du domaine public.</dd>
+        <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
+        <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
+        <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
+      </dl>
+      <p class="small muted" style="margin:0">Madame Voyance est un divertissement : ses messages n'ont aucune valeur prédictive.</p></div>`);
+    return;
+  }
+  openSheet(`<div class="legal-doc">
+    <div class="h-eyebrow">Informations</div><h2 class="h-title gold" style="font-size:22px;margin:0">Mentions légales</h2>
+    <dl>
+      <dt>Éditeur</dt><dd>${todo(LEGAL.editeur)}, particulier<br>Contact : <span style="user-select:all">${todo(LEGAL.contact)}</span></dd>
+      <dt>Directeur de la publication</dt><dd>${todo(LEGAL.directeur)}</dd>
+      <dt>Hébergement</dt><dd>GitHub Pages, GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</dd>
+      <dt>Données personnelles</dt><dd>L'éditeur ne collecte aucune donnée. Prénom, date de naissance, points, journal, grimoire et préférences sont enregistrés uniquement dans le navigateur de votre appareil, sans compte, sans cookie et sans mesure d'audience. Vous pouvez tout effacer depuis l'onglet Profil. L'hébergeur et Google Fonts reçoivent l'adresse IP de l'appareil lors du chargement de la page, selon leurs propres politiques de confidentialité.</dd>
+      <dt>Nature du service</dt><dd>Application gratuite de divertissement. Les tirages, horoscopes et oracles ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.</dd>
+      <dt>Propriété intellectuelle</dt><dd>Textes, design et code © ${esc(LEGAL.annee)} ${LEGAL.editeur ? esc(LEGAL.editeur) : 'l\'éditeur'}. Illustrations des cartes : domaine public.</dd>
+    </dl></div>`);
+}
+
 /* ---------- Vue : Profil ---------- */
 function vProfil(){
   const p = S.profile, bp = birthParts(p.birth), z = ZODIAC[signIndex(bp.m, bp.d)];
@@ -1461,11 +2119,11 @@ function vProfil(){
 
     <div class="frame-plain levelbar">
       <div class="lv-row"><span class="lv-name">${esc(LEVELS[lv].t)}</span><span class="count">Niveau ${lv + 1} / ${LEVELS.length}</span></div>
-      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="track"><i data-lvbar style="width:${lvPct(shown)}%"></i></div>
       <div class="small muted">${next ? `${S.points} / ${next.p} points pour devenir ${esc(next.t)}` : `${S.points} points · niveau maximal atteint`}</div>
     </div>
     <div class="stats4">
-      <div class="stat"><b>${S.points}</b><span>points</span></div>
+      <div class="stat"><b data-pts>${shown}</b><span>points</span></div>
       <div class="stat"><b>${S.streak} j</b><span>série actuelle</span></div>
       <div class="stat"><b>${S.best} j</b><span>meilleure série</span></div>
       <div class="stat"><b>${S.rituals}</b><span>rituels accomplis</span></div>
@@ -1477,6 +2135,16 @@ function vProfil(){
         return `<button class="back-opt" data-act="back" data-id="${bk.id}" aria-pressed="${S.back === bk.id}" ${locked ? `disabled data-lvl="${bk.lvl + 1}"` : ''}>
           <span class="mini" ${locked ? `data-lvl="${bk.lvl + 1}"` : ''}>${backFace(bk.id)}</span><span>${bk.n}</span></button>`;
       }).join('')}</div>
+    </section>
+
+    ${grimLink()}
+
+    <section class="stack"><div class="section-head"><h2>Ambiance</h2></div>
+      <div class="frame-plain stack">
+        ${switchRow('sound', 'Sons doux', 'Bol tibétain, carillon et souffle', S.sound && !S.zen)}
+        ${switchRow('zen', 'Mode zen', 'Coupe les animations, les sons et les vibrations', S.zen)}
+        ${tiltSupported ? switchRow('tilt', 'Effet de profondeur', 'Le ciel bouge quand vous inclinez le téléphone', S.tilt && !S.zen) : ''}
+      </div>
     </section>
 
     <section class="stack"><div class="section-head"><h2>Journal des cartes</h2><span class="count">${S.journal.length} tirage${S.journal.length > 1 ? 's' : ''}</span></div>
@@ -1503,6 +2171,12 @@ function vProfil(){
           ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer prénom, date, points et journal ? Cette action est définitive.</p>
               <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Tout effacer</button></div></div>`
           : `<button class="btn btn-danger btn-wide" data-act="erase">Effacer toutes mes données</button>`}
+        <div class="legal-box">
+          <div class="h-eyebrow">Informations légales</div>
+          <p class="small muted" style="margin:0">Aucun compte, aucun cookie, aucune mesure d'audience. Le site est hébergé par GitHub Pages et les polices viennent de Google Fonts : ces deux services voient l'adresse IP de votre appareil quand la page se charge, comme pour tout site web.</p>
+          <button class="legal-row" data-act="legal" data-t="mentions"><span>Mentions légales</span><span aria-hidden="true">›</span></button>
+          <button class="legal-row" data-act="legal" data-t="credits"><span>Crédits</span><span aria-hidden="true">›</span></button>
+        </div>
       </div>
     </section>
     <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public.</p>
@@ -1518,7 +2192,7 @@ const PRIVACY = `
     <li><span><b>Votre prénom</b>, pour vous saluer et personnaliser les tirages.</span></li>
     <li><span><b>Votre date de naissance</b>, pour votre signe, votre signe chinois et votre numérologie.</span></li>
     <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
-    <li><span><b>Le journal de vos cartes du jour</b> et vos préférences (jeu, dos de carte).</span></li>
+    <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
   <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule et les dates saisies pour la compatibilité ne sont pas conservées.</p>
   <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
@@ -1558,6 +2232,7 @@ function validateProfile(form){
 
 /* ---------- Fenêtres ---------- */
 function openSheet(html){
+  Snd.whoosh(.04);
   $('#sheet-root').innerHTML = `<div class="sheet-back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${html}<button class="btn btn-ghost btn-wide" data-act="close">Fermer</button></div></div>`;
 }
 function closeSheet(){ $('#sheet-root').innerHTML = ''; }
@@ -1570,17 +2245,29 @@ function cardSheet(id){
 }
 function levelUp(lv){
   const unlock = BACKS.find(b => b.lvl === lv);
-  openSheet(`<div class="stack levelup"><div class="glyph-orb"><span class="num">${lv + 1}</span></div>
-    <div class="h-eyebrow">Nouveau niveau</div><h2 class="h-title gold">${esc(LEVELS[lv].t)}</h2>
-    ${unlock ? `<p class="lead" style="margin:0">Vous débloquez le dos de cartes « ${unlock.n} ». Choisissez-le dans votre profil.</p>` : `<p class="lead" style="margin:0">Les étoiles saluent votre fidélité.</p>`}</div>`);
-  setTimeout(() => sparkle(innerWidth / 2, innerHeight * .55, 60, 1.6), 200);
+  const old = document.querySelector('.lvl-ov'); if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'lvl-ov h-tarot'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Nouveau niveau');
+  el.innerHTML = `<div class="rays" aria-hidden="true"></div><div class="lvl-in">
+    <div class="h-eyebrow">Nouveau niveau</div>
+    <div class="glyph-orb lvl-orb"><span class="num">${lv + 1}</span></div>
+    <h2 class="h-title gold">${esc(LEVELS[lv].t)}</h2>
+    ${unlock ? `<div class="lvl-back"><span class="mini">${backFace(unlock.id)}</span><span class="small" style="text-align:left">Dos de cartes « ${esc(unlock.n)} » débloqué.<br><span class="muted">Choisissez-le dans votre profil.</span></span></div>`
+             : `<p class="lead" style="margin:0">Les étoiles saluent votre fidélité.</p>`}
+    <button class="btn btn-gold" data-act="lvl-close">Continuer</button></div>`;
+  document.body.appendChild(el);
+  el.querySelector('[data-act="lvl-close"]').focus({preventScroll: true});
+  Snd.bowl(146.8, .24); setTimeout(() => Snd.chime(), 350); buzz([30, 60, 30, 60, 90]);
+  setTimeout(() => { const o = el.querySelector('.lvl-orb'); if (o){ const b = o.getBoundingClientRect(); ringAt(b.left + b.width / 2, b.top + b.height / 2, 220, '#ffe6a8', 4); sparkleAt(o, 70, 1.9); } }, 260);
+  starRain(2600);
 }
 function breathe(){
   const el = document.createElement('div'); el.className = 'breathe';
   el.innerHTML = `<div class="orb"></div><p id="bt">Inspirez…</p><button class="btn btn-ghost" id="bstop">Terminer</button>`;
   document.body.appendChild(el);
   let t = 0; const bt = el.querySelector('#bt');
-  const iv = setInterval(() => { t++; bt.textContent = t % 2 ? 'Expirez…' : 'Inspirez…'; if (t >= 4) end(); }, 4000);
+  Snd.bowl(196, .16);
+  const iv = setInterval(() => { t++; bt.textContent = t % 2 ? 'Expirez…' : 'Inspirez…'; if (t >= 4) end(); else Snd.bowl(t % 2 ? 164.8 : 196, .13); }, 4000);
   function end(){ clearInterval(iv); el.remove(); if (award('pensee')) sparkle(innerWidth / 2, innerHeight * .4, 40, 1.4); render(); }
   el.querySelector('#bstop').addEventListener('click', end);
   el.querySelector('#bstop').focus();
@@ -1610,9 +2297,9 @@ function render(){
   if (!S.consent){ showOnboarding(1); return; }
   if (!S.profile){ showOnboarding(2); return; }
   $('#onboard').hidden = true; $('#onboard-in').innerHTML = ''; $('#app').hidden = false; $('#nav').hidden = false;
-  const v = UI.view;
-  $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : vAccueil();
-  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === v ? 'page' : 'false'));
+  const v = UI.view, navV = v === 'grimoire' ? 'tarot' : v;
+  $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : v === 'grimoire' ? vGrimoire() : vAccueil();
+  document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === navV ? 'page' : 'false'));
 }
 function go(view, sub, keepScroll){
   if (view === 'tarot' && sub){ if (UI.tarot !== sub) UI.flips = new Set(); UI.tarot = sub; }
@@ -1624,11 +2311,83 @@ function go(view, sub, keepScroll){
 }
 function fromHash(){
   const h = location.hash.slice(1);
-  if (VIEWS.includes(h) && h !== UI.view){ if (h === 'oracles') UI.oracle = null; UI.view = h; UI.confirmErase = false; render(); window.scrollTo(0, 0); }
+  if (ROUTES.includes(h) && h !== UI.view){ if (h === 'oracles') UI.oracle = null; UI.view = h; UI.confirmErase = false; render(); window.scrollTo(0, 0); }
+}
+
+/* ---------- Tirage : charger la carte, puis la révéler ---------- */
+function flipTarot(el){
+  const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
+  UI.flips.add(i); el.classList.add('flipped');
+  el.setAttribute('aria-label', CARD[el.dataset.card].name);
+  if (UI.flips.size >= n && !isDone(id)){
+    const cards = drawSpread(n);
+    S.today.draws[n] = cards.map(c => c.id);
+    if (n === 1){ S.journal.push({d: dk(), id: cards[0].id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120); }
+    recordSeen(cards.map(c => c.id));
+    award(id);
+    setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: calm() ? 'auto' : 'smooth', block:'start'}); }, calm() ? 0 : 1200);
+  }
+}
+function flipHome(el){
+  el.classList.add('flipped');
+  const c = drawSpread(1)[0];
+  S.today.draws[1] = [c.id];
+  S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
+  recordSeen([c.id]);
+  award('tarot1');
+  setTimeout(render, calm() ? 0 : 1200);
+}
+function doFlip(el){ if (el.dataset.act === 'homeflip') flipHome(el); else flipTarot(el); }
+function revealFx(el){
+  const b = el.getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2, m = Math.max(b.width, b.height);
+  lastTap = {x: cx, y: cy, t: performance.now()};
+  if (calm()) return;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); setTimeout(() => el.classList.remove('pop'), 850);
+  flashAt(cx, cy);
+  ringAt(cx, cy, m * 1.2, '#ffe6a8', 4); setTimeout(() => ringAt(cx, cy, m * 1.9, '#c9a8ff', 3), 120); setTimeout(() => ringAt(cx, cy, m * 2.6, '#8fe9ff', 2), 240);
+  setTimeout(() => sparkle(cx, cy, 56, 1.7), 300);
+  Snd.chime(); Snd.bowl(174.6, .15); buzz([18, 40, 70]);
+}
+let chg = null, eatClick = false, downAt = null;
+function chargeK(c, now){ return c.rel == null ? Math.min(1, (now - c.t0) / c.full) : Math.min(1, c.k0 + (now - c.rel) / c.rest * (1 - c.k0)); }
+function startCharge(el, quick){
+  if (chg || el.classList.contains('flipped')) return;
+  if (calm()){ revealFx(el); doFlip(el); return; }
+  const now = performance.now();
+  const c = chg = {el, t0: now, full: 1400, rel: quick ? now : null, k0: 0, rest: 650, down: !quick};
+  el.classList.add('charging');
+  Snd.riser(quick ? .65 : 1.4); buzz(12);
+  const step = t => {
+    if (chg !== c) return;
+    const k = chargeK(c, t);
+    el.style.setProperty('--charge', k.toFixed(3));
+    const b = el.getBoundingClientRect();
+    if (Math.random() < .55 + k * .45) suck(b.left + b.width / 2, b.top + b.height / 2, Math.max(b.width, b.height) * .8, k);
+    if (k >= 1) finishCharge(c); else requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function releaseCharge(){
+  const c = chg; if (!c || !c.down) return;
+  c.down = false;
+  if (c.rel == null){ const now = performance.now(); c.k0 = chargeK(c, now); c.rel = now; c.rest = 450; }
+}
+function abortCharge(){
+  const c = chg; if (!c) return;
+  chg = null; c.el.classList.remove('charging'); c.el.style.removeProperty('--charge'); Snd.stopRiser();
+}
+function finishCharge(c){
+  chg = null;
+  const el = c.el;
+  el.classList.remove('charging'); el.style.removeProperty('--charge'); Snd.stopRiser();
+  if (c.down) eatClick = true;
+  revealFx(el);
+  doFlip(el);
 }
 
 /* ---------- Actions ---------- */
 document.addEventListener('click', e => {
+  if (eatClick){ eatClick = false; if (e.target.closest('.tcard')){ e.preventDefault(); return; } }
   const navA = e.target.closest('.nav a');
   if (navA && navA.dataset.v === UI.view){ e.preventDefault(); if (UI.view === 'oracles') UI.oracle = null; render(); window.scrollTo(0, 0); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
@@ -1641,53 +2400,50 @@ document.addEventListener('click', e => {
     case 'deck':
       if (S.today.draws[UI.tarot]){ toast('Le tirage du jour est déjà fixé'); break; }
       S.deck = el.dataset.deck; UI.flips = new Set(); save(); render(); break;
-    case 'flip': {
-      const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
-      if (el.classList.contains('flipped')){ cardSheet(el.dataset.card); break; }
-      UI.flips.add(i); el.classList.add('flipped');
-      el.setAttribute('aria-label', CARD[el.dataset.card].name);
-      setTimeout(() => sparkleAt(el, 22, 1.1), reduceMotion ? 0 : 380);
-      if (UI.flips.size >= n && !isDone(id)){
-        const cards = drawSpread(n);
-        S.today.draws[n] = cards.map(c => c.id);
-        if (n === 1){ S.journal.push({d: dk(), id: cards[0].id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120); }
-        award(id);
-        setTimeout(() => { render(); const r = document.querySelector('.reading, .daily-read'); if (r) r.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'}); }, reduceMotion ? 0 : 1000);
-      }
-      break;
-    }
-    case 'homeflip': {
-      if (isDone('tarot1')){ cardSheet(el.dataset.card); break; }
-      el.classList.add('flipped');
-      setTimeout(() => sparkleAt(el, 26, 1.2), reduceMotion ? 0 : 380);
-      const c = drawSpread(1)[0];
-      S.today.draws[1] = [c.id];
-      S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
-      award('tarot1');
-      setTimeout(render, reduceMotion ? 0 : 1000);
+    case 'flip': case 'homeflip': {
+      if (el.classList.contains('flipped') || (act === 'homeflip' && isDone('tarot1'))){ cardSheet(el.dataset.card); break; }
+      if (!chg) startCharge(el, true);
       break;
     }
     case 'card': cardSheet(el.dataset.card); break;
     case 'amode': UI.astres = el.dataset.m; render(); break;
     case 'sign': {
       const i = +el.dataset.i, z = ZODIAC[i];
-      openSheet(`<div class="sign-hero"><div class="glyph-orb"><span>${z.g}${VS}</span></div><h2 class="h-title gold" style="font-size:24px">${z.n}</h2><div class="small muted">${z.d} · ${z.el}</div></div>${horoBlock(i)}`);
+      openSheet(`<div class="h-horo stack"><div class="sign-hero"><div class="glyph-orb"><span>${z.g}${VS}</span></div><h2 class="h-title gold" style="font-size:24px">${z.n}</h2><div class="small muted">${z.d} · ${z.el}</div></div><figure class="constel-box" style="padding:0">${constellation(i)}</figure>${horoBlock(i)}</div>`);
       break;
     }
     case 'reveal': {
-      const id = el.dataset.id, rect = el.getBoundingClientRect();
-      if (award(id)) sparkle(rect.left + rect.width / 2, rect.top + rect.height / 2, 34, 1.3);
+      const id = el.dataset.id, rect = el.getBoundingClientRect(), cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      if (award(id)){ sparkle(cx, cy, 40, 1.4); ringAt(cx, cy, Math.max(rect.width, 120), '#ffe6a8'); if (id === 'rune') Snd.bowl(130.8, .22); else Snd.chime(); buzz(25); }
       render(); break;
     }
+    case 'sound':
+      if (S.zen){ toast('Le mode zen coupe les sons. Désactivez-le dans le profil.'); break; }
+      S.sound = !S.sound; save(); render(); if (S.sound){ Snd.unlock(); Snd.ding(); } break;
+    case 'toggle': {
+      const k = el.dataset.k;
+      if (k === 'sound' && S.zen){ S.zen = false; S.sound = true; }
+      else if (k === 'tilt' && S.zen){ S.zen = false; S.tilt = true; }
+      else S[k] = !S[k];
+      applyZen(); save();
+      if (k === 'tilt'){ if (S.tilt) enableTilt(true); else { tX = tY = 0; } }
+      if (k === 'sound' && S.sound){ Snd.unlock(); Snd.ding(); }
+      if (k === 'zen' && !S.zen){ sparkleAt(el, 30, 1.2); Snd.chime(); }
+      render(); break;
+    }
+    case 'lvl-close': { const o = el.closest('.lvl-ov'); if (o) o.remove(); break; }
+    case 'gsuit': UI.gsuit = el.dataset.s; render(); break;
+    case 'glocked': toast('Cette carte ne s\'est pas encore montrée à vous'); break;
     case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
+    case 'legal': legalSheet(el.dataset.t); break;
     case 'privacy': openSheet(`<div class="stack">${PRIVACY}</div>`); break;
     case 'erase': UI.confirmErase = true; render(); break;
     case 'erase-no': UI.confirmErase = false; render(); break;
     case 'erase-yes':
       try { localStorage.removeItem(KEY); } catch (err) {}
-      S = defaultState(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
+      S = defaultState(); shown = 0; applyZen(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
     case 'install': installApp(); break;
     case 'install-hide': S.installHide = true; save(); render(); break;
     case 'close': closeSheet(); break;
@@ -1711,14 +2467,14 @@ document.addEventListener('submit', e => {
     if (!q){ $('#q-err').textContent = 'Écrivez une question à laquelle on peut répondre par oui ou non.'; return; }
     const norm = q.toLowerCase().replace(/\s+/g, ' ');
     const r = pick(rngFrom(userKey() + '|' + dk() + '|pendule|' + norm), PENDULUM);
-    UI.pendulum = {q, a: r.a, d: r.d, swinging: !reduceMotion};
+    UI.pendulum = {q, a: r.a, d: r.d, swinging: !calm()};
     render();
     setTimeout(() => {
       if (!UI.pendulum || UI.pendulum.q !== q) return;
       UI.pendulum.swinging = false;
       award('pendule'); render();
-      const ans = document.querySelector('.answer'); if (ans) sparkleAt(ans, 30, 1.2);
-    }, reduceMotion ? 0 : 2800);
+      const ans = document.querySelector('.answer'); if (ans){ sparkleAt(ans, 36, 1.3); Snd.chime(); buzz(25); }
+    }, calm() ? 0 : 2800);
     return;
   }
   if (kind === 'compat'){
@@ -1726,13 +2482,48 @@ document.addEventListener('submit', e => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(b) || b < '1900-01-01' || b > dk()){ $('#cb-err').textContent = 'Choisissez une date de naissance valide.'; return; }
     UI.compat = {name: f.cn.value.trim().slice(0, 30), birth: b};
     award('compat'); render();
-    const ring = document.querySelector('.ring'); if (ring){ ring.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'center'}); setTimeout(() => sparkleAt(ring, 34, 1.3), 300); }
+    const ring = document.querySelector('.ring'); if (ring){ ring.scrollIntoView({behavior: calm() ? 'auto' : 'smooth', block:'center'}); setTimeout(() => { sparkleAt(ring, 40, 1.4, ['#ff9ad5','#ffc0a8','#fbe2a0','#fff3d6']); Snd.chime(); }, 300); }
   }
 });
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG'){ const f = t.closest('.face'); if (f) f.classList.add('noimg'); else t.style.visibility = 'hidden'; } }, true);
-document.addEventListener('pointerdown', e => { if (e.target.closest('.btn, .rit, .tile, .seg button, .signs button')) sparkle(e.clientX, e.clientY, 7, .6); });
+const TOUCHY = '.btn, .tile, .seg button, .signs button, .explore-links button, .read-row, .gslot, .grim-link, .sw-row, .snd, .back-opt';
+const RIPPLE = '.btn, .seg button, .signs button, .explore-links button';
+const SKY_SKIP = 'button, a, input, label, form, .frame, .frame-plain, .tile, .dtile, .sheet, .nav, .stat, .tcard, .lvl-ov, .breathe, .overlay .frame';
+document.addEventListener('pointerdown', e => {
+  eatClick = false;
+  lastTap = {x: e.clientX, y: e.clientY, t: performance.now()};
+  if (S.sound && !S.zen) Snd.unlock();
+  const card = e.target.closest('.tcard');
+  if (card && !card.classList.contains('flipped') && e.button === 0 && !(card.dataset.act === 'homeflip' && isDone('tarot1'))){
+    downAt = {x: e.clientX, y: e.clientY, id: e.pointerId};
+    startCharge(card, false);
+    return;
+  }
+  const t = e.target.closest(TOUCHY);
+  if (t){
+    sparkle(e.clientX, e.clientY, 7, .6);
+    if (!calm() && t.matches(RIPPLE)){
+      const b = t.getBoundingClientRect(), d = Math.max(b.width, b.height) * 2.4, r = document.createElement('span');
+      r.className = 'ripple'; r.style.width = r.style.height = d + 'px'; r.style.left = (e.clientX - b.left) + 'px'; r.style.top = (e.clientY - b.top) + 'px';
+      t.appendChild(r); setTimeout(() => r.remove(), 700);
+    }
+    return;
+  }
+  if (!e.target.closest(SKY_SKIP)){ sparkle(e.clientX, e.clientY, 16, .9); Snd.twinkle(); }
+});
+document.addEventListener('pointermove', e => {
+  if (chg && chg.down && downAt && e.pointerId === downAt.id && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 14) abortCharge();
+  if (e.pointerType === 'mouse' && S.tilt && !calm()){ tX = (e.clientX / W - .5) * 1.2; tY = (e.clientY / H - .5) * 1.2; }
+});
+document.addEventListener('pointerup', e => {
+  releaseCharge(); downAt = null;
+  if (!calm()){ const t = e.target.closest(TOUCHY); if (t){ t.classList.remove('boing'); void t.offsetWidth; t.classList.add('boing'); setTimeout(() => t.classList.remove('boing'), 520); } }
+  if (motionNeedsPermission && S.tilt && !tiltOn && !tiltAsked){ tiltAsked = true; enableTilt(true); }
+});
+document.addEventListener('pointercancel', () => { abortCharge(); downAt = null; });
+document.addEventListener('contextmenu', e => { if (e.target.closest('.tcard')) e.preventDefault(); });
 window.addEventListener('hashchange', fromHash);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.profile && S.today.d !== dk()){ UI.flips = new Set(); checkIn(); render(); } });
 window.addEventListener('resize', resize);
@@ -1740,9 +2531,12 @@ window.addEventListener('resize', resize);
 /* ---------- Démarrage ---------- */
 $('#nav').innerHTML = `<div class="nav-in">${VIEWS.map(v => `<a href="#${v}" data-v="${v}">${ICONS[v]}<span>${NAV_LABELS[v]}</span></a>`).join('')}</div>`;
 resize();
-if (!reduceMotion) requestAnimationFrame(skyLoop);
+setTod(); setInterval(setTod, 5 * 60 * 1000);
+applyZen();
+requestAnimationFrame(skyLoop);
+enableTilt(false);
 const h0 = location.hash.slice(1);
-if (VIEWS.includes(h0)) UI.view = h0;
+if (ROUTES.includes(h0)) UI.view = h0;
 if (S.consent && S.profile) checkIn();
 function installBonus(){ if (standalone() && S.profile && !S.installBonus){ S.installBonus = true; gain(50, 'Application installée'); save(); } }
 installBonus();

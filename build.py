@@ -5,17 +5,18 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 P = lambda *a: os.path.join(ROOT, *a)
 read = lambda f: open(P(f), encoding='utf-8').read()
 
-BODY = """<div class="nebula" aria-hidden="true"></div>
+BODY = """<div class="nebula" aria-hidden="true"><i class="nb n1"></i><i class="nb n2"></i><i class="nb n3"></i><i class="aurora"></i></div>
 <canvas id="sky" aria-hidden="true"></canvas>
 <main class="wrap" id="app" hidden></main>
 <nav class="nav" id="nav" aria-label="Navigation" hidden></nav>
 <div class="overlay onboard" id="onboard" hidden><div class="wrap" id="onboard-in"></div></div>
 <div id="sheet-root"></div>
 <div id="toast-root" aria-live="polite"></div>
+<div id="flash" aria-hidden="true"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
 <script>
 """ + read('src/data.js') + read('src/app.js') + "</script>\n"
-head = read('src/head.html')
+head = read('src/head.html') + read('src/fx.css')  # fx.css : couleurs, ciel vivant, effets
 
 # 1. Version artifact (le squelette est ajouté à la publication)
 open(P('index.html'), 'w', encoding='utf-8').write(head + BODY)

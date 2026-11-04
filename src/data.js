@@ -118,6 +118,22 @@ const ZODIAC = [
   {n:"Verseau",g:"♒",d:"20 janvier – 18 février",el:"Air",pl:"Uranus",t:"Original, libre, tourné vers l'avenir."},
   {n:"Poissons",g:"♓",d:"19 février – 20 mars",el:"Eau",pl:"Neptune",t:"Rêveur, intuitif, d'une grande empathie."}
 ];
+/* Constellations stylisées (repère 100 × 60) : p = étoiles, e = traits, b = étoiles brillantes */
+const ZODIAC_DE = ["du Bélier","du Taureau","des Gémeaux","du Cancer","du Lion","de la Vierge","de la Balance","du Scorpion","du Sagittaire","du Capricorne","du Verseau","des Poissons"];
+const CONSTEL = [
+  {p:[[14,34],[42,22],[54,26],[86,42]], e:[[0,1],[1,2],[2,3]], b:[1]},
+  {p:[[52,46],[40,36],[14,12],[64,36],[84,12],[92,54]], e:[[0,1],[1,2],[0,3],[3,4]], b:[1]},
+  {p:[[28,8],[46,8],[24,28],[48,26],[18,52],[52,52],[10,40],[62,42]], e:[[0,2],[2,4],[1,3],[3,5],[2,3],[2,6],[3,7]], b:[0,1]},
+  {p:[[50,28],[50,6],[28,54],[74,48],[40,12]], e:[[0,1],[0,2],[0,3],[1,4]], b:[]},
+  {p:[[20,46],[24,32],[34,24],[42,14],[34,6],[24,8],[62,24],[60,40],[88,38]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[2,6],[0,7],[7,8],[8,6],[6,7]], b:[0]},
+  {p:[[10,18],[26,22],[40,20],[48,32],[64,28],[82,22],[58,52],[74,44]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[3,6],[4,7]], b:[6]},
+  {p:[[50,8],[28,28],[72,26],[22,52],[78,50]], e:[[0,1],[0,2],[1,2],[1,3],[2,4]], b:[0]},
+  {p:[[18,14],[10,6],[24,6],[26,22],[36,28],[44,34],[50,42],[58,50],[70,54],[82,50],[88,40],[82,32]], e:[[1,0],[2,0],[0,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11]], b:[4]},
+  {p:[[22,40],[40,42],[42,26],[30,20],[52,12],[60,28],[72,22],[68,42],[56,50]], e:[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[2,5],[5,6],[6,7],[7,8],[8,1],[5,7]], b:[5]},
+  {p:[[12,16],[22,24],[36,44],[52,50],[70,40],[86,22],[80,14],[60,26],[40,28]], e:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,1]], b:[5]},
+  {p:[[14,22],[28,14],[42,20],[54,14],[62,28],[54,42],[66,52],[80,46],[90,54]], e:[[0,1],[1,2],[2,3],[2,4],[4,5],[5,6],[6,7],[7,8]], b:[2]},
+  {p:[[10,14],[18,6],[26,12],[20,20],[44,30],[62,40],[80,52],[78,36],[84,24],[92,30],[86,40]], e:[[0,1],[1,2],[2,3],[3,0],[2,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,7]], b:[6]}
+];
 const HORO = {
   open: [
     "{P} vous accompagne et donne le ton de la journée.",
@@ -449,3 +465,17 @@ const RITUALS = [
 const DAILY = ['tarot1', 'horo'];
 const VISIT_PTS = 10, DAILY_BONUS = 20;
 const STREAK_BONUS = {3:15, 7:50, 14:100, 30:200, 60:300, 100:500, 365:1000};
+/* --- Mentions légales : complétez ces trois champs avant de publier --- */
+const LEGAL = {
+  editeur: "Aurélien Marck",              /* Personne ou société qui publie le site */
+  contact: "aurelien.marck@gmail.com",    /* Adresse e-mail de contact */
+  directeur: "Aurélien Marck",            /* Directeur de la publication */
+  developpement: "Aurélien Marck, avec l'aide de Claude (Anthropic)",
+  annee: "2026"
+};
+/* ============ PERSONNALISATION ============
+   Images des cartes : remplacez les fichiers du dossier cards/ en gardant les mêmes noms
+   (m00 à m21 pour les arcanes majeurs ; w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14),
+   ou changez simplement la fonction ci-dessous. */
+const cardImg = id => 'cards/' + id + '.webp';
+
