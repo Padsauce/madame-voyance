@@ -24,6 +24,7 @@ open(P('index.html'), 'w', encoding='utf-8').write(head + BODY)
 dist = P('docs'); shutil.rmtree(dist, ignore_errors=True)
 shutil.copytree(P('cards'), os.path.join(dist, 'cards'))
 shutil.copytree(P('icons'), os.path.join(dist, 'icons'))
+open(os.path.join(dist, '.nojekyll'), 'w').close()  # GitHub Pages : servir les fichiers tels quels
 page = ('<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         '<meta name="description" content="Votre voyance du jour : tarot, horoscope, lune, runes et numérologie.">\n'
