@@ -1,0 +1,16 @@
+MADAME VOYANCE : site installable
+
+Mise en ligne
+  Déposez tout le contenu de ce dossier sur n'importe quel hébergement statique en HTTPS
+  (Netlify Drop, GitHub Pages, Vercel, Cloudflare Pages, OVH...). Aucun serveur n'est nécessaire.
+  Netlify Drop est le plus rapide : app.netlify.com/drop, puis glissez le dossier.
+
+Installation sur téléphone
+  iPhone : ouvrir le site dans Safari > Partager > « Sur l'écran d'accueil ».
+  Android : Chrome propose « Installer l'application » (ou menu ⋮ > Installer).
+  L'app s'ouvre ensuite en plein écran et fonctionne hors ligne.
+
+Personnalisation
+  cards/  : illustrations des cartes (gardez les noms : m00 à m21, puis w/c/s/p 01 à 14).
+  icons/  : icône de l'app (192, 512, version « maskable » pour Android, 180 pour iPhone).
+  Après une modification, les téléphones reçoivent la nouvelle version à la visite suivante.
