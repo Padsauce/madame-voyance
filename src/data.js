@@ -480,8 +480,10 @@ const DECK_ARTS = [
   {id:'rws', n:'Rider-Waite-Smith', d:'Pamela Colman Smith, 1909', dir:'cards',
    credit:'Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Domaine public.'},
   /* Marseille (Jean Dodal) : ajouté dès que ses 78 images sont dans decks/marseille */
-  {id:'pixel', n:'Pixel', d:'Rider-Waite-Smith en pixel art', dir:'decks/pixel',
-   credit:'Version pixel art générée pour Madame Voyance à partir du tarot Rider-Waite-Smith.'}
+  {id:'8bits', n:'8 bits', d:'Pixel art, palette façon NES', dir:'decks/8bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 48×82 pixels, 13 couleurs de la palette NES.'},
+  {id:'16bits', n:'16 bits', d:'Pixel art, couleurs façon Mega Drive', dir:'decks/16bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 70×120 pixels, 32 couleurs en 9 bits comme la Mega Drive.'}
 ];
 let ART = 'rws';
 const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];
