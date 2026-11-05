@@ -37,7 +37,7 @@ const KEY = 'madame-voyance:v1';
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
-          deck:'22', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
+          deck:'22', art:'rws', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
           zen:reduceMotion, sound:true, tilt:!motionNeedsPermission, seen:{}, gm:{}};
 }
 function load(){
@@ -50,6 +50,7 @@ function load(){
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
 let S = load();
+ART = artOf(S.art).id;
 let shown = S.points;
 /* Grimoire : on reprend les cartes déjà tirées avant cette version */
 (function backfillSeen(){
@@ -689,6 +690,12 @@ function vTarot(){
         <button data-act="deck" data-deck="78" aria-pressed="${S.deck === '78'}">78 cartes</button>
       </div>
     </div>
+    <div class="deck-choice">
+      <span class="small muted">Illustrations</span>
+      <div class="seg" role="group" aria-label="Illustrations des cartes" style="min-width:220px">
+        ${DECK_ARTS.map(a => `<button data-act="art" data-id="${a.id}" aria-pressed="${ART === a.id}">${esc(a.n === 'Rider-Waite-Smith' ? 'Classique' : a.n)}</button>`).join('')}
+      </div>
+    </div>
     <div class="stage">
       <div class="spread n${n}">
         ${cards.map((c, i) => `<div class="slot">
@@ -965,7 +972,7 @@ function legalSheet(t){
       <dl>
         <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
         <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
-        <dt>Illustrations des cartes</dt><dd>Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Œuvre du domaine public.</dd>
+        <dt>Illustrations des cartes</dt>${DECK_ARTS.map(a => `<dd><b>${esc(a.n)}</b> : ${esc(a.credit)}</dd>`).join('')}
         <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
         <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
         <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
@@ -1013,6 +1020,11 @@ function vProfil(){
       <div class="stat"><b>${S.best} j</b><span>meilleure série</span></div>
       <div class="stat"><b>${S.rituals}</b><span>rituels accomplis</span></div>
     </div>
+
+    <section class="stack"><div class="section-head"><h2>Illustrations</h2><span class="count">${DECK_ARTS.length} jeux</span></div>
+      <div class="arts">${DECK_ARTS.map(a => `<button class="back-opt art-opt" data-act="art" data-id="${a.id}" aria-pressed="${ART === a.id}">
+          <span class="mini"><img src="${cardImg('m17', a.id)}" alt="" loading="lazy"></span><b>${esc(a.n)}</b><span>${esc(a.d)}</span></button>`).join('')}</div>
+    </section>
 
     <section class="stack"><div class="section-head"><h2>Dos de cartes</h2><span class="count">Débloqués par niveau</span></div>
       <div class="backs">${BACKS.map(bk => {
@@ -1064,7 +1076,7 @@ function vProfil(){
         </div>
       </div>
     </section>
-    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public.</p>
+    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public, et sa version pixel art.</p>
   </section>`;
 }
 
@@ -1322,6 +1334,7 @@ document.addEventListener('click', e => {
     case 'glocked': toast('Cette carte ne s\'est pas encore montrée à vous'); break;
     case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
+    case 'art': S.art = ART = artOf(el.dataset.id).id; save(); render(); break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
     case 'legal': legalSheet(el.dataset.t); break;
     case 'privacy': openSheet(`<div class="stack">${PRIVACY}</div>`); break;
@@ -1329,7 +1342,7 @@ document.addEventListener('click', e => {
     case 'erase-no': UI.confirmErase = false; render(); break;
     case 'erase-yes':
       try { localStorage.removeItem(KEY); } catch (err) {}
-      S = defaultState(); shown = 0; applyZen(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
+      S = defaultState(); ART = 'rws'; shown = 0; applyZen(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
     case 'install': installApp(); break;
     case 'install-hide': S.installHide = true; save(); render(); break;
     case 'close': closeSheet(); break;

@@ -473,9 +473,17 @@ const LEGAL = {
   developpement: "Aurélien Marck, avec l'aide de Claude (Anthropic)",
   annee: "2026"
 };
-/* ============ PERSONNALISATION ============
-   Images des cartes : remplacez les fichiers du dossier cards/ en gardant les mêmes noms
-   (m00 à m21 pour les arcanes majeurs ; w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14),
-   ou changez simplement la fonction ci-dessous. */
-const cardImg = id => 'cards/' + id + '.webp';
+/* ============ JEUX D'ILLUSTRATIONS ============
+   Chaque jeu est un dossier d'images aux mêmes noms : m00 à m21 pour les arcanes majeurs ;
+   w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14. Pour ajouter un jeu : un dossier + une ligne ici. */
+const DECK_ARTS = [
+  {id:'rws', n:'Rider-Waite-Smith', d:'Pamela Colman Smith, 1909', dir:'cards',
+   credit:'Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Domaine public.'},
+  /* Marseille (Jean Dodal) : ajouté dès que ses 78 images sont dans decks/marseille */
+  {id:'pixel', n:'Pixel', d:'Rider-Waite-Smith en pixel art', dir:'decks/pixel',
+   credit:'Version pixel art générée pour Madame Voyance à partir du tarot Rider-Waite-Smith.'}
+];
+let ART = 'rws';
+const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];
+const cardImg = (id, art) => artOf(art || ART).dir + '/' + id + '.webp';
 

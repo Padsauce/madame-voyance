@@ -25,6 +25,7 @@ open(P('index.html'), 'w', encoding='utf-8').write(head + BODY)
 dist = P('docs'); shutil.rmtree(dist, ignore_errors=True)
 shutil.copytree(P('cards'), os.path.join(dist, 'cards'))
 shutil.copytree(P('icons'), os.path.join(dist, 'icons'))
+shutil.copytree(P('decks'), os.path.join(dist, 'decks'))  # autres jeux d'illustrations
 open(os.path.join(dist, '.nojekyll'), 'w').close()  # GitHub Pages : servir les fichiers tels quels
 page = ('<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -50,7 +51,7 @@ manifest = {
 }
 open(os.path.join(dist, 'manifest.webmanifest'), 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2))
 
-files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))]
+files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))] + ['decks/%s/%s' % (d, f) for d in sorted(os.listdir(P('decks'))) for f in sorted(os.listdir(P('decks', d)))]
 version = hashlib.sha1(page.encode()).hexdigest()[:8]
 sw = """/* Madame Voyance : fonctionnement hors ligne */
 const CACHE = 'mv-%s';
@@ -98,7 +99,7 @@ Installation sur téléphone
   L'app s'ouvre ensuite en plein écran et fonctionne hors ligne.
 
 Personnalisation
-  cards/  : illustrations des cartes (gardez les noms : m00 à m21, puis w/c/s/p 01 à 14).
+  cards/  : jeu Rider-Waite-Smith ; decks/<jeu>/ : autres jeux (mêmes noms : m00 à m21, puis w/c/s/p 01 à 14).
   icons/  : icône de l'app (192, 512, version « maskable » pour Android, 180 pour iPhone).
   Après une modification, les téléphones reçoivent la nouvelle version à la visite suivante.
 """)
