@@ -51,7 +51,7 @@ manifest = {
 }
 open(os.path.join(dist, 'manifest.webmanifest'), 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2))
 
-files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))] + ['decks/%s/%s' % (d, f) for d in sorted(os.listdir(P('decks'))) for f in sorted(os.listdir(P('decks', d)))]
+files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))]  # autres jeux : mis en cache à la première utilisation
 version = hashlib.sha1(page.encode()).hexdigest()[:8]
 sw = """/* Madame Voyance : fonctionnement hors ligne */
 const CACHE = 'mv-%s';
@@ -81,7 +81,10 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match('index.html')));
     return;
   }
-  e.respondWith(caches.match(req, {ignoreSearch: true}).then(hit => hit || fetch(req)));
+  e.respondWith(caches.match(req, {ignoreSearch: true}).then(hit => hit || fetch(req).then(r => {
+    if (r.ok){ const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+    return r;
+  })));
 });
 """ % (version, json.dumps(files))
 open(os.path.join(dist, 'sw.js'), 'w', encoding='utf-8').write(sw)

@@ -693,7 +693,7 @@ function vTarot(){
     <div class="deck-choice">
       <span class="small muted">Illustrations</span>
       <div class="seg art-seg" role="group" aria-label="Illustrations des cartes" style="min-width:220px">
-        ${DECK_ARTS.map(a => `<button data-act="art" data-id="${a.id}" aria-pressed="${ART === a.id}">${esc(a.n === 'Rider-Waite-Smith' ? 'Classique' : a.n)}</button>`).join('')}
+        ${DECK_ARTS.map(a => `<button data-act="art" data-id="${a.id}" aria-pressed="${ART === a.id}">${esc(a.n)}</button>`).join('')}
       </div>
     </div>
     <div class="stage">
@@ -1076,7 +1076,7 @@ function vProfil(){
         </div>
       </div>
     </section>
-    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarot Rider-Waite-Smith (1909), domaine public, et ses versions 8 et 16 bits.</p>
+    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarots Rider-Waite-Smith (1909) et Jean Dodal (vers 1701), domaine public ; versions 8 et 16 bits générées.</p>
   </section>`;
 }
 

@@ -477,9 +477,10 @@ const LEGAL = {
    Chaque jeu est un dossier d'images aux mêmes noms : m00 à m21 pour les arcanes majeurs ;
    w = Bâtons, c = Coupes, s = Épées, p = Deniers, 01 à 14. Pour ajouter un jeu : un dossier + une ligne ici. */
 const DECK_ARTS = [
-  {id:'rws', n:'Rider-Waite-Smith', d:'Pamela Colman Smith, 1909', dir:'cards',
+  {id:'rws', n:'Classique', d:'Rider-Waite-Smith, 1909', dir:'cards',
    credit:'Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Domaine public.'},
-  /* Marseille (Jean Dodal) : ajouté dès que ses 78 images sont dans decks/marseille */
+  {id:'marseille', n:'Marseille', d:'Jean Dodal, Lyon, vers 1701', dir:'decks/marseille',
+   credit:'Tarot de Marseille de Jean Dodal (Lyon, vers 1701), exemplaire de la Bibliothèque nationale de France, via Wikimedia Commons. Domaine public.'},
   {id:'8bits', n:'8 bits', d:'Pixel art, palette façon NES', dir:'decks/8bits',
    credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 48×82 pixels, 13 couleurs de la palette NES.'},
   {id:'16bits', n:'16 bits', d:'Pixel art, couleurs façon Mega Drive', dir:'decks/16bits',
