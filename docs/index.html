@@ -48,7 +48,7 @@ body{margin:0}
 [hidden]{display:none!important}
 img{max-width:100%}
 html,body{height:100%;background:var(--night);color:var(--ink)}
-body{font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+body{font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden;overflow-x:clip}
 *,*::before,*::after{box-sizing:border-box}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 input{font:inherit;color:inherit}
@@ -153,18 +153,18 @@ input{font:inherit;color:inherit}
 .tc-inner{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,.7,.2,1)}
 .tcard.flipped .tc-inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
-.face.front{transform:rotateY(180deg);background:#f3ead2;border:2px solid var(--gold);box-shadow:0 0 24px -4px var(--violet-glow)}
+.face.front{transform:rotateY(180deg);background:#f3ead2;border:2px solid var(--gold)}
 .face.front img{width:100%;height:100%;object-fit:cover;display:block}
 .face.front .fallback{display:none}
 .face.front.noimg{display:grid;place-items:center;background:linear-gradient(180deg,var(--velvet-2),var(--night-2));padding:8px;text-align:center}
 .face.front.noimg img{display:none}
 .face.front.noimg .fallback{display:block;font-family:var(--f-display);color:var(--gold-hi);font-size:13px}
-.tcard:not(.flipped) .tc-inner{animation:hover-card 4s ease-in-out infinite}
-.slot:nth-child(odd) .tcard:not(.flipped) .tc-inner{animation-delay:-2s}
+.tcard:not(.flipped){animation:hover-card 4s ease-in-out infinite}
+.slot:nth-child(odd) .tcard:not(.flipped){animation-delay:-2s}
 @keyframes hover-card{50%{transform:translateY(-4px)}}
 
 /* Dos de cartes */
-.back{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(10,6,22,.8) inset,0 0 0 4px var(--gold-line) inset,0 0 22px -4px var(--violet-glow)}
+.back{border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(10,6,22,.8) inset,0 0 0 4px var(--gold-line) inset}
 .back-nuit{background:radial-gradient(circle at 50% 50%,rgba(230,195,120,.28) 0 14%,transparent 15%),radial-gradient(circle at 50% 50%,transparent 0 30%,rgba(230,195,120,.35) 30.5% 31.5%,transparent 32%),radial-gradient(1px 1px at 20% 25%,#fff8 99%,transparent),radial-gradient(1px 1px at 75% 18%,#fff9 99%,transparent),radial-gradient(1px 1px at 30% 80%,#fff7 99%,transparent),radial-gradient(1px 1px at 82% 72%,#fff8 99%,transparent),linear-gradient(160deg,#2b1760,#120a2a)}
 .back-lune{background:radial-gradient(circle at 57% 41%,#1c1046 0 21%,transparent 22%),radial-gradient(circle at 46% 47%,var(--gold) 0 22%,transparent 23%),repeating-radial-gradient(circle at 50% 50%,transparent 0 9px,rgba(230,195,120,.12) 9px 10px),linear-gradient(160deg,#241052,#0e0722)}
 .back-soleil{background:radial-gradient(circle at 50% 50%,var(--gold-hi) 0 12%,var(--gold) 13% 16%,transparent 17%),repeating-conic-gradient(from 0deg at 50% 50%,rgba(230,195,120,.42) 0 4deg,transparent 4deg 15deg),linear-gradient(160deg,#3b1650,#160a2c)}
@@ -496,8 +496,15 @@ html[data-tod="nuit"]{--sky-top:#0a0616;--sky-bot:#150b2e;--neb-a:rgba(120,70,22
 
 /* ---- Cartes : charge, révélation ---- */
 .spread{max-width:100%}
-#app{overflow-x:clip}
-.tcard{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+/* Le débordement horizontal est coupé au bord de l'écran (body), pas au bord de l'app : les halos des cartes restent entiers. */
+.tcard{position:relative;isolation:isolate;overflow:visible;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.tcard img{pointer-events:none}
+/* Halo de la carte : à plat derrière elle, hors du calque 3D (Safari rogne les ombres des faces pendant la rotation). */
+.tcard::after{content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:-1;
+  box-shadow:0 0 22px -4px var(--violet-glow);transition:box-shadow .5s}
+.tcard.flipped::after{box-shadow:0 0 26px -2px var(--ha),0 0 2px var(--gold-hi)}
+.tcard.flipping::after{animation:flip-glow 1s cubic-bezier(.3,1.45,.5,1)}
+@keyframes flip-glow{0%{transform:scaleX(1)}40%{transform:scaleX(.08);opacity:.5}100%{transform:scaleX(1);opacity:1}}
 .tcard img{-webkit-user-drag:none;-webkit-touch-callout:none}
 .tcard::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:-1;opacity:0;filter:blur(14px);
   background:conic-gradient(from var(--ang),transparent 0 8%,var(--hb) 16%,transparent 28%,var(--ha) 42%,transparent 56%,var(--rose) 68%,transparent 80%,var(--cyan) 90%,transparent)}
@@ -508,7 +515,6 @@ html[data-tod="nuit"]{--sky-top:#0a0616;--sky-bot:#150b2e;--neb-a:rgba(120,70,22
 .tc-inner{transition:transform 1s cubic-bezier(.3,1.45,.5,1)}
 .tcard.pop{animation:card-pop .8s cubic-bezier(.3,1.7,.5,1)}
 @keyframes card-pop{0%{scale:1.07}30%{scale:1.17}100%{scale:1}}
-.tcard.flipped .face.front{box-shadow:0 0 26px -2px var(--ha),0 0 2px var(--gold-hi)}
 #flash{position:fixed;inset:0;z-index:84;pointer-events:none;opacity:0;
   background:radial-gradient(circle at var(--fx,50%) var(--fy,40%),rgba(255,248,226,.9),rgba(255,214,150,.4) 22%,rgba(200,150,255,.18) 42%,transparent 65%)}
 #flash.on{animation:flash .6s ease-out}
@@ -1725,9 +1731,9 @@ function vAccueil(){
       <div class="daily2">
         <div class="dtile hue-tile h-tarot ${cardDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Carte du jour</span><span class="badge ${cardDone ? 'ok' : ''}">${cardDone ? '✓' : '+' + ptsOf('tarot1')}</span></div>
-          <button class="tcard home-card ${cardDone ? 'flipped' : ''}" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
+          <div class="tcard home-card ${cardDone ? 'flipped' : ''}" role="button" tabindex="0" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(card)}</span>
-          </button>
+          </div>
           ${cardDone
             ? `<div class="dt-name">${esc(card.name)}</div><div class="dt-text">${esc(card.msg)}</div><button class="dt-link" data-act="card" data-card="${card.id}">Voir la carte</button>`
             : `<div class="dt-name"><span class="hint-hold"><i></i>Gardez le doigt dessus</span></div>`}
@@ -1807,9 +1813,9 @@ function vTarot(){
     <div class="stage">
       <div class="spread n${n}">
         ${cards.map((c, i) => `<div class="slot">
-          <button class="tcard ${flipped(i) ? 'flipped' : ''}" data-act="flip" data-i="${i}" data-card="${c.id}" aria-label="${flipped(i) ? esc(c.name) : 'Carte face cachée, ' + esc(sp.pos[i])}">
+          <div class="tcard ${flipped(i) ? 'flipped' : ''}" role="button" tabindex="0" data-act="flip" data-i="${i}" data-card="${c.id}" aria-label="${flipped(i) ? esc(c.name) : 'Carte face cachée, ' + esc(sp.pos[i])}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(c)}</span>
-          </button>
+          </div>
           ${n > 1 ? `<span class="slot-label">${n === 10 ? (i + 1) + '. ' : ''}${esc(sp.pos[i])}</span>` : ''}
         </div>`).join('')}
       </div>
@@ -2315,9 +2321,10 @@ function fromHash(){
 }
 
 /* ---------- Tirage : charger la carte, puis la révéler ---------- */
+function markFlipping(el){ el.classList.add('flipping'); setTimeout(() => el.classList.remove('flipping'), 1100); }
 function flipTarot(el){
   const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
-  UI.flips.add(i); el.classList.add('flipped');
+  UI.flips.add(i); el.classList.add('flipped'); markFlipping(el);
   el.setAttribute('aria-label', CARD[el.dataset.card].name);
   if (UI.flips.size >= n && !isDone(id)){
     const cards = drawSpread(n);
@@ -2329,7 +2336,7 @@ function flipTarot(el){
   }
 }
 function flipHome(el){
-  el.classList.add('flipped');
+  el.classList.add('flipped'); markFlipping(el);
   const c = drawSpread(1)[0];
   S.today.draws[1] = [c.id];
   S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
@@ -2486,7 +2493,11 @@ document.addEventListener('submit', e => {
   }
 });
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSheet();
+  const el = e.target;
+  if ((e.key === 'Enter' || e.key === ' ') && el && el.classList && el.classList.contains('tcard')){ e.preventDefault(); el.click(); }
+});
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG'){ const f = t.closest('.face'); if (f) f.classList.add('noimg'); else t.style.visibility = 'hidden'; } }, true);
 const TOUCHY = '.btn, .tile, .seg button, .signs button, .explore-links button, .read-row, .gslot, .grim-link, .sw-row, .snd, .back-opt';
 const RIPPLE = '.btn, .seg button, .signs button, .explore-links button';

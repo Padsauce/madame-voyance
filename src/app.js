@@ -610,9 +610,9 @@ function vAccueil(){
       <div class="daily2">
         <div class="dtile hue-tile h-tarot ${cardDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Carte du jour</span><span class="badge ${cardDone ? 'ok' : ''}">${cardDone ? '✓' : '+' + ptsOf('tarot1')}</span></div>
-          <button class="tcard home-card ${cardDone ? 'flipped' : ''}" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
+          <div class="tcard home-card ${cardDone ? 'flipped' : ''}" role="button" tabindex="0" data-act="homeflip" data-card="${card.id}" aria-label="${cardDone ? esc(card.name) : 'Retourner ma carte du jour'}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(card)}</span>
-          </button>
+          </div>
           ${cardDone
             ? `<div class="dt-name">${esc(card.name)}</div><div class="dt-text">${esc(card.msg)}</div><button class="dt-link" data-act="card" data-card="${card.id}">Voir la carte</button>`
             : `<div class="dt-name"><span class="hint-hold"><i></i>Gardez le doigt dessus</span></div>`}
@@ -692,9 +692,9 @@ function vTarot(){
     <div class="stage">
       <div class="spread n${n}">
         ${cards.map((c, i) => `<div class="slot">
-          <button class="tcard ${flipped(i) ? 'flipped' : ''}" data-act="flip" data-i="${i}" data-card="${c.id}" aria-label="${flipped(i) ? esc(c.name) : 'Carte face cachée, ' + esc(sp.pos[i])}">
+          <div class="tcard ${flipped(i) ? 'flipped' : ''}" role="button" tabindex="0" data-act="flip" data-i="${i}" data-card="${c.id}" aria-label="${flipped(i) ? esc(c.name) : 'Carte face cachée, ' + esc(sp.pos[i])}">
             <span class="tc-inner">${backFace(S.back)}${cardFront(c)}</span>
-          </button>
+          </div>
           ${n > 1 ? `<span class="slot-label">${n === 10 ? (i + 1) + '. ' : ''}${esc(sp.pos[i])}</span>` : ''}
         </div>`).join('')}
       </div>
@@ -1200,9 +1200,10 @@ function fromHash(){
 }
 
 /* ---------- Tirage : charger la carte, puis la révéler ---------- */
+function markFlipping(el){ el.classList.add('flipping'); setTimeout(() => el.classList.remove('flipping'), 1100); }
 function flipTarot(el){
   const i = +el.dataset.i, n = UI.tarot, id = 'tarot' + n;
-  UI.flips.add(i); el.classList.add('flipped');
+  UI.flips.add(i); el.classList.add('flipped'); markFlipping(el);
   el.setAttribute('aria-label', CARD[el.dataset.card].name);
   if (UI.flips.size >= n && !isDone(id)){
     const cards = drawSpread(n);
@@ -1214,7 +1215,7 @@ function flipTarot(el){
   }
 }
 function flipHome(el){
-  el.classList.add('flipped');
+  el.classList.add('flipped'); markFlipping(el);
   const c = drawSpread(1)[0];
   S.today.draws[1] = [c.id];
   S.journal.push({d: dk(), id: c.id}); if (S.journal.length > 120) S.journal = S.journal.slice(-120);
@@ -1371,7 +1372,11 @@ document.addEventListener('submit', e => {
   }
 });
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSheet();
+  const el = e.target;
+  if ((e.key === 'Enter' || e.key === ' ') && el && el.classList && el.classList.contains('tcard')){ e.preventDefault(); el.click(); }
+});
 document.addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG'){ const f = t.closest('.face'); if (f) f.classList.add('noimg'); else t.style.visibility = 'hidden'; } }, true);
 const TOUCHY = '.btn, .tile, .seg button, .signs button, .explore-links button, .read-row, .gslot, .grim-link, .sw-row, .snd, .back-opt';
 const RIPPLE = '.btn, .seg button, .signs button, .explore-links button';
