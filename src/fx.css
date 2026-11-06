@@ -270,12 +270,12 @@ html.zen *,html.zen *::before,html.zen *::after{animation-duration:.001ms!import
 html.zen .breathe .orb{transform:scale(.9)}
 html.zen .aurora{display:none}
 /* ---- Jeux d'illustrations ---- */
-.arts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.arts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .deck-choice.art-choice{flex-direction:column;align-items:stretch;gap:6px}
 .seg.art-seg{grid-auto-columns:1fr;width:100%}
 .seg.art-seg button{padding:0 4px;font-size:12.5px}
 .art-opt .mini img{width:100%;height:100%;object-fit:cover;display:block}
 .art-opt b{font-family:var(--f-display);font-size:13px;font-weight:600;color:var(--gold-hi);line-height:1.2}
 .art-opt span:last-child{font-size:10.5px;line-height:1.25}
-img[src*="decks/8bits/"],img[src*="decks/16bits/"]{image-rendering:pixelated;image-rendering:crisp-edges}
+img[src*="decks/8bits/"]{image-rendering:pixelated;image-rendering:crisp-edges}
 </style>
