@@ -14,6 +14,8 @@ choix.json : {"lion": [0, false], ...}  (indice de la silhouette, retournement h
 import json, os, re, sys
 import numpy as np
 from PIL import Image
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from totem_hand import HAND
 
 W, H = 28, 20
 OUTLINE = (28, 20, 48)
@@ -101,11 +103,33 @@ def paint(m, base, stripes=0):
         rgb[y, x, :3] = OUTLINE if base.mean() > 60 else (250, 240, 210)
     return Image.fromarray(rgb, 'RGBA')
 
+def hand_frame(rows, pal):
+    assert len(set(map(len, rows))) == 1, 'lignes de longueurs différentes'
+    h, w = len(rows), len(rows[0])
+    a = np.zeros((h, w, 4), np.uint8)
+    for y, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            if ch != '.': a[y, x, :3] = hexrgb(pal[ch]); a[y, x, 3] = 255
+    im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    im.alpha_composite(Image.fromarray(a, 'RGBA'), ((W - w) // 2, H - h))   # centré, posé en bas
+    return im
+
+def hand_sheet(spec, mv):
+    f1 = hand_frame(spec['frames'][0], spec['pal'])
+    if len(spec['frames']) > 1: f2 = hand_frame(spec['frames'][1], spec['pal'])
+    else:                                                        # saut : tassement de l'image
+        bb = f1.getbbox(); part = f1.crop(bb); nh = max(2, round(part.height * .9))
+        f2 = Image.new('RGBA', (W, H), (0, 0, 0, 0)); f2.alpha_composite(part.resize((part.width, nh), Image.NEAREST), (bb[0], H - nh))
+    sheet = Image.new('RGBA', (W * 2, H), (0, 0, 0, 0)); sheet.paste(f1, (0, 0)); sheet.paste(f2, (W, 0))
+    return sheet
+
 def build(sil_dir, choices, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     meta = animals()
     for slug, (idx, flip) in choices.items():
         color, mv = meta[slug]
+        if slug in HAND:                                         # dessiné à la main (tools/totem_hand.py)
+            hand_sheet(HAND[slug], mv).save(os.path.join(out_dir, slug + '.png'), optimize=True); print(slug, 'main'); continue
         m = fit(silhouette(os.path.join(sil_dir, slug, f'{idx}.png'), flip))
         base = hexrgb(color)
         sheet = Image.new('RGBA', (W * 2, H), (0, 0, 0, 0))

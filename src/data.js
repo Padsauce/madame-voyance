@@ -599,7 +599,7 @@ const TOTEMS = [
    d:"Le Faucon voit loin et frappe juste. Il sait exactement ce qu'il veut et quand agir.",
    f:"Votre précision fait mouche à chaque fois.", o:"Votre impatience peut vous faire plonger trop tôt.",
    m:"Visez juste, puis laissez le vent vous porter."},
-  {id:'aigle', n:'Aigle', el:'Air', v:[-1,1,1,-2,2,2], c:'#6a4a30', mv:'hop', k:'Hauteur · Liberté · Vision',
+  {id:'aigle', n:'Aigle', el:'Air', v:[-1,1,1,-2,2,2], c:'#7a5232', mv:'hop', k:'Hauteur · Liberté · Vision',
    d:"L'Aigle vole au-dessus des nuages. De là-haut, il voit le dessin d'ensemble.",
    f:"Vous savez prendre de la hauteur dans les moments difficiles.", o:"Vu de si haut, on peut oublier les détails qui comptent.",
    m:"Prenez de la hauteur : la vue est meilleure."},
