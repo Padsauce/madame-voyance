@@ -1,0 +1,162 @@
+{
+"lion": [
+0,
+false
+],
+"tigre": [
+1,
+false
+],
+"panthere": [
+0,
+false
+],
+"renard": [
+6,
+false
+],
+"colibri": [
+0,
+false
+],
+"salamandre": [
+0,
+true
+],
+"lynx": [
+1,
+false
+],
+"coq": [
+0,
+true
+],
+"bouquetin": [
+0,
+true
+],
+"ours": [
+2,
+false
+],
+"loup": [
+1,
+false
+],
+"cerf": [
+1,
+false
+],
+"blaireau": [
+0,
+true
+],
+"tortue": [
+2,
+false
+],
+"castor": [
+0,
+true
+],
+"herisson": [
+0,
+false
+],
+"sanglier": [
+2,
+true
+],
+"elephant": [
+0,
+true
+],
+"ecureuil": [
+1,
+false
+],
+"hibou": [
+0,
+false
+],
+"corbeau": [
+2,
+false
+],
+"colombe": [
+0,
+true
+],
+"faucon": [
+1,
+false
+],
+"aigle": [
+4,
+false
+],
+"libellule": [
+0,
+false
+],
+"chauvesouris": [
+1,
+false
+],
+"abeille": [
+1,
+true
+],
+"chat": [
+0,
+true
+],
+"dauphin": [
+2,
+true
+],
+"baleine": [
+0,
+true
+],
+"loutre": [
+0,
+false
+],
+"cheval": [
+4,
+false
+],
+"papillon": [
+0,
+false
+],
+"cygne": [
+0,
+false
+],
+"grenouille": [
+3,
+true
+],
+"heron": [
+0,
+true
+],
+"saumon": [
+0,
+true
+],
+"pieuvre": [
+0,
+false
+],
+"phoque": [
+0,
+false
+],
+"serpent": [
+1,
+false
+]
+}

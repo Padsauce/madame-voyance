@@ -26,6 +26,7 @@ dist = P('docs'); shutil.rmtree(dist, ignore_errors=True)
 shutil.copytree(P('cards'), os.path.join(dist, 'cards'))
 shutil.copytree(P('icons'), os.path.join(dist, 'icons'))
 shutil.copytree(P('decks'), os.path.join(dist, 'decks'))  # autres jeux d'illustrations
+if os.path.isdir(P('totems')): shutil.copytree(P('totems'), os.path.join(dist, 'totems'))  # sprites des animaux totems
 open(os.path.join(dist, '.nojekyll'), 'w').close()  # GitHub Pages : servir les fichiers tels quels
 page = ('<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -52,6 +53,7 @@ manifest = {
 open(os.path.join(dist, 'manifest.webmanifest'), 'w', encoding='utf-8').write(json.dumps(manifest, ensure_ascii=False, indent=2))
 
 files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))]  # autres jeux : mis en cache à la première utilisation
+files += ['totems/' + f for f in sorted(os.listdir(P('totems')))] if os.path.isdir(P('totems')) else []
 version = hashlib.sha1(page.encode()).hexdigest()[:8]
 sw = """/* Madame Voyance : fonctionnement hors ligne */
 const CACHE = 'mv-%s';

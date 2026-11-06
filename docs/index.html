@@ -388,6 +388,7 @@ html[data-tod="nuit"]{--sky-top:#0a0616;--sky-bot:#150b2e;--neb-a:rgba(120,70,22
 .h-pierre{--ha:#ff8a4c;--hb:#ffd9a8}
 .h-pendule{--ha:#1fb8ae;--hb:#b9fff6}
 .h-compat{--ha:#ff5f86;--hb:#ffc0a8}
+.h-totem{--ha:#3fbf7f;--hb:#d6ffb0}
 .h-pensee{--ha:#a77dff;--hb:#fbe9b7}
 .s-m{--ha:#8b5cff;--hb:#ffd27a}
 .s-w{--ha:#ff6a2b;--hb:#ffd08a}
@@ -635,6 +636,64 @@ html.zen .aurora{display:none}
 .art-opt b{font-family:var(--f-display);font-size:13px;font-weight:600;color:var(--gold-hi);line-height:1.2}
 .art-opt span:last-child{font-size:10.5px;line-height:1.25}
 img[src*="decks/8bits/"]{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ---- Animal totem ---- */
+.tsprite{display:inline-block;flex:none;width:calc(28px * var(--z, 2));height:calc(20px * var(--z, 2));
+  background:var(--sp) 0 0 / 200% 100% no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
+.tsprite.big{--z:6}
+.tsprite.tile-sprite{--z:1.5}
+.totem-stage .tsprite,.pet[data-state=walk] .tsprite{animation:sp2 .42s steps(1) infinite}
+@keyframes sp2{0%{background-position:0 0}50%{background-position:100% 0}}
+.totem-hero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.totem-stage{position:relative;display:grid;place-items:center;width:min(240px,70vw);aspect-ratio:7/5;border-radius:50%;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--ha) 45%,transparent),transparent);filter:drop-shadow(0 0 18px color-mix(in srgb,var(--ha) 60%,transparent))}
+.totem-stage.mv-fly .tsprite,.totem-stage.mv-swim .tsprite{translate:0 0;animation:sp2 .42s steps(1) infinite,float 2.6s ease-in-out infinite}
+@keyframes float{50%{translate:0 -8px}}
+.totem-parade{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 10px}
+.totem-parade .tsprite{--z:1.5}
+.totem-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tm{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);text-align:center}
+.tm b{font-family:var(--f-display);font-size:14px;color:var(--gold-hi)}
+.tm span:last-child{font-size:11px;color:var(--mist)}
+.tq{display:flex;flex-direction:column;gap:14px}
+.tq-head{display:flex;justify-content:space-between;align-items:center}
+.tq-q{font-family:var(--f-read);font-weight:600;font-size:clamp(22px,6vw,26px);line-height:1.25;margin:6px 0 0;text-wrap:balance}
+.tq-answers{display:flex;flex-direction:column;gap:10px}
+.tq-a{min-height:54px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.7);text-align:left;font-size:15px;line-height:1.35;transition:border-color .2s,background .2s}
+.tq-a:hover{border-color:var(--gold-line)}
+.tq-a[aria-pressed=true]{border-color:var(--ha);background:color-mix(in srgb,var(--ha) 22%,rgba(28,17,58,.7));box-shadow:0 0 18px -6px var(--ha)}
+
+/* Compagnon sur la barre */
+.pet{position:absolute;left:0;bottom:calc(100% - 7px);z-index:2;padding:0;border:0;background:none;cursor:pointer;
+  will-change:transform;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pet .tsprite{--z:2;display:block;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+.pet-flip{display:block}
+.pet.flip .pet-flip{transform:scaleX(-1)}
+.pet.mv-fly{bottom:calc(100% + 6px)}
+.pet.mv-fly[data-state=walk] .tsprite{animation:sp2 .22s steps(1) infinite,fly 1.8s ease-in-out infinite}
+@keyframes fly{0%,100%{translate:0 0}25%{translate:0 -10px}75%{translate:0 4px}}
+.pet.mv-hop[data-state=walk] .tsprite{animation:sp2 .5s steps(1) infinite,hop .5s ease-out infinite}
+@keyframes hop{0%,100%{translate:0 0}40%{translate:0 -9px}}
+.pet.mv-swim[data-state=walk] .tsprite{animation:sp2 .5s steps(1) infinite,swim 1.6s ease-in-out infinite}
+@keyframes swim{0%,100%{translate:0 0;rotate:-4deg}50%{translate:0 -4px;rotate:4deg}}
+.pet.mv-walk[data-state=walk] .tsprite{animation:sp2 .36s steps(1) infinite,step .36s steps(2) infinite}
+@keyframes step{50%{translate:0 -1px}}
+.pet.mv-crawl[data-state=walk] .tsprite{animation:sp2 .8s steps(1) infinite}
+.pet[data-state=sit] .tsprite{animation:breathe-pet 2.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes breathe-pet{50%{scale:1 1.05}}
+.pet[data-state=sleep] .tsprite{filter:brightness(.7) saturate(.8) drop-shadow(0 2px 0 rgba(0,0,0,.35));animation:breathe-pet 3.4s ease-in-out infinite;transform-origin:50% 100%}
+.pet.mv-fly[data-state=sleep],.pet.mv-fly[data-state=sit]{bottom:calc(100% - 7px)}
+.pet-z{position:absolute;right:4px;top:-6px;font-family:var(--f-display);font-size:14px;font-weight:700;color:var(--gold-hi);opacity:0;pointer-events:none}
+.pet[data-state=sleep] .pet-z{animation:zz 2.4s ease-in infinite}
+@keyframes zz{0%{opacity:0;translate:0 0}20%{opacity:1}100%{opacity:0;translate:10px -22px}}
+.pet.poke .tsprite{animation:poke .55s cubic-bezier(.3,1.6,.5,1)!important}
+@keyframes poke{0%{translate:0 0;scale:1.1 .85}40%{translate:0 -18px;scale:.92 1.1}100%{translate:0 0;scale:1 1}}
+.pet-say{position:absolute;bottom:calc(100% + 8px);padding:8px 12px;border-radius:12px;border:1px solid var(--gold-line);
+  background:linear-gradient(180deg,#2c1b55,#1a0f38);box-shadow:0 8px 24px -8px var(--violet-glow);font-family:var(--f-read);font-size:15px;line-height:1.3;
+  color:var(--ink);text-align:center;pointer-events:none;opacity:0;translate:0 6px;transition:opacity .25s,translate .25s}
+.pet.flip .pet-say{transform:none}
+.pet.saying .pet-say{opacity:1;translate:0 0}
+html.zen .pet .tsprite{animation:none!important;translate:none}
 </style>
 </head>
 <body>
@@ -1140,6 +1199,203 @@ let ART = 'rws';
 const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];
 const cardImg = (id, art) => artOf(art || ART).dir + '/' + id + '.webp';
 
+
+/* ============ ANIMAL TOTEM ============
+   Six traits, de -2 à +2 :
+   lien (solitaire − / entouré +), elan (réflexion − / action +), audace (prudence − / audace +),
+   nuit (jour − / nuit +), liberte (ancrage − / liberté +), intensite (douceur − / intensité +).
+   Chaque animal a un profil sur ces traits ; le quiz construit le vôtre, l'élément du signe solaire ajoute un léger penchant.
+   mv : façon de se déplacer sur la barre (walk, hop, fly, swim, crawl). c : couleur du sprite. */
+const TOTEM_AXES = ['lien', 'elan', 'audace', 'nuit', 'liberte', 'intensite'];
+const TOTEM_EL_BONUS = .12;
+const TOTEMS = [
+  // ---- Feu ----
+  {id:'lion', n:'Lion', el:'Feu', v:[1,1,2,-1,-1,2], c:'#e0a53a', mv:'walk', k:'Courage · Rayonnement · Protection',
+   d:"Le Lion règne par sa présence plus que par sa force. Il protège les siens et assume la place qu'on lui donne.",
+   f:"Vous savez prendre les choses en main quand tout le monde hésite.", o:"Votre fierté peut vous empêcher de demander de l'aide.",
+   m:"Rugir n'est utile que si l'on sait aussi se reposer au soleil."},
+  {id:'tigre', n:'Tigre', el:'Feu', v:[-2,1,2,1,0,2], c:'#e2782c', mv:'walk', k:'Puissance · Indépendance · Passion',
+   d:"Le Tigre avance seul, sûr de sa force. Il garde son énergie pour le moment décisif, puis s'y engage entièrement.",
+   f:"Votre détermination ne recule devant rien.", o:"Vous oubliez parfois de laisser entrer les autres.",
+   m:"Votre feu intérieur est un trésor : choisissez bien ce qu'il éclaire."},
+  {id:'panthere', n:'Panthère', el:'Feu', v:[-1,0,1,2,1,1], c:'#3b3350', mv:'walk', k:'Mystère · Élégance · Instinct',
+   d:"La Panthère se fond dans l'ombre et n'en sort qu'à son heure. Elle voit ce que les autres ne remarquent pas.",
+   f:"Votre instinct vous guide sans jamais vous tromper.", o:"Le secret peut devenir une armure trop lourde.",
+   m:"Ce qui est caché n'est pas perdu : votre heure viendra."},
+  {id:'renard', n:'Renard', el:'Feu', v:[-1,0,1,1,1,-1], c:'#e06a2a', mv:'walk', k:'Ruse · Adaptation · Malice',
+   d:"Le Renard trouve toujours un passage. Curieux et joueur, il transforme les obstacles en énigmes amusantes.",
+   f:"Vous vous adaptez à tout avec esprit.", o:"À force de détours, on peut perdre de vue le chemin direct.",
+   m:"La solution la plus simple est peut-être juste sous votre nez."},
+  {id:'cheval', n:'Cheval', el:'Feu', v:[1,2,1,-1,2,1], c:'#9a5a34', mv:'walk', k:'Liberté · Élan · Loyauté',
+   d:"Le Cheval a besoin d'espace et de vent. Généreux, il porte les autres aussi loin qu'il le peut.",
+   f:"Votre énergie entraîne tout le monde avec vous.", o:"Vous supportez mal les barrières, même celles qui protègent.",
+   m:"Galopez, mais revenez boire à la source."},
+  {id:'colibri', n:'Colibri', el:'Feu', v:[0,2,0,-2,2,-2], c:'#2fb88a', mv:'fly', k:'Joie · Légèreté · Énergie',
+   d:"Le Colibri butine la vie fleur après fleur. Minuscule, il rappelle que la joie se trouve dans les petites choses.",
+   f:"Votre enthousiasme rend les journées plus lumineuses.", o:"À trop voleter, on s'épuise : pensez à vous poser.",
+   m:"Une seule goutte de nectar suffit à illuminer la journée."},
+  {id:'salamandre', n:'Salamandre', el:'Feu', v:[-1,-1,1,1,-1,1], c:'#e8b020', mv:'crawl', k:'Transformation · Résilience · Secret',
+   d:"La Salamandre traverse le feu sans se brûler, disait la légende. Elle renaît de ce qui aurait pu la détruire.",
+   f:"Les épreuves vous rendent plus fort·e.", o:"Vous gardez vos blessures pour vous plus que nécessaire.",
+   m:"Ce qui vous a brûlé hier vous éclaire aujourd'hui."},
+  {id:'lynx', n:'Lynx', el:'Feu', v:[-2,-1,0,1,1,0], c:'#c79a62', mv:'walk', k:'Clairvoyance · Discrétion · Patience',
+   d:"Le Lynx observe sans être vu. On dit qu'il perçoit les secrets à travers les murs.",
+   f:"Vous comprenez les gens avant qu'ils ne parlent.", o:"Observer sans jamais s'impliquer peut isoler.",
+   m:"Partagez un peu de ce que vous voyez si bien."},
+  {id:'coq', n:'Coq', el:'Feu', v:[1,2,1,-2,-1,1], c:'#d8402e', mv:'walk', k:'Vigilance · Fierté · Éveil',
+   d:"Le Coq annonce le jour avant tout le monde. Fier et franc, il réveille ce qui dormait.",
+   f:"Vous dites les choses avec un courage rare.", o:"Votre franchise peut froisser sans que vous le vouliez.",
+   m:"Chaque matin est une nouvelle chance de chanter juste."},
+  {id:'bouquetin', n:'Bouquetin', el:'Feu', v:[0,1,2,-2,0,0], c:'#a8865e', mv:'hop', k:'Persévérance · Équilibre · Ambition',
+   d:"Le Bouquetin grimpe là où personne n'ose aller. Il avance pas à pas, sûr de chaque appui.",
+   f:"Rien n'est trop haut pour vous si vous le décidez.", o:"Vous pouvez oublier de regarder le paysage en grimpant.",
+   m:"Le sommet est beau, le chemin aussi."},
+  // ---- Terre ----
+  {id:'ours', n:'Ours', el:'Terre', v:[-1,-1,0,0,-2,1], c:'#7a4e30', mv:'walk', k:'Force tranquille · Introspection · Foyer',
+   d:"L'Ours connaît le temps de l'action et celui du repos. Il se retire pour mieux revenir, plus fort.",
+   f:"Votre calme rassure tout le monde.", o:"Vous pouvez hiberner trop longtemps dans vos pensées.",
+   m:"Le repos n'est pas une faiblesse : c'est une préparation."},
+  {id:'loup', n:'Loup', el:'Terre', v:[2,1,1,1,1,1], c:'#8a8fa8', mv:'walk', k:'Loyauté · Instinct · Meute',
+   d:"Le Loup vit pour sa meute et par son instinct. Il sait quand guider et quand suivre.",
+   f:"On peut compter sur vous en toutes circonstances.", o:"Vous vous oubliez parfois au service du groupe.",
+   m:"Votre instinct connaît déjà la route : faites-lui confiance."},
+  {id:'cerf', n:'Cerf', el:'Terre', v:[0,-1,-1,-1,0,-2], c:'#a8693a', mv:'walk', k:'Douceur · Noblesse · Renouveau',
+   d:"Le Cerf traverse la forêt avec grâce. Ses bois tombent et repoussent, symbole d'un renouveau sans fin.",
+   f:"Votre douceur désarme toutes les tensions.", o:"Votre sensibilité vous fait fuir certains conflits utiles.",
+   m:"La douceur est une force qui ne fait pas de bruit."},
+  {id:'blaireau', n:'Blaireau', el:'Terre', v:[-1,1,1,1,-2,1], c:'#6b6670', mv:'walk', k:'Ténacité · Enracinement · Franchise',
+   d:"Le Blaireau creuse et défend son terrier avec acharnement. Il ne lâche jamais ce qui compte.",
+   f:"Votre ténacité vient à bout de tout.", o:"Vous pouvez vous montrer piquant·e quand on vous dérange.",
+   m:"Creusez encore un peu : la réponse est plus profonde."},
+  {id:'tortue', n:'Tortue', el:'Terre', v:[-1,-2,-2,0,-2,-2], c:'#5e8a4a', mv:'crawl', k:'Patience · Sagesse · Longévité',
+   d:"La Tortue porte sa maison sur son dos et n'est jamais pressée. Elle arrive toujours, à son rythme.",
+   f:"Votre patience vous mène plus loin que la vitesse des autres.", o:"Vous rentrer dans votre carapace peut vous priver du monde.",
+   m:"Lentement mais sûrement : vous êtes sur le bon chemin."},
+  {id:'castor', n:'Castor', el:'Terre', v:[2,2,-1,0,-2,0], c:'#8a5a32', mv:'walk', k:'Construction · Travail · Famille',
+   d:"Le Castor bâtit pour les siens, brindille après brindille. Son œuvre transforme tout le paysage.",
+   f:"Vous transformez les idées en réalisations solides.", o:"Vous avez du mal à vous arrêter tant que tout n'est pas fini.",
+   m:"Ce que vous construisez aujourd'hui abritera demain."},
+  {id:'herisson', n:'Hérisson', el:'Terre', v:[-1,-1,-2,1,-1,-1], c:'#9a7a5a', mv:'walk', k:'Protection · Sensibilité · Humilité',
+   d:"Le Hérisson cache un cœur tendre sous ses piquants. Il sort à la nuit tombée, discret et curieux.",
+   f:"Vous savez vous protéger sans attaquer.", o:"Vous vous mettez en boule avant même que le danger n'arrive.",
+   m:"Montrez votre côté doux : il est en sécurité ici."},
+  {id:'sanglier', n:'Sanglier', el:'Terre', v:[1,1,2,1,-1,1], c:'#5a4436', mv:'walk', k:'Bravoure · Famille · Vitalité',
+   d:"Le Sanglier fonce sans détour pour défendre les siens. Sa vitalité est celle de la forêt elle-même.",
+   f:"Votre courage protège ceux que vous aimez.", o:"Foncer tête baissée vous fait parfois manquer l'essentiel.",
+   m:"La force la plus belle est celle qui défend."},
+  {id:'elephant', n:'Éléphant', el:'Terre', v:[2,-1,0,-1,-1,0], c:'#8e8aa0', mv:'walk', k:'Mémoire · Sagesse · Bienveillance',
+   d:"L'Éléphant n'oublie rien de ceux qu'il aime. Il guide le troupeau avec une sagesse ancienne.",
+   f:"Votre mémoire du cœur fait de vous un pilier.", o:"Vous gardez aussi en mémoire les blessures anciennes.",
+   m:"Souvenez-vous de vos forces autant que de vos peines."},
+  {id:'ecureuil', n:'Écureuil', el:'Terre', v:[0,2,-1,-2,0,-1], c:'#c4602a', mv:'hop', k:'Prévoyance · Vivacité · Curiosité',
+   d:"L'Écureuil prépare l'hiver en plein été. Vif et curieux, il explore chaque branche.",
+   f:"Vous anticipez ce que les autres ne voient pas venir.", o:"À trop prévoir, on peut oublier de profiter.",
+   m:"Gardez une noisette pour aujourd'hui."},
+  // ---- Air ----
+  {id:'hibou', n:'Hibou', el:'Air', v:[-1,-2,0,2,0,0], c:'#9a7448', mv:'hop', k:'Sagesse · Clairvoyance · Nuit',
+   d:"Le Hibou voit dans l'obscurité ce que le jour cache. Il écoute plus qu'il ne parle.",
+   f:"Votre lucidité éclaire les situations les plus troubles.", o:"Vous pouvez rester trop longtemps dans vos pensées nocturnes.",
+   m:"Les réponses viennent souvent quand tout est silencieux."},
+  {id:'corbeau', n:'Corbeau', el:'Air', v:[0,-1,1,1,1,0], c:'#3a3f6a', mv:'hop', k:'Intelligence · Magie · Messages',
+   d:"Le Corbeau est le messager entre les mondes. Malin et curieux, il comprend les signes.",
+   f:"Votre esprit vif résout les énigmes.", o:"On vous croit parfois plus sombre que vous ne l'êtes.",
+   m:"Un signe vous attend aujourd'hui : ouvrez l'œil."},
+  {id:'colombe', n:'Colombe', el:'Air', v:[2,-1,-2,-1,0,-2], c:'#e8e4f0', mv:'walk', k:'Paix · Douceur · Espoir',
+   d:"La Colombe apporte la paix là où elle se pose. Elle relie les cœurs avec une grande douceur.",
+   f:"Vous apaisez les conflits par votre seule présence.", o:"Vous évitez parfois de dire ce qui fâche.",
+   m:"La paix commence par celle que vous vous accordez."},
+  {id:'faucon', n:'Faucon', el:'Air', v:[-1,2,2,-1,1,1], c:'#7a6a5a', mv:'fly', k:'Vision · Précision · Rapidité',
+   d:"Le Faucon voit loin et frappe juste. Il sait exactement ce qu'il veut et quand agir.",
+   f:"Votre précision fait mouche à chaque fois.", o:"Votre impatience peut vous faire plonger trop tôt.",
+   m:"Visez juste, puis laissez le vent vous porter."},
+  {id:'aigle', n:'Aigle', el:'Air', v:[-1,1,1,-2,2,2], c:'#6a4a30', mv:'hop', k:'Hauteur · Liberté · Vision',
+   d:"L'Aigle vole au-dessus des nuages. De là-haut, il voit le dessin d'ensemble.",
+   f:"Vous savez prendre de la hauteur dans les moments difficiles.", o:"Vu de si haut, on peut oublier les détails qui comptent.",
+   m:"Prenez de la hauteur : la vue est meilleure."},
+  {id:'papillon', n:'Papillon', el:'Air', v:[1,0,0,-1,2,-2], c:'#e86aa8', mv:'fly', k:'Métamorphose · Légèreté · Beauté',
+   d:"Le Papillon sait que tout change, et il en fait sa beauté. Il est la preuve que la transformation est possible.",
+   f:"Vous vous réinventez avec grâce.", o:"Vous papillonnez parfois au lieu de choisir.",
+   m:"Votre prochaine métamorphose est déjà en route."},
+  {id:'libellule', n:'Libellule', el:'Air', v:[-1,1,0,-1,1,-1], c:'#3ab0d0', mv:'fly', k:'Illusion · Agilité · Lumière',
+   d:"La Libellule danse entre l'eau et l'air, jouant avec les reflets. Elle voit au-delà des apparences.",
+   f:"Vous percevez la vérité derrière les illusions.", o:"Vous changez de cap si vite que les autres ont du mal à suivre.",
+   m:"Regardez au-delà du reflet."},
+  {id:'chauvesouris', n:'Chauve-souris', el:'Air', v:[1,0,1,2,0,0], c:'#4a3a5a', mv:'fly', k:'Intuition · Renaissance · Communauté',
+   d:"La Chauve-souris se guide dans le noir par l'écoute. Elle vit en colonie et renaît chaque soir.",
+   f:"Vous trouvez votre chemin là où d'autres sont perdus.", o:"On vous comprend mal au premier abord.",
+   m:"Fiez-vous à ce que vous sentez, pas seulement à ce que vous voyez."},
+  {id:'abeille', n:'Abeille', el:'Air', v:[2,2,0,-2,-1,-1], c:'#e8b830', mv:'fly', k:'Coopération · Travail · Douceur',
+   d:"L'Abeille travaille pour la ruche et transforme le pollen en miel. Ensemble, tout devient possible.",
+   f:"Vous rendez chaque équipe meilleure.", o:"Vous pouvez vous perdre dans le travail des autres.",
+   m:"Ce que vous donnez revient en miel."},
+  {id:'chat', n:'Chat', el:'Air', v:[-2,-1,0,2,2,0], c:'#3c3446', mv:'walk', k:'Indépendance · Mystère · Intuition',
+   d:"Le Chat va où il veut, quand il veut. Gardien des seuils, il sent ce qui se trame.",
+   f:"Vous restez libre en toutes circonstances.", o:"Votre indépendance peut passer pour de l'indifférence.",
+   m:"Faites comme le chat : choisissez vos moments."},
+  // ---- Eau ----
+  {id:'dauphin', n:'Dauphin', el:'Eau', v:[2,1,0,-1,1,-1], c:'#5a8ac8', mv:'swim', k:'Joie · Communication · Jeu',
+   d:"Le Dauphin joue avec les vagues et parle à tous. Il apporte la bonne humeur partout où il nage.",
+   f:"Vous créez du lien avec une facilité rare.", o:"Vous fuyez parfois la profondeur dans le jeu.",
+   m:"Le rire est un pont : traversez-le aujourd'hui."},
+  {id:'baleine', n:'Baleine', el:'Eau', v:[1,-2,-1,0,1,0], c:'#3a5a8a', mv:'swim', k:'Profondeur · Mémoire · Chant',
+   d:"La Baleine porte la mémoire des océans. Son chant voyage sur des milliers de kilomètres.",
+   f:"Votre profondeur apaise ceux qui vous écoutent.", o:"Vous plongez parfois trop loin en vous-même.",
+   m:"Votre voix porte plus loin que vous ne le croyez."},
+  {id:'loutre', n:'Loutre', el:'Eau', v:[1,1,0,1,0,-2], c:'#7a5038', mv:'swim', k:'Jeu · Curiosité · Tendresse',
+   d:"La Loutre fait de chaque rivière un terrain de jeu. Elle tient la main des siens pour ne pas dériver.",
+   f:"Votre légèreté rend la vie plus douce.", o:"Le sérieux vous ennuie, même quand il est nécessaire.",
+   m:"Jouer est aussi une façon d'apprendre."},
+  {id:'cygne', n:'Cygne', el:'Eau', v:[1,-1,-1,-1,-2,-1], c:'#f4f2f8', mv:'swim', k:'Grâce · Fidélité · Amour',
+   d:"Le Cygne glisse avec grâce et reste fidèle toute sa vie. Il est le symbole de l'amour sincère.",
+   f:"Votre fidélité est un cadeau précieux.", o:"Vous cachez vos efforts sous une apparence calme.",
+   m:"Votre beauté vient de ce que vous êtes, pas de ce que vous montrez."},
+  {id:'grenouille', n:'Grenouille', el:'Eau', v:[0,1,-1,1,1,-1], c:'#4ab04a', mv:'hop', k:'Purification · Passage · Renouveau',
+   d:"La Grenouille passe de l'eau à la terre. Elle annonce la pluie qui lave et fait tout repousser.",
+   f:"Vous traversez les transitions avec souplesse.", o:"Vous sautez d'une idée à l'autre sans toujours finir.",
+   m:"Laissez la pluie laver ce qui doit partir."},
+  {id:'heron', n:'Héron', el:'Eau', v:[-2,-2,-1,-1,0,-1], c:'#8aa0b8', mv:'walk', k:'Patience · Solitude · Calme',
+   d:"Le Héron attend, immobile, le moment parfait. Il sait que la patience est une forme d'action.",
+   f:"Votre calme vous fait saisir les bonnes occasions.", o:"Attendre trop longtemps peut vous faire manquer le moment.",
+   m:"L'immobilité aussi est un mouvement."},
+  {id:'saumon', n:'Saumon', el:'Eau', v:[0,2,2,0,-1,2], c:'#e07a6a', mv:'swim', k:'Détermination · Retour aux sources · Courage',
+   d:"Le Saumon remonte le courant pour retrouver sa rivière natale. Rien ne l'arrête.",
+   f:"Votre volonté remonte tous les courants.", o:"Lutter contre tout peut épuiser.",
+   m:"Retournez à la source : elle vous attend."},
+  {id:'pieuvre', n:'Pieuvre', el:'Eau', v:[-2,0,0,2,1,1], c:'#c05a8a', mv:'swim', k:'Ingéniosité · Adaptation · Mystère',
+   d:"La Pieuvre change de couleur et de forme à volonté. Son intelligence étonne même les savants.",
+   f:"Vous trouvez des solutions à tout.", o:"À trop vous adapter, vous pouvez vous perdre.",
+   m:"Vous avez plus de bras que vous ne le pensez."},
+  {id:'phoque', n:'Phoque', el:'Eau', v:[1,-1,-1,1,0,-1], c:'#7a8090', mv:'crawl', k:'Imagination · Rêve · Sensibilité',
+   d:"Le Phoque est à l'aise entre deux mondes. Les légendes en font un être qui change de peau.",
+   f:"Votre imagination ouvre des portes secrètes.", o:"Vous fuyez parfois dans vos rêves.",
+   m:"Vos rêves ont quelque chose à vous dire."},
+  {id:'serpent', n:'Serpent', el:'Eau', v:[-2,-1,1,2,0,2], c:'#4a8a4a', mv:'crawl', k:'Transformation · Intuition · Guérison',
+   d:"Le Serpent mue et renaît. Il est depuis toujours le symbole de la guérison et du savoir caché.",
+   f:"Vous savez laisser derrière vous ce qui ne vous sert plus.", o:"On vous craint parfois sans vous connaître.",
+   m:"Une vieille peau tombe : accueillez la nouvelle."}
+];
+const TOTEM_QUIZ = [
+  {q:"Un samedi idéal ?", a:[["Une grande tablée avec des amis",{lien:2}],["Une longue marche seul·e dans la nature",{lien:-2,liberte:1}],["Un projet à terminer de mes mains",{elan:2,liberte:-1}],["Un livre, une couverture, et rien d'autre",{elan:-2}]]},
+  {q:"Face à un problème, vous…", a:[["Foncez, vous réfléchirez après",{elan:2,audace:1}],["Observez longtemps avant d'agir",{elan:-2}],["Demandez conseil autour de vous",{lien:2}],["Cherchez la solution que personne n'a vue",{liberte:1,nuit:1}]]},
+  {q:"Votre moment préféré de la journée ?", a:[["L'aube",{nuit:-2}],["Le plein midi",{nuit:-1,intensite:1}],["Le crépuscule",{nuit:1}],["Le cœur de la nuit",{nuit:2}]]},
+  {q:"On vous propose de partir demain à l'autre bout du monde :", a:[["J'y vais, sans hésiter",{audace:2,liberte:2}],["J'y vais si je pars bien accompagné·e",{lien:1,audace:1}],["Je demande le temps de m'organiser",{audace:-1,liberte:-1}],["Non merci, je suis bien chez moi",{liberte:-2}]]},
+  {q:"Dans un groupe, vous êtes plutôt…", a:[["Celle ou celui qui mène",{intensite:1,audace:1,lien:1}],["Celle ou celui qui écoute",{lien:1,intensite:-2}],["Celle ou celui qui fait rire",{lien:2,intensite:-1}],["Un peu en retrait, mais attentif·ve",{lien:-2}]]},
+  {q:"Une émotion forte vous traverse :", a:[["Elle explose, puis elle passe",{intensite:2,elan:1}],["Je la garde pour moi et je la digère",{intensite:1,lien:-1,elan:-1}],["J'en parle tout de suite",{lien:2}],["Je l'écris, je la dessine, je la transforme",{nuit:1,elan:-1}]]},
+  {q:"Le paysage qui vous ressemble :", a:[["Une forêt profonde",{liberte:-1,nuit:1}],["Un sommet battu par le vent",{audace:1,liberte:1,intensite:1}],["Un océan à perte de vue",{liberte:2}],["Une prairie au soleil",{nuit:-2,intensite:-1}]]},
+  {q:"Ce qu'on admire le plus chez vous :", a:[["Votre courage",{audace:2}],["Votre douceur",{intensite:-2}],["Votre loyauté",{lien:2,liberte:-1}],["Votre intuition",{nuit:2}]]},
+  {q:"Votre rapport au risque :", a:[["Il me fait vibrer",{audace:2,intensite:1}],["Je le calcule",{audace:-1,elan:-1}],["Je l'évite quand je peux",{audace:-2}],["Je le prends pour les autres, pas pour moi",{lien:1,audace:1}]]},
+  {q:"Votre maison idéale :", a:[["Une cabane cachée loin de tout",{lien:-2,liberte:1}],["Une maison pleine de monde et de bruit",{lien:2}],["Un nid douillet que je quitte rarement",{liberte:-2,intensite:-1}],["Un van aménagé, toujours sur la route",{liberte:2,elan:1}]]},
+  {q:"Quand quelqu'un vous blesse :", a:[["Je le lui dis, droit dans les yeux",{audace:2,intensite:1}],["Je prends mes distances, en silence",{lien:-2}],["Je pardonne vite",{intensite:-2,lien:1}],["Je n'oublie jamais",{intensite:2,elan:-1}]]},
+  {q:"Votre façon d'apprendre :", a:[["En faisant, quitte à me tromper",{elan:2}],["En lisant, en étudiant",{elan:-2}],["En observant ceux que j'admire",{lien:1}],["Par intuition, sans savoir comment",{nuit:2}]]},
+  {q:"La saison qui vous parle :", a:[["Le printemps",{nuit:-1,elan:1}],["L'été",{intensite:2,nuit:-1}],["L'automne",{nuit:1,intensite:-1}],["L'hiver",{lien:-1,elan:-1,nuit:1}]]},
+  {q:"Le compliment qui vous touche le plus :", a:[["« Tu es libre »",{liberte:2}],["« On peut compter sur toi »",{liberte:-2,lien:1}],["« Tu es fascinant·e »",{nuit:1,intensite:1}],["« Tu me fais du bien »",{intensite:-2,lien:1}]]},
+  {q:"Votre rythme de vie :", a:[["Rapide, j'enchaîne",{elan:2}],["Lent et régulier",{elan:-2,liberte:-1}],["Par vagues : intense, puis calme",{intensite:1}],["Imprévisible, au gré des envies",{liberte:2}]]},
+  {q:"On vous confie un secret :", a:[["Il est enterré avec moi",{lien:-1,nuit:1}],["Je cherche comment aider",{lien:2,elan:1}],["J'écoute sans juger",{intensite:-2}],["Je devine aussi ce qui n'est pas dit",{nuit:2}]]},
+  {q:"L'élément qui vous attire :", a:[["Le feu",{intensite:2}],["La terre",{liberte:-2}],["L'air",{liberte:2}],["L'eau",{intensite:-1,nuit:1}]]},
+  {q:"Devant une porte fermée :", a:[["Je l'ouvre",{audace:2}],["Je frappe et j'attends",{audace:-1,lien:1}],["Je cherche une autre entrée",{liberte:1,elan:1}],["Je me demande pourquoi elle est fermée",{elan:-2}]]},
+  {q:"Ce qui vous ressource :", a:[["Le silence",{lien:-2,elan:-1}],["Les éclats de rire",{lien:2}],["Le mouvement, le sport",{elan:2}],["Les rêves, la nuit",{nuit:2}]]},
+  {q:"Si vous aviez un pouvoir :", a:[["Voler",{liberte:2}],["Lire dans les pensées",{nuit:2}],["Être invincible",{audace:2,intensite:1}],["Guérir les autres",{intensite:-2,lien:1}]]}
+];
 (() => {
 'use strict';
 
@@ -1179,7 +1435,7 @@ const KEY = 'madame-voyance:v1';
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
-          deck:'22', art:'rws', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
+          deck:'22', art:'rws', back:'nuit', totem:null, pet:true, journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
           zen:reduceMotion, sound:true, tilt:!motionNeedsPermission, seen:{}, gm:{}};
 }
 function load(){
@@ -1661,7 +1917,7 @@ new MutationObserver(() => { if (!decoQueued){ decoQueued = true; requestAnimati
 /* ---------- État d'interface ---------- */
 const VIEWS = ['accueil','tarot','astres','oracles','profil'];
 const ROUTES = VIEWS.concat(['grimoire']);
-const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m'};
+const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m', tq:null};
 
 /* ---------- Petits morceaux d'interface ---------- */
 const ICONS = {
@@ -1951,8 +2207,156 @@ function vAstres(){
   </section>`;
 }
 
+/* ---------- Animal totem ---------- */
+const TOT = Object.fromEntries(TOTEMS.map(t => [t.id, t]));
+const TQ = (() => {   // moyenne et écart-type de chaque trait pour des réponses au hasard : chaque trait pèse autant
+  const mean = TOTEM_AXES.map(() => 0), vr = TOTEM_AXES.map(() => 0);
+  TOTEM_QUIZ.forEach(q => {
+    const vs = q.a.map(a => TOTEM_AXES.map(k => a[1][k] || 0));
+    TOTEM_AXES.forEach((_, i) => { const m = vs.reduce((s, v) => s + v[i], 0) / vs.length; mean[i] += m; vr[i] += vs.reduce((s, v) => s + (v[i] - m) ** 2, 0) / vs.length; });
+  });
+  return {mean, sd: vr.map(v => Math.sqrt(v) || 1)};
+})();
+const vlen = v => Math.hypot(...v) || 1;
+const cosine = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0) / (vlen(a) * vlen(b));
+const birthEl = () => { const bp = birthParts(S.profile.birth); return ZODIAC[signIndex(bp.m, bp.d)]; };
+function totemRank(answers){
+  const u = TOTEM_AXES.map(() => 0);
+  answers.forEach((ai, qi) => { const d = TOTEM_QUIZ[qi].a[ai][1]; for (const k in d) u[TOTEM_AXES.indexOf(k)] += d[k]; });
+  const z = u.map((x, i) => (x - TQ.mean[i]) / TQ.sd[i]), el = birthEl().el;
+  return TOTEMS.map(t => ({t, s: cosine(z, t.v) + (t.el === el ? TOTEM_EL_BONUS : 0)})).sort((a, b) => b.s - a.s);
+}
+const totemFriends = t => TOTEMS.filter(o => o.id !== t.id).map(o => ({o, s: cosine(t.v, o.v)})).sort((a, b) => b.s - a.s).slice(0, 2).map(x => x.o);
+const sprite = (id, cls) => `<span class="tsprite ${cls || ''}" style="--sp:url('totems/${id}.png')" aria-hidden="true"></span>`;
+const isNight = () => { const h = new Date().getHours(); return h >= 22 || h < 6; };
+
+function totemBody(){
+  if (UI.tq){
+    const i = UI.tq.i, q = TOTEM_QUIZ[i];
+    return `<div class="tq">
+      <div class="tq-head"><span class="h-eyebrow">Question ${i + 1} / ${TOTEM_QUIZ.length}</span>
+        <button class="dt-link" data-act="tq-back">${i ? 'Précédente' : 'Quitter'}</button></div>
+      <div class="track"><i style="width:${Math.round(i / TOTEM_QUIZ.length * 100)}%"></i></div>
+      <h2 class="tq-q">${esc(q.q)}</h2>
+      <div class="tq-answers">${q.a.map((a, k) => `<button class="tq-a" data-act="tq-a" data-k="${k}" aria-pressed="${UI.tq.ans[i] === k}">${esc(a[0])}</button>`).join('')}</div>
+    </div>`;
+  }
+  if (!S.totem || !TOT[S.totem.id]){
+    const z = birthEl();
+    return `<div class="frame stack totem-intro">
+        <div class="totem-parade">${['loup','hibou','renard','dauphin','papillon','ours'].map(id => sprite(id)).join('')}</div>
+        <p class="lead" style="margin:0">Quarante animaux veillent sur Madame Voyance. Lequel vous ressemble ?</p>
+        <p class="small muted" style="margin:0">Vingt questions sur votre façon d'être. Votre élément de naissance, ${esc(z.el)} (${esc(z.n)}), fera aussi pencher la balance.</p>
+        <button class="btn btn-gold btn-wide" data-act="tq-start">Commencer le quiz <span class="pts">+30</span></button>
+      </div>
+      <p class="small muted" style="margin:0;text-align:center">Vos réponses ne sont pas gardées : seul l'animal obtenu l'est, sur cet appareil.</p>`;
+  }
+  const t = TOT[S.totem.id], friends = totemFriends(t), alts = (S.totem.alt || []).map(id => TOT[id]).filter(Boolean);
+  const z = birthEl();
+  return `<div class="totem-hero">
+      <div class="totem-stage mv-${t.mv}">${sprite(t.id, 'big')}</div>
+      <div class="h-eyebrow">Votre animal totem</div>
+      <h2 class="h-title gold" style="font-size:30px;margin:0">${esc(t.n)}</h2>
+      <div class="facts"><span class="fact">${esc(t.el)}</span>${t.el === z.el ? `<span class="fact">comme votre ${esc(z.n)}</span>` : ''}</div>
+      <div class="keys">${esc(t.k)}</div>
+    </div>
+    <div class="frame stack">
+      <p class="lead" style="margin:0">${esc(t.d)}</p>
+      <div class="tip"><span>✦</span><span><b>Force :</b> ${esc(t.f)}</span></div>
+      <div class="tip"><span>☾${VS}</span><span><b>Part d'ombre :</b> ${esc(t.o)}</span></div>
+    </div>
+    <div class="frame-plain stack" style="text-align:center">
+      <div class="h-eyebrow">Le message de votre ${esc(t.n.toLowerCase())}</div>
+      <p class="lead" style="margin:0;font-style:italic">« ${esc(t.m)} »</p>
+    </div>
+    <section class="stack"><div class="section-head"><h2>Affinités</h2></div>
+      <div class="totem-mini">${[...alts.slice(0, 2).map(o => [o, 'votre autre facette']), ...friends.filter(o => !alts.slice(0, 2).includes(o)).map(o => [o, 'un esprit proche du vôtre'])]
+        .map(([o, why]) => `<button class="tm" data-act="totem-peek" data-id="${o.id}">${sprite(o.id)}<b>${esc(o.n)}</b><span>${why}</span></button>`).join('')}</div>
+    </section>
+    <div class="frame-plain stack">${switchRow('pet', 'Compagnon sur la barre', `Votre ${esc(t.n.toLowerCase())} se promène en bas de l'écran`, S.pet !== false)}</div>
+    <button class="btn btn-ghost btn-wide" data-act="tq-start">Refaire le quiz</button>`;
+}
+function totemSheet(id){
+  const t = TOT[id];
+  openSheet(`<div class="totem-hero"><div class="totem-stage mv-${t.mv}">${sprite(t.id, 'big')}</div>
+    <h2 class="h-title gold" style="font-size:26px;margin:0">${esc(t.n)}</h2>
+    <div class="facts"><span class="fact">${esc(t.el)}</span></div><div class="keys">${esc(t.k)}</div></div>
+    <p class="lead" style="margin:0">${esc(t.d)}</p>
+    <div class="tip"><span>✦</span><span>${esc(t.f)}</span></div>`);
+}
+function finishQuiz(){
+  const rank = totemRank(UI.tq.ans), first = !S.totem;
+  S.totem = {id: rank[0].t.id, alt: rank.slice(1, 3).map(r => r.t.id), d: dk()};
+  UI.tq = null; save();
+  if (first){ gain(30, 'Animal totem révélé'); S.pet = true; save(); }
+  render(); window.scrollTo(0, 0);
+  const st = document.querySelector('.totem-stage');
+  if (st && !calm()){ const b = st.getBoundingClientRect(); setTimeout(() => { sparkle(b.left + b.width / 2, b.top + b.height / 2, 60, 1.6); ringAt(b.left + b.width / 2, b.top + b.height / 2, 200, '#ffe6a8'); }, 150); Snd.chime(); buzz([20, 40, 60]); }
+  Pet.sync();
+}
+
+/* Compagnon : l'animal se promène sur la barre de navigation */
+const Pet = (() => {
+  let el = null, id = null, x = 24, dir = 1, state = 'sit', until = 0, last = 0, raf = 0, sayT = 0;
+  const SPEED = {walk: 26, hop: 34, fly: 44, swim: 32, crawl: 10};
+  function sync(){
+    const nav = $('#nav');
+    const want = S.profile && S.totem && TOT[S.totem.id] && S.pet !== false && nav && !nav.hidden;
+    if (!want){ if (el){ el.remove(); el = null; id = null; } return; }
+    if (!el || id !== S.totem.id){
+      if (el) el.remove();
+      id = S.totem.id; const t = TOT[id];
+      el = document.createElement('button');
+      el.className = 'pet mv-' + t.mv; el.type = 'button';
+      el.setAttribute('aria-label', `Votre ${t.n.toLowerCase()} : touchez-le pour un message`);
+      el.innerHTML = `<span class="pet-flip">${sprite(id)}</span><span class="pet-z" aria-hidden="true">z</span><span class="pet-say" role="status"></span>`;
+      el.addEventListener('click', poke);
+      nav.appendChild(el);
+      x = Math.max(8, Math.random() * (nav.clientWidth - 80));
+    }
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+  function step(ts){
+    raf = 0; if (!el) return;
+    const dt = Math.min(80, ts - (last || ts)); last = ts;
+    const W = el.parentNode.clientWidth, sw = el.offsetWidth || 56;
+    if (isNight()) state = 'sleep';
+    else if (calm() || el.classList.contains('saying')) state = 'sit';   // il s'arrête pour parler
+    else if (ts > until && !el.classList.contains('poke')){
+      state = Math.random() < .62 ? 'walk' : 'sit';
+      until = ts + (state === 'walk' ? 3500 + Math.random() * 6000 : 1800 + Math.random() * 3500);
+      if (Math.random() < .35) dir = -dir;
+    }
+    if (state === 'walk'){
+      x += dir * SPEED[TOT[id].mv] * dt / 1000;
+      if (x < 6){ x = 6; dir = 1; } if (x > W - sw - 6){ x = W - sw - 6; dir = -1; }
+    }
+    el.style.transform = `translateX(${x.toFixed(1)}px)`;
+    el.dataset.state = state; el.classList.toggle('flip', dir < 0);
+    raf = requestAnimationFrame(step);
+  }
+  function poke(e){
+    e.preventDefault(); e.stopPropagation();
+    const t = TOT[id]; if (!t) return;
+    el.classList.remove('poke'); void el.offsetWidth; el.classList.add('poke'); setTimeout(() => el && el.classList.remove('poke'), 600);
+    const lines = [t.m, ...t.k.split(' · ').map(k => k + ' ✦'), isNight() ? 'Chut… je rêve des étoiles.' : 'Belle journée, ' + S.profile.name + ' !'];
+    const say = el.querySelector('.pet-say');
+    say.textContent = lines[Math.floor(Math.random() * lines.length)];
+    const W = el.parentNode.clientWidth;
+    say.style.maxWidth = Math.min(240, W - 24) + 'px'; say.style.width = 'max-content';
+    const bw = say.offsetWidth;
+    say.style.left = Math.max(12 - x, Math.min(W - 12 - bw - x, (el.offsetWidth - bw) / 2)) + 'px';
+    el.classList.add('saying'); clearTimeout(sayT); sayT = setTimeout(() => el && el.classList.remove('saying'), 4200);
+    const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 3, 16, .9); Snd.twinkle(); buzz(12);
+    if (!S.today.done.pet){ S.today.done.pet = true; gain(5, 'Câlin à votre ' + t.n.toLowerCase()); save(); }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden){ last = 0; sync(); } });
+  return {sync};
+})();
+
 /* ---------- Vue : Oracles ---------- */
 const ORACLES = [
+  {id:'totem', n:'Animal totem', g:'', d:'Vingt questions pour découvrir l\'animal qui vous ressemble', wide:true},
   {id:'numero', n:'Numérologie', g:'9', d:'Votre chemin de vie et le nombre du jour'},
   {id:'rune', n:'Rune du jour', g:'ᚱ', d:'Une rune tirée de la bourse'},
   {id:'pierre', n:'Pierre & couleur', g:'◆', d:'Votre talisman et votre chiffre chance'},
@@ -1967,9 +2371,11 @@ function vOracles(){
       <div><div class="h-eyebrow">Les oracles</div><h1 class="h-title gold">Que voulez-vous savoir ?</h1></div>
       <div class="tiles">
         ${ORACLES.map((o, k) => `<button class="tile hue-tile h-${o.id} ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}" style="--d:${(k * 1.3).toFixed(1)}s${o.id === 'pierre' ? ';--ha:' + stoneC : ''}">
-          <span class="tg">${o.id === 'compat' ? o.g + VS : o.g}</span>
-          <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.n}</span><br><span class="td">${o.d}</span></span>
-          <span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>
+          <span class="tg">${o.id === 'totem' ? sprite(S.totem && TOT[S.totem.id] ? S.totem.id : 'loup', 'tile-sprite') : o.id === 'compat' ? o.g + VS : o.g}</span>
+          <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.id === 'totem' && S.totem && TOT[S.totem.id] ? 'Votre totem : ' + TOT[S.totem.id].n : o.n}</span><br><span class="td">${o.id === 'totem' && S.totem && TOT[S.totem.id] ? esc(TOT[S.totem.id].k) : o.d}</span></span>
+          ${o.id === 'totem'
+            ? `<span class="badge ${S.totem ? 'ok' : ''}">${S.totem ? '✓' : '+30'}</span>`
+            : `<span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>`}
         </button>`).join('')}
       </div>
     </section>`;
@@ -1981,6 +2387,7 @@ function vOracles(){
 }
 function oracleBody(id){
   const p = S.profile;
+  if (id === 'totem') return totemBody();
   if (id === 'numero'){
     const lp = lifePath(p.birth), ex = expressionNumber(p.name), pd = personalDay(p.birth);
     return `<div class="sign-hero">
@@ -2114,6 +2521,7 @@ function legalSheet(t){
         <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
         <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
         <dt>Illustrations des cartes</dt>${DECK_ARTS.map(a => `<dd><b>${esc(a.n)}</b> : ${esc(a.credit)}</dd>`).join('')}
+        <dt>Animaux totems</dt><dd>Sprites pixel art dessinés pour Madame Voyance d'après des silhouettes de PhyloPic (phylopic.org) placées dans le domaine public (CC0).</dd>
         <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
         <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
         <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
@@ -2182,6 +2590,7 @@ function vProfil(){
         ${switchRow('sound', 'Sons doux', 'Bol tibétain, carillon et souffle', S.sound && !S.zen)}
         ${switchRow('zen', 'Mode zen', 'Coupe les animations, les sons et les vibrations', S.zen)}
         ${tiltSupported ? switchRow('tilt', 'Effet de profondeur', 'Le ciel bouge quand vous inclinez le téléphone', S.tilt && !S.zen) : ''}
+        ${S.totem && TOT[S.totem.id] ? switchRow('pet', 'Compagnon sur la barre', `Votre ${esc(TOT[S.totem.id].n.toLowerCase())} se promène en bas de l'écran`, S.pet !== false) : ''}
       </div>
     </section>
 
@@ -2232,7 +2641,7 @@ const PRIVACY = `
     <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
     <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
-  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule et les dates saisies pour la compatibilité ne sont pas conservées.</p>
+  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
   <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
 
 function profileForm(isEdit){
@@ -2338,6 +2747,7 @@ function render(){
   const v = UI.view, navV = v === 'grimoire' ? 'tarot' : v;
   $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : v === 'grimoire' ? vGrimoire() : vAccueil();
   document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === navV ? 'page' : 'false'));
+  Pet.sync();
 }
 function go(view, sub, keepScroll){
   if (view === 'tarot' && sub){ if (UI.tarot !== sub) UI.flips = new Set(); UI.tarot = sub; }
@@ -2473,7 +2883,17 @@ document.addEventListener('click', e => {
     case 'lvl-close': { const o = el.closest('.lvl-ov'); if (o) o.remove(); break; }
     case 'gsuit': UI.gsuit = el.dataset.s; render(); break;
     case 'glocked': toast('Cette carte ne s\'est pas encore montrée à vous'); break;
-    case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
+    case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; UI.tq = null; render(); window.scrollTo(0, 0); break;
+    case 'tq-start': UI.tq = {i: 0, ans: []}; render(); window.scrollTo(0, 0); break;
+    case 'tq-back': if (!UI.tq) break; if (UI.tq.i) UI.tq.i--; else UI.tq = null; render(); break;
+    case 'tq-a': {
+      if (!UI.tq) break;
+      UI.tq.ans[UI.tq.i] = +el.dataset.k;
+      el.setAttribute('aria-pressed', 'true'); sparkleAt(el, 8, .6);
+      setTimeout(() => { if (!UI.tq) return; if (UI.tq.i < TOTEM_QUIZ.length - 1){ UI.tq.i++; render(); } else finishQuiz(); }, calm() ? 0 : 220);
+      break;
+    }
+    case 'totem-peek': totemSheet(el.dataset.id); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
     case 'art': S.art = ART = artOf(el.dataset.id).id; save(); render(); break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;

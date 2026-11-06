@@ -31,6 +31,7 @@ html[data-tod="nuit"]{--sky-top:#0a0616;--sky-bot:#150b2e;--neb-a:rgba(120,70,22
 .h-pierre{--ha:#ff8a4c;--hb:#ffd9a8}
 .h-pendule{--ha:#1fb8ae;--hb:#b9fff6}
 .h-compat{--ha:#ff5f86;--hb:#ffc0a8}
+.h-totem{--ha:#3fbf7f;--hb:#d6ffb0}
 .h-pensee{--ha:#a77dff;--hb:#fbe9b7}
 .s-m{--ha:#8b5cff;--hb:#ffd27a}
 .s-w{--ha:#ff6a2b;--hb:#ffd08a}
@@ -278,4 +279,62 @@ html.zen .aurora{display:none}
 .art-opt b{font-family:var(--f-display);font-size:13px;font-weight:600;color:var(--gold-hi);line-height:1.2}
 .art-opt span:last-child{font-size:10.5px;line-height:1.25}
 img[src*="decks/8bits/"]{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ---- Animal totem ---- */
+.tsprite{display:inline-block;flex:none;width:calc(28px * var(--z, 2));height:calc(20px * var(--z, 2));
+  background:var(--sp) 0 0 / 200% 100% no-repeat;image-rendering:pixelated;image-rendering:crisp-edges}
+.tsprite.big{--z:6}
+.tsprite.tile-sprite{--z:1.5}
+.totem-stage .tsprite,.pet[data-state=walk] .tsprite{animation:sp2 .42s steps(1) infinite}
+@keyframes sp2{0%{background-position:0 0}50%{background-position:100% 0}}
+.totem-hero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.totem-stage{position:relative;display:grid;place-items:center;width:min(240px,70vw);aspect-ratio:7/5;border-radius:50%;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--ha) 45%,transparent),transparent);filter:drop-shadow(0 0 18px color-mix(in srgb,var(--ha) 60%,transparent))}
+.totem-stage.mv-fly .tsprite,.totem-stage.mv-swim .tsprite{translate:0 0;animation:sp2 .42s steps(1) infinite,float 2.6s ease-in-out infinite}
+@keyframes float{50%{translate:0 -8px}}
+.totem-parade{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 10px}
+.totem-parade .tsprite{--z:1.5}
+.totem-mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tm{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);text-align:center}
+.tm b{font-family:var(--f-display);font-size:14px;color:var(--gold-hi)}
+.tm span:last-child{font-size:11px;color:var(--mist)}
+.tq{display:flex;flex-direction:column;gap:14px}
+.tq-head{display:flex;justify-content:space-between;align-items:center}
+.tq-q{font-family:var(--f-read);font-weight:600;font-size:clamp(22px,6vw,26px);line-height:1.25;margin:6px 0 0;text-wrap:balance}
+.tq-answers{display:flex;flex-direction:column;gap:10px}
+.tq-a{min-height:54px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.7);text-align:left;font-size:15px;line-height:1.35;transition:border-color .2s,background .2s}
+.tq-a:hover{border-color:var(--gold-line)}
+.tq-a[aria-pressed=true]{border-color:var(--ha);background:color-mix(in srgb,var(--ha) 22%,rgba(28,17,58,.7));box-shadow:0 0 18px -6px var(--ha)}
+
+/* Compagnon sur la barre */
+.pet{position:absolute;left:0;bottom:calc(100% - 7px);z-index:2;padding:0;border:0;background:none;cursor:pointer;
+  will-change:transform;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pet .tsprite{--z:2;display:block;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+.pet-flip{display:block}
+.pet.flip .pet-flip{transform:scaleX(-1)}
+.pet.mv-fly{bottom:calc(100% + 6px)}
+.pet.mv-fly[data-state=walk] .tsprite{animation:sp2 .22s steps(1) infinite,fly 1.8s ease-in-out infinite}
+@keyframes fly{0%,100%{translate:0 0}25%{translate:0 -10px}75%{translate:0 4px}}
+.pet.mv-hop[data-state=walk] .tsprite{animation:sp2 .5s steps(1) infinite,hop .5s ease-out infinite}
+@keyframes hop{0%,100%{translate:0 0}40%{translate:0 -9px}}
+.pet.mv-swim[data-state=walk] .tsprite{animation:sp2 .5s steps(1) infinite,swim 1.6s ease-in-out infinite}
+@keyframes swim{0%,100%{translate:0 0;rotate:-4deg}50%{translate:0 -4px;rotate:4deg}}
+.pet.mv-walk[data-state=walk] .tsprite{animation:sp2 .36s steps(1) infinite,step .36s steps(2) infinite}
+@keyframes step{50%{translate:0 -1px}}
+.pet.mv-crawl[data-state=walk] .tsprite{animation:sp2 .8s steps(1) infinite}
+.pet[data-state=sit] .tsprite{animation:breathe-pet 2.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes breathe-pet{50%{scale:1 1.05}}
+.pet[data-state=sleep] .tsprite{filter:brightness(.7) saturate(.8) drop-shadow(0 2px 0 rgba(0,0,0,.35));animation:breathe-pet 3.4s ease-in-out infinite;transform-origin:50% 100%}
+.pet.mv-fly[data-state=sleep],.pet.mv-fly[data-state=sit]{bottom:calc(100% - 7px)}
+.pet-z{position:absolute;right:4px;top:-6px;font-family:var(--f-display);font-size:14px;font-weight:700;color:var(--gold-hi);opacity:0;pointer-events:none}
+.pet[data-state=sleep] .pet-z{animation:zz 2.4s ease-in infinite}
+@keyframes zz{0%{opacity:0;translate:0 0}20%{opacity:1}100%{opacity:0;translate:10px -22px}}
+.pet.poke .tsprite{animation:poke .55s cubic-bezier(.3,1.6,.5,1)!important}
+@keyframes poke{0%{translate:0 0;scale:1.1 .85}40%{translate:0 -18px;scale:.92 1.1}100%{translate:0 0;scale:1 1}}
+.pet-say{position:absolute;bottom:calc(100% + 8px);padding:8px 12px;border-radius:12px;border:1px solid var(--gold-line);
+  background:linear-gradient(180deg,#2c1b55,#1a0f38);box-shadow:0 8px 24px -8px var(--violet-glow);font-family:var(--f-read);font-size:15px;line-height:1.3;
+  color:var(--ink);text-align:center;pointer-events:none;opacity:0;translate:0 6px;transition:opacity .25s,translate .25s}
+.pet.flip .pet-say{transform:none}
+.pet.saying .pet-say{opacity:1;translate:0 0}
+html.zen .pet .tsprite{animation:none!important;translate:none}
 </style>

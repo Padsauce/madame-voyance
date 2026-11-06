@@ -37,7 +37,7 @@ const KEY = 'madame-voyance:v1';
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
-          deck:'22', art:'rws', back:'nuit', journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
+          deck:'22', art:'rws', back:'nuit', totem:null, pet:true, journal:[], installHide:false, installBonus:false, today:{d:null, done:{}, draws:{}},
           zen:reduceMotion, sound:true, tilt:!motionNeedsPermission, seen:{}, gm:{}};
 }
 function load(){
@@ -520,7 +520,7 @@ new MutationObserver(() => { if (!decoQueued){ decoQueued = true; requestAnimati
 /* ---------- État d'interface ---------- */
 const VIEWS = ['accueil','tarot','astres','oracles','profil'];
 const ROUTES = VIEWS.concat(['grimoire']);
-const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m'};
+const UI = {view:'accueil', tarot:1, astres:'zodiaque', oracle:null, flips:new Set(), confirmErase:false, compat:null, pendulum:null, gsuit:'m', tq:null};
 
 /* ---------- Petits morceaux d'interface ---------- */
 const ICONS = {
@@ -810,8 +810,156 @@ function vAstres(){
   </section>`;
 }
 
+/* ---------- Animal totem ---------- */
+const TOT = Object.fromEntries(TOTEMS.map(t => [t.id, t]));
+const TQ = (() => {   // moyenne et écart-type de chaque trait pour des réponses au hasard : chaque trait pèse autant
+  const mean = TOTEM_AXES.map(() => 0), vr = TOTEM_AXES.map(() => 0);
+  TOTEM_QUIZ.forEach(q => {
+    const vs = q.a.map(a => TOTEM_AXES.map(k => a[1][k] || 0));
+    TOTEM_AXES.forEach((_, i) => { const m = vs.reduce((s, v) => s + v[i], 0) / vs.length; mean[i] += m; vr[i] += vs.reduce((s, v) => s + (v[i] - m) ** 2, 0) / vs.length; });
+  });
+  return {mean, sd: vr.map(v => Math.sqrt(v) || 1)};
+})();
+const vlen = v => Math.hypot(...v) || 1;
+const cosine = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0) / (vlen(a) * vlen(b));
+const birthEl = () => { const bp = birthParts(S.profile.birth); return ZODIAC[signIndex(bp.m, bp.d)]; };
+function totemRank(answers){
+  const u = TOTEM_AXES.map(() => 0);
+  answers.forEach((ai, qi) => { const d = TOTEM_QUIZ[qi].a[ai][1]; for (const k in d) u[TOTEM_AXES.indexOf(k)] += d[k]; });
+  const z = u.map((x, i) => (x - TQ.mean[i]) / TQ.sd[i]), el = birthEl().el;
+  return TOTEMS.map(t => ({t, s: cosine(z, t.v) + (t.el === el ? TOTEM_EL_BONUS : 0)})).sort((a, b) => b.s - a.s);
+}
+const totemFriends = t => TOTEMS.filter(o => o.id !== t.id).map(o => ({o, s: cosine(t.v, o.v)})).sort((a, b) => b.s - a.s).slice(0, 2).map(x => x.o);
+const sprite = (id, cls) => `<span class="tsprite ${cls || ''}" style="--sp:url('totems/${id}.png')" aria-hidden="true"></span>`;
+const isNight = () => { const h = new Date().getHours(); return h >= 22 || h < 6; };
+
+function totemBody(){
+  if (UI.tq){
+    const i = UI.tq.i, q = TOTEM_QUIZ[i];
+    return `<div class="tq">
+      <div class="tq-head"><span class="h-eyebrow">Question ${i + 1} / ${TOTEM_QUIZ.length}</span>
+        <button class="dt-link" data-act="tq-back">${i ? 'Précédente' : 'Quitter'}</button></div>
+      <div class="track"><i style="width:${Math.round(i / TOTEM_QUIZ.length * 100)}%"></i></div>
+      <h2 class="tq-q">${esc(q.q)}</h2>
+      <div class="tq-answers">${q.a.map((a, k) => `<button class="tq-a" data-act="tq-a" data-k="${k}" aria-pressed="${UI.tq.ans[i] === k}">${esc(a[0])}</button>`).join('')}</div>
+    </div>`;
+  }
+  if (!S.totem || !TOT[S.totem.id]){
+    const z = birthEl();
+    return `<div class="frame stack totem-intro">
+        <div class="totem-parade">${['loup','hibou','renard','dauphin','papillon','ours'].map(id => sprite(id)).join('')}</div>
+        <p class="lead" style="margin:0">Quarante animaux veillent sur Madame Voyance. Lequel vous ressemble ?</p>
+        <p class="small muted" style="margin:0">Vingt questions sur votre façon d'être. Votre élément de naissance, ${esc(z.el)} (${esc(z.n)}), fera aussi pencher la balance.</p>
+        <button class="btn btn-gold btn-wide" data-act="tq-start">Commencer le quiz <span class="pts">+30</span></button>
+      </div>
+      <p class="small muted" style="margin:0;text-align:center">Vos réponses ne sont pas gardées : seul l'animal obtenu l'est, sur cet appareil.</p>`;
+  }
+  const t = TOT[S.totem.id], friends = totemFriends(t), alts = (S.totem.alt || []).map(id => TOT[id]).filter(Boolean);
+  const z = birthEl();
+  return `<div class="totem-hero">
+      <div class="totem-stage mv-${t.mv}">${sprite(t.id, 'big')}</div>
+      <div class="h-eyebrow">Votre animal totem</div>
+      <h2 class="h-title gold" style="font-size:30px;margin:0">${esc(t.n)}</h2>
+      <div class="facts"><span class="fact">${esc(t.el)}</span>${t.el === z.el ? `<span class="fact">comme votre ${esc(z.n)}</span>` : ''}</div>
+      <div class="keys">${esc(t.k)}</div>
+    </div>
+    <div class="frame stack">
+      <p class="lead" style="margin:0">${esc(t.d)}</p>
+      <div class="tip"><span>✦</span><span><b>Force :</b> ${esc(t.f)}</span></div>
+      <div class="tip"><span>☾${VS}</span><span><b>Part d'ombre :</b> ${esc(t.o)}</span></div>
+    </div>
+    <div class="frame-plain stack" style="text-align:center">
+      <div class="h-eyebrow">Le message de votre ${esc(t.n.toLowerCase())}</div>
+      <p class="lead" style="margin:0;font-style:italic">« ${esc(t.m)} »</p>
+    </div>
+    <section class="stack"><div class="section-head"><h2>Affinités</h2></div>
+      <div class="totem-mini">${[...alts.slice(0, 2).map(o => [o, 'votre autre facette']), ...friends.filter(o => !alts.slice(0, 2).includes(o)).map(o => [o, 'un esprit proche du vôtre'])]
+        .map(([o, why]) => `<button class="tm" data-act="totem-peek" data-id="${o.id}">${sprite(o.id)}<b>${esc(o.n)}</b><span>${why}</span></button>`).join('')}</div>
+    </section>
+    <div class="frame-plain stack">${switchRow('pet', 'Compagnon sur la barre', `Votre ${esc(t.n.toLowerCase())} se promène en bas de l'écran`, S.pet !== false)}</div>
+    <button class="btn btn-ghost btn-wide" data-act="tq-start">Refaire le quiz</button>`;
+}
+function totemSheet(id){
+  const t = TOT[id];
+  openSheet(`<div class="totem-hero"><div class="totem-stage mv-${t.mv}">${sprite(t.id, 'big')}</div>
+    <h2 class="h-title gold" style="font-size:26px;margin:0">${esc(t.n)}</h2>
+    <div class="facts"><span class="fact">${esc(t.el)}</span></div><div class="keys">${esc(t.k)}</div></div>
+    <p class="lead" style="margin:0">${esc(t.d)}</p>
+    <div class="tip"><span>✦</span><span>${esc(t.f)}</span></div>`);
+}
+function finishQuiz(){
+  const rank = totemRank(UI.tq.ans), first = !S.totem;
+  S.totem = {id: rank[0].t.id, alt: rank.slice(1, 3).map(r => r.t.id), d: dk()};
+  UI.tq = null; save();
+  if (first){ gain(30, 'Animal totem révélé'); S.pet = true; save(); }
+  render(); window.scrollTo(0, 0);
+  const st = document.querySelector('.totem-stage');
+  if (st && !calm()){ const b = st.getBoundingClientRect(); setTimeout(() => { sparkle(b.left + b.width / 2, b.top + b.height / 2, 60, 1.6); ringAt(b.left + b.width / 2, b.top + b.height / 2, 200, '#ffe6a8'); }, 150); Snd.chime(); buzz([20, 40, 60]); }
+  Pet.sync();
+}
+
+/* Compagnon : l'animal se promène sur la barre de navigation */
+const Pet = (() => {
+  let el = null, id = null, x = 24, dir = 1, state = 'sit', until = 0, last = 0, raf = 0, sayT = 0;
+  const SPEED = {walk: 26, hop: 34, fly: 44, swim: 32, crawl: 10};
+  function sync(){
+    const nav = $('#nav');
+    const want = S.profile && S.totem && TOT[S.totem.id] && S.pet !== false && nav && !nav.hidden;
+    if (!want){ if (el){ el.remove(); el = null; id = null; } return; }
+    if (!el || id !== S.totem.id){
+      if (el) el.remove();
+      id = S.totem.id; const t = TOT[id];
+      el = document.createElement('button');
+      el.className = 'pet mv-' + t.mv; el.type = 'button';
+      el.setAttribute('aria-label', `Votre ${t.n.toLowerCase()} : touchez-le pour un message`);
+      el.innerHTML = `<span class="pet-flip">${sprite(id)}</span><span class="pet-z" aria-hidden="true">z</span><span class="pet-say" role="status"></span>`;
+      el.addEventListener('click', poke);
+      nav.appendChild(el);
+      x = Math.max(8, Math.random() * (nav.clientWidth - 80));
+    }
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+  function step(ts){
+    raf = 0; if (!el) return;
+    const dt = Math.min(80, ts - (last || ts)); last = ts;
+    const W = el.parentNode.clientWidth, sw = el.offsetWidth || 56;
+    if (isNight()) state = 'sleep';
+    else if (calm() || el.classList.contains('saying')) state = 'sit';   // il s'arrête pour parler
+    else if (ts > until && !el.classList.contains('poke')){
+      state = Math.random() < .62 ? 'walk' : 'sit';
+      until = ts + (state === 'walk' ? 3500 + Math.random() * 6000 : 1800 + Math.random() * 3500);
+      if (Math.random() < .35) dir = -dir;
+    }
+    if (state === 'walk'){
+      x += dir * SPEED[TOT[id].mv] * dt / 1000;
+      if (x < 6){ x = 6; dir = 1; } if (x > W - sw - 6){ x = W - sw - 6; dir = -1; }
+    }
+    el.style.transform = `translateX(${x.toFixed(1)}px)`;
+    el.dataset.state = state; el.classList.toggle('flip', dir < 0);
+    raf = requestAnimationFrame(step);
+  }
+  function poke(e){
+    e.preventDefault(); e.stopPropagation();
+    const t = TOT[id]; if (!t) return;
+    el.classList.remove('poke'); void el.offsetWidth; el.classList.add('poke'); setTimeout(() => el && el.classList.remove('poke'), 600);
+    const lines = [t.m, ...t.k.split(' · ').map(k => k + ' ✦'), isNight() ? 'Chut… je rêve des étoiles.' : 'Belle journée, ' + S.profile.name + ' !'];
+    const say = el.querySelector('.pet-say');
+    say.textContent = lines[Math.floor(Math.random() * lines.length)];
+    const W = el.parentNode.clientWidth;
+    say.style.maxWidth = Math.min(240, W - 24) + 'px'; say.style.width = 'max-content';
+    const bw = say.offsetWidth;
+    say.style.left = Math.max(12 - x, Math.min(W - 12 - bw - x, (el.offsetWidth - bw) / 2)) + 'px';
+    el.classList.add('saying'); clearTimeout(sayT); sayT = setTimeout(() => el && el.classList.remove('saying'), 4200);
+    const b = el.getBoundingClientRect(); sparkle(b.left + b.width / 2, b.top + b.height / 3, 16, .9); Snd.twinkle(); buzz(12);
+    if (!S.today.done.pet){ S.today.done.pet = true; gain(5, 'Câlin à votre ' + t.n.toLowerCase()); save(); }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden){ last = 0; sync(); } });
+  return {sync};
+})();
+
 /* ---------- Vue : Oracles ---------- */
 const ORACLES = [
+  {id:'totem', n:'Animal totem', g:'', d:'Vingt questions pour découvrir l\'animal qui vous ressemble', wide:true},
   {id:'numero', n:'Numérologie', g:'9', d:'Votre chemin de vie et le nombre du jour'},
   {id:'rune', n:'Rune du jour', g:'ᚱ', d:'Une rune tirée de la bourse'},
   {id:'pierre', n:'Pierre & couleur', g:'◆', d:'Votre talisman et votre chiffre chance'},
@@ -826,9 +974,11 @@ function vOracles(){
       <div><div class="h-eyebrow">Les oracles</div><h1 class="h-title gold">Que voulez-vous savoir ?</h1></div>
       <div class="tiles">
         ${ORACLES.map((o, k) => `<button class="tile hue-tile h-${o.id} ${o.wide ? 'wide' : ''}" data-act="oracle" data-id="${o.id}" style="--d:${(k * 1.3).toFixed(1)}s${o.id === 'pierre' ? ';--ha:' + stoneC : ''}">
-          <span class="tg">${o.id === 'compat' ? o.g + VS : o.g}</span>
-          <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.n}</span><br><span class="td">${o.d}</span></span>
-          <span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>
+          <span class="tg">${o.id === 'totem' ? sprite(S.totem && TOT[S.totem.id] ? S.totem.id : 'loup', 'tile-sprite') : o.id === 'compat' ? o.g + VS : o.g}</span>
+          <span class="${o.wide ? 'grow' : ''}"><span class="tn">${o.id === 'totem' && S.totem && TOT[S.totem.id] ? 'Votre totem : ' + TOT[S.totem.id].n : o.n}</span><br><span class="td">${o.id === 'totem' && S.totem && TOT[S.totem.id] ? esc(TOT[S.totem.id].k) : o.d}</span></span>
+          ${o.id === 'totem'
+            ? `<span class="badge ${S.totem ? 'ok' : ''}">${S.totem ? '✓' : '+30'}</span>`
+            : `<span class="badge ${isDone(o.id) ? 'ok' : ''}">${isDone(o.id) ? '✓' : '+' + RITUALS.find(r => r.id === o.id).pts}</span>`}
         </button>`).join('')}
       </div>
     </section>`;
@@ -840,6 +990,7 @@ function vOracles(){
 }
 function oracleBody(id){
   const p = S.profile;
+  if (id === 'totem') return totemBody();
   if (id === 'numero'){
     const lp = lifePath(p.birth), ex = expressionNumber(p.name), pd = personalDay(p.birth);
     return `<div class="sign-hero">
@@ -973,6 +1124,7 @@ function legalSheet(t){
         <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
         <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
         <dt>Illustrations des cartes</dt>${DECK_ARTS.map(a => `<dd><b>${esc(a.n)}</b> : ${esc(a.credit)}</dd>`).join('')}
+        <dt>Animaux totems</dt><dd>Sprites pixel art dessinés pour Madame Voyance d'après des silhouettes de PhyloPic (phylopic.org) placées dans le domaine public (CC0).</dd>
         <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
         <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
         <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
@@ -1041,6 +1193,7 @@ function vProfil(){
         ${switchRow('sound', 'Sons doux', 'Bol tibétain, carillon et souffle', S.sound && !S.zen)}
         ${switchRow('zen', 'Mode zen', 'Coupe les animations, les sons et les vibrations', S.zen)}
         ${tiltSupported ? switchRow('tilt', 'Effet de profondeur', 'Le ciel bouge quand vous inclinez le téléphone', S.tilt && !S.zen) : ''}
+        ${S.totem && TOT[S.totem.id] ? switchRow('pet', 'Compagnon sur la barre', `Votre ${esc(TOT[S.totem.id].n.toLowerCase())} se promène en bas de l'écran`, S.pet !== false) : ''}
       </div>
     </section>
 
@@ -1091,7 +1244,7 @@ const PRIVACY = `
     <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
     <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
-  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule et les dates saisies pour la compatibilité ne sont pas conservées.</p>
+  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
   <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
 
 function profileForm(isEdit){
@@ -1197,6 +1350,7 @@ function render(){
   const v = UI.view, navV = v === 'grimoire' ? 'tarot' : v;
   $('#app').innerHTML = v === 'tarot' ? vTarot() : v === 'astres' ? vAstres() : v === 'oracles' ? vOracles() : v === 'profil' ? vProfil() : v === 'grimoire' ? vGrimoire() : vAccueil();
   document.querySelectorAll('.nav a').forEach(a => a.setAttribute('aria-current', a.dataset.v === navV ? 'page' : 'false'));
+  Pet.sync();
 }
 function go(view, sub, keepScroll){
   if (view === 'tarot' && sub){ if (UI.tarot !== sub) UI.flips = new Set(); UI.tarot = sub; }
@@ -1332,7 +1486,17 @@ document.addEventListener('click', e => {
     case 'lvl-close': { const o = el.closest('.lvl-ov'); if (o) o.remove(); break; }
     case 'gsuit': UI.gsuit = el.dataset.s; render(); break;
     case 'glocked': toast('Cette carte ne s\'est pas encore montrée à vous'); break;
-    case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; render(); window.scrollTo(0, 0); break;
+    case 'oracle': UI.oracle = el.dataset.id || null; UI.pendulum = null; UI.compat = null; UI.tq = null; render(); window.scrollTo(0, 0); break;
+    case 'tq-start': UI.tq = {i: 0, ans: []}; render(); window.scrollTo(0, 0); break;
+    case 'tq-back': if (!UI.tq) break; if (UI.tq.i) UI.tq.i--; else UI.tq = null; render(); break;
+    case 'tq-a': {
+      if (!UI.tq) break;
+      UI.tq.ans[UI.tq.i] = +el.dataset.k;
+      el.setAttribute('aria-pressed', 'true'); sparkleAt(el, 8, .6);
+      setTimeout(() => { if (!UI.tq) return; if (UI.tq.i < TOTEM_QUIZ.length - 1){ UI.tq.i++; render(); } else finishQuiz(); }, calm() ? 0 : 220);
+      break;
+    }
+    case 'totem-peek': totemSheet(el.dataset.id); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
     case 'art': S.art = ART = artOf(el.dataset.id).id; save(); render(); break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
