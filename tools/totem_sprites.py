@@ -103,9 +103,9 @@ def paint(m, base, stripes=0):
         rgb[y, x, :3] = OUTLINE if base.mean() > 60 else (250, 240, 210)
     return Image.fromarray(rgb, 'RGBA')
 
-def hand_frame(rows, pal):
-    assert len(set(map(len, rows))) == 1, 'lignes de longueurs différentes'
-    h, w = len(rows), len(rows[0])
+def hand_frame(rows, pal, flip=False):
+    w = max(map(len, rows)); rows = [r.ljust(w, '.')[::-1] if flip else r.ljust(w, '.') for r in rows]   # lignes complétées à droite
+    h = len(rows)
     a = np.zeros((h, w, 4), np.uint8)
     for y, r in enumerate(rows):
         for x, ch in enumerate(r):
@@ -114,12 +114,31 @@ def hand_frame(rows, pal):
     im.alpha_composite(Image.fromarray(a, 'RGBA'), ((W - w) // 2, H - h))   # centré, posé en bas
     return im
 
+def auto_frame2(f1, mv):
+    """Seconde image calculée à partir de la première, selon la façon de bouger."""
+    a = np.asarray(f1).copy(); out = a.copy()
+    ys, xs = np.where(a[..., 3] > 0); top, bot, left, right = ys.min(), ys.max(), xs.min(), xs.max()
+    if mv in ('walk', 'crawl'):                                  # pattes : 3 dernières lignes, arrière et avant décalés
+        band = 3 if mv == 'walk' else 2; y = bot - band + 1; mid = (left + right) // 2
+        out[y:] = 0
+        out[y:, 1:mid + 1] = np.where(a[y:, 0:mid, 3:] > 0, a[y:, 0:mid], out[y:, 1:mid + 1])
+        out[y:, mid:-1] = np.where(a[y:, mid + 1:, 3:] > 0, a[y:, mid + 1:], out[y:, mid:-1])
+    elif mv == 'swim':                                           # queue : tiers arrière relevé d'un pixel
+        q = left + (right - left + 1) // 3
+        out[:, :q] = 0; out[:-1, :q] = a[1:, :q]
+    elif mv == 'fly':                                            # ailes : moitié haute abaissée d'un pixel
+        half = top + (bot - top) // 2
+        out[:half + 1] = 0; out[top + 1:half + 2] = np.where(a[top:half + 1, :, 3:] > 0, a[top:half + 1], out[top + 1:half + 2])
+    else:                                                        # saut : tassement
+        part = f1.crop(f1.getbbox()); nh = max(2, round(part.height * .9))
+        im = Image.new('RGBA', (W, H), (0, 0, 0, 0)); im.alpha_composite(part.resize((part.width, nh), Image.NEAREST), (left, H - nh))
+        return im
+    return Image.fromarray(out, 'RGBA')
+
 def hand_sheet(spec, mv):
-    f1 = hand_frame(spec['frames'][0], spec['pal'])
-    if len(spec['frames']) > 1: f2 = hand_frame(spec['frames'][1], spec['pal'])
-    else:                                                        # saut : tassement de l'image
-        bb = f1.getbbox(); part = f1.crop(bb); nh = max(2, round(part.height * .9))
-        f2 = Image.new('RGBA', (W, H), (0, 0, 0, 0)); f2.alpha_composite(part.resize((part.width, nh), Image.NEAREST), (bb[0], H - nh))
+    f1 = hand_frame(spec['frames'][0], spec['pal'], spec.get('flip'))
+    if len(spec['frames']) > 1: f2 = hand_frame(spec['frames'][1], spec['pal'], spec.get('flip'))
+    else: f2 = auto_frame2(f1, spec.get('mv', mv))
     sheet = Image.new('RGBA', (W * 2, H), (0, 0, 0, 0)); sheet.paste(f1, (0, 0)); sheet.paste(f2, (W, 0))
     return sheet
 

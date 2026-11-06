@@ -144,3 +144,7 @@ HAND = {
     ]],
   },
 }
+
+# Les 36 autres animaux
+from totem_hand2 import HAND2
+HAND.update(HAND2)
