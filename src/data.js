@@ -481,10 +481,12 @@ const DECK_ARTS = [
    credit:'Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Domaine public.'},
   {id:'marseille', n:'Marseille', d:'Jean Dodal, Lyon, vers 1701', dir:'decks/marseille',
    credit:'Tarot de Marseille de Jean Dodal (Lyon, vers 1701), exemplaire de la Bibliothèque nationale de France, via Wikimedia Commons. Domaine public.'},
-  {id:'8bits', n:'8 bits', d:'Pixel art, palette façon NES', dir:'decks/8bits',
-   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 48×82 pixels, 13 couleurs de la palette NES.'},
-  {id:'16bits', n:'16 bits', d:'Pixel art, couleurs façon Mega Drive', dir:'decks/16bits',
-   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 70×120 pixels, 32 couleurs en 9 bits comme la Mega Drive.'}
+  {id:'8bits', n:'8 bits', d:'Pixel art aux règles de la NES', dir:'decks/8bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith, aux contraintes de la NES : 96×160 pixels, couleurs de la palette NES, un fond commun et 4 palettes de 3 couleurs, une palette par bloc de 16×16.'},
+  {id:'16bits', n:'16 bits', d:'Pixel art aux règles de la Mega Drive', dir:'decks/16bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith, aux contraintes de la Mega Drive : 144×240 pixels, couleurs 9 bits, 4 palettes de 15 couleurs, une palette par carreau de 8×8.'},
+  {id:'encre', n:'Encre', d:'Hachures aux stylos de couleur', dir:'decks/encre',
+   credit:'Version en hachures de stylos de couleur sur papier crème, générée pour Madame Voyance à partir du Rider-Waite-Smith.'}
 ];
 let ART = 'rws';
 const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];

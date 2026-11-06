@@ -627,8 +627,10 @@ html.zen *,html.zen *::before,html.zen *::after{animation-duration:.001ms!import
 html.zen .breathe .orb{transform:scale(.9)}
 html.zen .aurora{display:none}
 /* ---- Jeux d'illustrations ---- */
-.arts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.seg.art-seg{grid-auto-columns:auto}
+.arts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.deck-choice.art-choice{flex-direction:column;align-items:stretch;gap:6px}
+.seg.art-seg{grid-auto-columns:1fr;width:100%}
+.seg.art-seg button{padding:0 4px;font-size:12.5px}
 .art-opt .mini img{width:100%;height:100%;object-fit:cover;display:block}
 .art-opt b{font-family:var(--f-display);font-size:13px;font-weight:600;color:var(--gold-hi);line-height:1.2}
 .art-opt span:last-child{font-size:10.5px;line-height:1.25}
@@ -1129,10 +1131,12 @@ const DECK_ARTS = [
    credit:'Tarot Rider-Waite-Smith, dessiné par Pamela Colman Smith (1909). Domaine public.'},
   {id:'marseille', n:'Marseille', d:'Jean Dodal, Lyon, vers 1701', dir:'decks/marseille',
    credit:'Tarot de Marseille de Jean Dodal (Lyon, vers 1701), exemplaire de la Bibliothèque nationale de France, via Wikimedia Commons. Domaine public.'},
-  {id:'8bits', n:'8 bits', d:'Pixel art, palette façon NES', dir:'decks/8bits',
-   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 48×82 pixels, 13 couleurs de la palette NES.'},
-  {id:'16bits', n:'16 bits', d:'Pixel art, couleurs façon Mega Drive', dir:'decks/16bits',
-   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith : 70×120 pixels, 32 couleurs en 9 bits comme la Mega Drive.'}
+  {id:'8bits', n:'8 bits', d:'Pixel art aux règles de la NES', dir:'decks/8bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith, aux contraintes de la NES : 96×160 pixels, couleurs de la palette NES, un fond commun et 4 palettes de 3 couleurs, une palette par bloc de 16×16.'},
+  {id:'16bits', n:'16 bits', d:'Pixel art aux règles de la Mega Drive', dir:'decks/16bits',
+   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith, aux contraintes de la Mega Drive : 144×240 pixels, couleurs 9 bits, 4 palettes de 15 couleurs, une palette par carreau de 8×8.'},
+  {id:'encre', n:'Encre', d:'Hachures aux stylos de couleur', dir:'decks/encre',
+   credit:'Version en hachures de stylos de couleur sur papier crème, générée pour Madame Voyance à partir du Rider-Waite-Smith.'}
 ];
 let ART = 'rws';
 const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];
@@ -1829,9 +1833,9 @@ function vTarot(){
         <button data-act="deck" data-deck="78" aria-pressed="${S.deck === '78'}">78 cartes</button>
       </div>
     </div>
-    <div class="deck-choice">
+    <div class="deck-choice art-choice">
       <span class="small muted">Illustrations</span>
-      <div class="seg art-seg" role="group" aria-label="Illustrations des cartes" style="min-width:220px">
+      <div class="seg art-seg" role="group" aria-label="Illustrations des cartes">
         ${DECK_ARTS.map(a => `<button data-act="art" data-id="${a.id}" aria-pressed="${ART === a.id}">${esc(a.n)}</button>`).join('')}
       </div>
     </div>
@@ -2215,7 +2219,7 @@ function vProfil(){
         </div>
       </div>
     </section>
-    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarots Rider-Waite-Smith (1909) et Jean Dodal (vers 1701), domaine public ; versions 8 et 16 bits générées.</p>
+    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarots Rider-Waite-Smith (1909) et Jean Dodal (vers 1701), domaine public ; versions 8 bits, 16 bits et Encre générées.</p>
   </section>`;
 }
 
