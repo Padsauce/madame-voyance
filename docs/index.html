@@ -717,6 +717,12 @@ html.zen .pet .tsprite{animation:none!important;translate:none}
 .acc-row b{font-size:15px;color:var(--gold-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acc-row.on{border-color:var(--gold-line);box-shadow:0 0 18px -8px var(--violet-glow)}
 .acc-go{font-size:22px;color:var(--mist)}
+
+/* ---- Transfert de profil ---- */
+.code-box{width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,Menlo,monospace;color:#efe6ff;background:rgba(10,5,25,.6);border:1px solid var(--gold-line);border-radius:12px;padding:10px 12px;resize:vertical;word-break:break-all}
+.code-box:focus{outline:2px solid var(--gold);outline-offset:1px}
+#onboard:not([hidden]) ~ #sheet-root .sheet-back{z-index:52}   /* fenêtre ouverte depuis l'accueil des nouveaux : au-dessus */
+#onboard:not([hidden]) ~ #sheet-root .sheet{z-index:53}
 </style>
 </head>
 <body>
@@ -2292,6 +2298,75 @@ function removeAccount(){
   S = defaultState(); resetUI(); render();
 }
 
+/* ---------- Transfert de profil : Safari → app installée (iPhone), ou vers un autre appareil ----------
+   Tous les comptes de l'appareil tiennent dans un code texte (CIRCE1: + JSON en base64) qui passe par le presse-papiers. Rien n'est envoyé. */
+const CODE_TAG = 'CIRCE1:';
+const b64 = str => { const u = new TextEncoder().encode(str); let b = ''; for (let i = 0; i < u.length; i += 8192) b += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); return btoa(b); };
+const unb64 = str => new TextDecoder().decode(Uint8Array.from(atob(str), c => c.charCodeAt(0)));
+function exportCode(){
+  if (S.profile) save();
+  const data = {};
+  ACC.list.forEach(a => { try { const r = localStorage.getItem(keyOf(a.id)); if (r) data[a.id] = JSON.parse(r); } catch (e) {} });
+  return CODE_TAG + b64(JSON.stringify({active: ACC.active, data}));
+}
+function importCode(text){                                  // nombre de comptes récupérés (0 si le code est invalide)
+  let o;
+  try {
+    const t = String(text || ''), i = t.indexOf(CODE_TAG); if (i < 0) return 0;
+    const rest = t.slice(i + CODE_TAG.length).trim();
+    for (const c of [(rest.match(/^[A-Za-z0-9+/]+=*/) || [''])[0], rest.replace(/[^A-Za-z0-9+/=]/g, '')]){   // code seul, ou coupé en plusieurs lignes
+      try { o = JSON.parse(unb64(c)); break; } catch (e) {}
+    }
+  } catch (e) { return 0; }
+  if (!o || !o.data || typeof o.data !== 'object') return 0;
+  if (S.profile) save();
+  const map = {}; let n = 0;
+  Object.entries(o.data).forEach(([id, st], k) => {
+    if (!st || !st.profile || !st.profile.name) return;
+    const same = ACC.list.find(a => a.name === st.profile.name && a.birth === st.profile.birth);
+    if (same && (same.points || 0) > (st.points || 0)){ map[id] = same.id; return; }   // déjà là, et plus avancé ici
+    const nid = same ? same.id : ACC.list.some(a => a.id === id) ? 'p' + Date.now().toString(36) + k : id;
+    st.consent = true;
+    try { localStorage.setItem(keyOf(nid), JSON.stringify(st)); } catch (e) { return; }
+    let a = ACC.list.find(x => x.id === nid); if (!a){ a = {id: nid}; ACC.list.push(a); }
+    Object.assign(a, {name: st.profile.name, birth: st.profile.birth, totem: st.totem ? st.totem.id : null, points: st.points || 0});
+    map[id] = nid; n++;
+  });
+  const act = map[o.active] || Object.values(map)[0];
+  if (!act) return 0;
+  ACC.active = act; saveAccounts();
+  S = load(); backfillSeen(); resetUI(); UI.prevAcc = null;
+  checkIn(); installBonus(); render(); window.scrollTo(0, 0);
+  sparkle(innerWidth / 2, innerHeight / 2, 50, 1.4);
+  toast(n > 1 ? `${n} comptes récupérés` : 'Bon retour, ' + esc(S.profile.name));
+  return Math.max(n, 1);
+}
+async function copyProfile(quiet){
+  const code = exportCode();
+  try { await navigator.clipboard.writeText(code); if (!quiet) toast('Profil copié ✓'); return true; }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = code; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, code.length);
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+    if (ok){ if (!quiet) toast('Profil copié ✓'); return true; }
+    if (!quiet) openSheet(`<div class="stack"><div class="h-eyebrow">Mon code de profil</div><p class="small" style="margin:0">Copiez ce texte en entier, puis collez-le dans « J'ai déjà un profil ».</p><textarea class="code-box" readonly rows="5">${esc(code)}</textarea></div>`);
+    return false;
+  }
+}
+async function pasteProfile(){
+  let t = '';
+  try { t = await navigator.clipboard.readText(); } catch (e) {}
+  if (t && importCode(t)) return;
+  openSheet(`<div class="stack">
+    <div class="h-eyebrow">J'ai déjà un profil</div>
+    <h2 class="h-title gold" style="font-size:22px;margin:0">Retrouver mon profil</h2>
+    <ol class="steps"><li><span>Là où se trouve votre profil (Safari ou l'autre téléphone) : Profil → Mes données → « Copier mon profil ».</span></li><li><span>Revenez ici et collez le code ci-dessous.</span></li></ol>
+    <textarea id="imp" class="code-box" rows="4" placeholder="Collez ici le code (il commence par CIRCE1:)" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+    <span class="err" id="imp-err"></span>
+    <button class="btn btn-gold btn-wide" data-act="imp-go">Récupérer</button></div>`);
+}
+
 /* ---------- Animal totem ---------- */
 const TOT = Object.fromEntries(TOTEMS.map(t => [t.id, t]));
 const TQ = (() => {   // moyenne et écart-type de chaque trait pour des réponses au hasard : chaque trait pèse autant
@@ -2723,13 +2798,16 @@ function vProfil(){
         <p class="small" style="margin:0">Tout est enregistré uniquement sur cet appareil.${storageOK ? '' : ' <b style="color:var(--danger)">Votre navigateur bloque l\'enregistrement : vos données disparaîtront à la fermeture de la page.</b>'}</p>
         <button class="btn btn-ghost btn-wide" data-act="edit">Modifier mon prénom ou ma date</button>
         <button class="btn btn-ghost btn-wide" data-act="privacy">Revoir l'avertissement</button>
+        <div class="stack" style="gap:8px"><div class="h-eyebrow">Transférer</div>
+          <p class="small muted" style="margin:0">Vers l'app installée sur l'écran d'accueil ou un autre téléphone : copiez votre profil ici, puis touchez « J'ai déjà un profil » là-bas. ${ACC.list.length > 1 ? 'Tous les comptes de cet appareil suivent.' : ''}</p>
+          <button class="btn btn-ghost btn-wide" data-act="exp">Copier mon profil</button><button class="btn btn-ghost btn-wide" data-act="imp">Récupérer un profil</button></div>
         ${UI.confirmErase
           ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer le compte de ${esc(S.profile.name)} : prénom, date, points, journal et animal ? Cette action est définitive.${ACC.list.length > 1 ? ' Les autres comptes ne sont pas touchés.' : ''}</p>
               <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Effacer ce compte</button></div></div>`
           : `<button class="btn btn-danger btn-wide" data-act="erase">${ACC.list.length > 1 ? 'Effacer ce compte' : 'Effacer toutes mes données'}</button>`}
         <div class="legal-box">
           <div class="h-eyebrow">Informations légales</div>
-          <p class="small muted" style="margin:0">Aucun compte, aucun cookie, aucune mesure d'audience. Le site est hébergé par GitHub Pages et les polices viennent de Google Fonts : ces deux services voient l'adresse IP de votre appareil quand la page se charge, comme pour tout site web.</p>
+          <p class="small muted" style="margin:0">Aucun compte en ligne, aucun cookie, aucune mesure d'audience. Le site est hébergé par GitHub Pages et les polices viennent de Google Fonts : ces deux services voient l'adresse IP de votre appareil quand la page se charge, comme pour tout site web.</p>
           <button class="legal-row" data-act="legal" data-t="mentions"><span>Mentions légales</span><span aria-hidden="true">›</span></button>
           <button class="legal-row" data-act="legal" data-t="credits"><span>Crédits</span><span aria-hidden="true">›</span></button>
         </div>
@@ -2750,7 +2828,7 @@ const PRIVACY = `
     <li><span><b>Vos points, séries et rituels accomplis</b>, pour suivre votre progression.</span></li>
     <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
-  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
+  <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé (le transfert vers l'app installée ou un autre téléphone passe par votre presse-papiers). Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
   <p class="small muted" style="margin:0">Plusieurs personnes peuvent avoir chacune leur compte sur l'appareil, sans mot de passe. Vous pouvez tout effacer à tout moment depuis l'onglet Profil. L'Oracle de Circé est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
 
 function profileForm(isEdit){
@@ -2767,13 +2845,15 @@ function showOnboarding(step){
   if (step === 1){
     inner.innerHTML = `<div class="frame stack">${PRIVACY}
       ${storageOK ? '' : '<p class="small" style="margin:0;color:var(--danger)">Votre navigateur bloque l\'enregistrement local : l\'application fonctionnera, mais vos données disparaîtront à la fermeture de la page.</p>'}
-      <button class="btn btn-gold btn-wide" data-act="consent">J'ai compris</button></div>`;
+      <button class="btn btn-gold btn-wide" data-act="consent">J'ai compris</button>
+      <button class="btn btn-ghost btn-wide" data-act="imp">J'ai déjà un profil : le récupérer</button></div>`;
   } else {
     inner.innerHTML = `<div class="frame stack">
       <div class="h-eyebrow" style="text-align:center">Faisons connaissance</div>
       <h1 class="h-title gold" style="text-align:center">Bienvenue dans le cercle</h1>
       <p class="small muted" style="margin:0;text-align:center">Ces deux informations suffisent à Circé pour lire vos astres.</p>
       ${profileForm(false)}
+      ${ACC.list.length ? '' : '<button class="btn btn-ghost btn-wide" data-act="imp">J\'ai déjà un profil : le récupérer</button>'}
       ${UI.prevAcc && ACC.list.some(a => a.id === UI.prevAcc) ? `<button class="btn btn-ghost btn-wide" data-act="acc-cancel">Revenir au compte de ${esc(ACC.list.find(a => a.id === UI.prevAcc).name)}</button>` : ''}</div>`;
   }
   ov.scrollTop = 0;
@@ -2836,6 +2916,7 @@ async function installApp(){
     try { evt.prompt(); await evt.userChoice; } catch (e) {}
     render(); return;
   }
+  const copied = isIOS && !standalone() && S.profile ? await copyProfile(true) : false;   // l'app installée sur iPhone a sa propre mémoire
   const share = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
   const steps = isIOS
     ? [`Dans Safari, touchez le bouton Partager ${share} en bas de l'écran.`, 'Faites défiler et choisissez « Sur l\'écran d\'accueil ».', 'Touchez « Ajouter » : l\'icône apparaît avec vos autres apps.']
@@ -2846,7 +2927,8 @@ async function installApp(){
       <h2 class="h-title gold" style="font-size:22px;margin:0">Installer l'Oracle de Circé</h2>
     </div>
     <ol class="steps">${steps.map(t => `<li><span>${t}</span></li>`).join('')}</ol>
-    <p class="small muted" style="margin:0;text-align:center">Une fois installée, l'app s'ouvre en plein écran et fonctionne sans connexion. Vous gagnez 50 points à la première ouverture.${isIOS ? ' Sur iPhone, l\'app installée garde ses propres données : vous referez une fois votre profil.' : ''}</p>`);
+    ${copied ? `<div class="frame-plain stack" style="gap:8px;text-align:center"><p class="small" style="margin:0"><b>Votre profil est copié.</b> À la première ouverture de l'app, touchez « J'ai déjà un profil : le récupérer ».</p><button class="btn btn-ghost btn-sm" data-act="exp">Copier à nouveau</button></div>` : ''}
+    <p class="small muted" style="margin:0;text-align:center">Une fois installée, l'app s'ouvre en plein écran et fonctionne sans connexion. Vous gagnez 50 points à la première ouverture.</p>`);
 }
 
 /* ---------- Rendu et navigation ---------- */
@@ -2953,6 +3035,9 @@ document.addEventListener('click', e => {
   const act = el.dataset.act;
   switch (act){
     case 'consent': S.consent = true; save(); sparkleAt(el, 24); render(); break;
+    case 'exp': copyProfile(); break;
+    case 'imp': pasteProfile(); break;
+    case 'imp-go': { const t = $('#imp') && $('#imp').value; if (importCode(t)) closeSheet(); else $('#imp-err').textContent = 'Ce code n\'est pas reconnu. Copiez-le à nouveau, en entier.'; break; }
     case 'go': { const g = JSON.parse(el.dataset.go); go(g[0], g[1]); break; }
     case 'breathe': breathe(); break;
     case 'tmode': UI.flips = new Set(); UI.tarot = +el.dataset.n; render(); break;
