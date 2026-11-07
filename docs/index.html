@@ -2284,6 +2284,26 @@ function totemSheet(id){
     <p class="lead" style="margin:0">${esc(t.d)}</p>
     <div class="tip"><span>✦</span><span>${esc(t.f)}</span></div>`);
 }
+/* Invitation au quiz : juste après l'inscription, ou à la prochaine ouverture pour un compte existant sans animal.
+   « Plus tard » : on repropose au plus tous les 3 jours, 3 fois en tout ; l'oracle reste toujours accessible. */
+let totemInvited = false;
+function totemInvite(force){
+  if (totemInvited || !S.profile || (S.totem && TOT[S.totem.id])) return;
+  const asks = S.totemAsks || 0, last = S.totemAskedOn;
+  if (!force && (asks >= 3 || (last && addDays(last, 3) > dk()))) return;
+  if ($('#sheet-root').innerHTML || document.querySelector('.lvl-ov')){ setTimeout(() => totemInvite(force), 1500); return; }
+  totemInvited = true; S.totemAsks = asks + 1; S.totemAskedOn = dk(); save();
+  openSheet(`<div class="stack h-totem totem-invite" style="align-items:center;text-align:center">
+      <div class="totem-parade">${['loup', 'hibou', 'renard', 'dauphin', 'papillon', 'ours'].map(id => sprite(id)).join('')}</div>
+      <div class="h-eyebrow">${force ? 'Bienvenue, ' + esc(S.profile.name) : 'Nouveau'}</div>
+      <h2 class="h-title gold" style="font-size:24px;margin:0">Quel animal veille sur vous ?</h2>
+      <p class="lead" style="margin:0;max-width:30ch">Vingt questions, environ trois minutes. Votre animal se promènera ensuite en bas de l'écran.</p>
+      <button class="btn btn-gold btn-wide" data-act="totem-go">Découvrir mon animal <span class="pts">+30</span></button>
+      <button class="btn btn-ghost btn-wide" data-act="totem-later">Plus tard</button>
+    </div>`, true);
+  const btn = document.querySelector('[data-act=totem-go]'); if (btn) btn.focus();
+}
+
 function finishQuiz(){
   const rank = totemRank(UI.tq.ans), first = !S.totem;
   S.totem = {id: rank[0].t.id, alt: rank.slice(1, 3).map(r => r.t.id), d: dk()};
@@ -2678,9 +2698,9 @@ function validateProfile(form){
 }
 
 /* ---------- Fenêtres ---------- */
-function openSheet(html){
+function openSheet(html, noClose){
   Snd.whoosh(.04);
-  $('#sheet-root').innerHTML = `<div class="sheet-back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${html}<button class="btn btn-ghost btn-wide" data-act="close">Fermer</button></div></div>`;
+  $('#sheet-root').innerHTML = `<div class="sheet-back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-in"><div class="grab"></div>${html}${noClose ? '' : '<button class="btn btn-ghost btn-wide" data-act="close">Fermer</button>'}</div></div>`;
 }
 function closeSheet(){ $('#sheet-root').innerHTML = ''; }
 function cardSheet(id){
@@ -2894,6 +2914,8 @@ document.addEventListener('click', e => {
       break;
     }
     case 'totem-peek': totemSheet(el.dataset.id); break;
+    case 'totem-go': closeSheet(); UI.view = 'oracles'; UI.oracle = 'totem'; UI.tq = {i: 0, ans: []}; history.replaceState(null, '', '#oracles'); render(); window.scrollTo(0, 0); break;
+    case 'totem-later': closeSheet(); toast('Votre animal vous attend dans Oracles'); break;
     case 'back': if (!el.disabled){ S.back = el.dataset.id; save(); render(); } break;
     case 'art': S.art = ART = artOf(el.dataset.id).id; save(); render(); break;
     case 'edit': openSheet(`<div class="h-eyebrow">Mes informations</div>${profileForm(true)}`); break;
@@ -2920,7 +2942,9 @@ document.addEventListener('submit', e => {
     S.profile = p; save();
     if (kind === 'edit') closeSheet();
     if (first){ sparkle(innerWidth / 2, innerHeight / 2, 60, 1.6); checkIn(); installBonus(); UI.view = 'accueil'; history.replaceState(null, '', '#accueil'); }
-    render(); return;
+    render();
+    if (first) setTimeout(() => totemInvite(true), 1200);
+    return;
   }
   if (kind === 'pendule'){
     const q = f.q.value.trim();
@@ -3005,6 +3029,7 @@ if (S.consent && S.profile) checkIn();
 function installBonus(){ if (standalone() && S.profile && !S.installBonus){ S.installBonus = true; gain(50, 'Application installée'); save(); } }
 installBonus();
 render();
+if (S.consent && S.profile) setTimeout(() => totemInvite(false), 1500);   // compte existant sans animal : invitation à l'ouverture
 })();
 </script>
 </body>
