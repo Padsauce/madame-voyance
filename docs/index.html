@@ -321,14 +321,20 @@ input{font:inherit;color:inherit}
 .dtile.done{border-color:rgba(230,195,120,.32)}
 .dt-head{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%}
 .dt-head .h-eyebrow{font-size:10px;letter-spacing:.18em}
-.home-card{width:min(112px,100%)}
-.dt-orb{width:96px;height:96px;margin-block:6px 4px}
+.home-card,.dt-slot{width:min(112px,100%)}
+.dt-slot{aspect-ratio:7/12;display:grid;place-items:center}   /* même hauteur que la carte : titres et textes alignés */
+.dt-orb{width:100px;height:100px}
 .dt-orb span{font-size:46px}
 .dt-name{font-family:var(--f-display);font-size:15px;line-height:1.2;color:var(--gold-hi);text-wrap:balance}
 .dtile:not(.done) .dt-name{font-family:var(--f-ui);font-size:13px;color:var(--mist)}
 .dt-text{font-family:var(--f-read);font-size:16px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .dt-link{margin-top:auto;font-size:13px;font-weight:500;color:var(--gold);text-decoration:underline;text-underline-offset:3px;min-height:32px}
 .dtile .btn-sm{margin-top:auto;width:100%}
+@supports (grid-template-rows:subgrid){   /* en-tête, carte/signe, titre, texte, lien alignés d'une tuile à l'autre */
+  .dtile{display:grid;grid-row:span 5;grid-template-rows:subgrid;justify-items:center;align-content:start}
+  .dtile>.home-card,.dtile>.dt-slot{grid-row:2}
+  .dt-link,.dtile .btn-sm{grid-row:5;align-self:end}
+}
 .explore{display:flex;flex-direction:column;align-items:center;gap:8px}
 .explore-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .explore-links button{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--gold-faint);background:rgba(20,11,43,.6);font-size:13px;color:var(--mist)}
@@ -2050,7 +2056,7 @@ function vAccueil(){
         </div>
         <div class="dtile hue-tile h-horo ${horoDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Horoscope</span><span class="badge ${horoDone ? 'ok' : ''}">${horoDone ? '✓' : '+' + ptsOf('horo')}</span></div>
-          <div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div>
+          <div class="dt-slot"><div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div></div>
           <div class="dt-name">${z.n}</div>
           ${horoDone
             ? `<div class="dt-text">${esc(horoscopeFor(si).open)}</div><button class="dt-link" data-act="go" data-go='["astres","zodiaque"]'>Lire en entier</button>`

@@ -636,7 +636,7 @@ function vAccueil(){
         </div>
         <div class="dtile hue-tile h-horo ${horoDone ? 'done' : ''}">
           <div class="dt-head"><span class="h-eyebrow">Horoscope</span><span class="badge ${horoDone ? 'ok' : ''}">${horoDone ? '✓' : '+' + ptsOf('horo')}</span></div>
-          <div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div>
+          <div class="dt-slot"><div class="glyph-orb dt-orb"><span>${z.g}${VS}</span></div></div>
           <div class="dt-name">${z.n}</div>
           ${horoDone
             ? `<div class="dt-text">${esc(horoscopeFor(si).open)}</div><button class="dt-link" data-act="go" data-go='["astres","zodiaque"]'>Lire en entier</button>`
