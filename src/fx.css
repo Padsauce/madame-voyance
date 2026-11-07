@@ -337,4 +337,21 @@ img[src*="decks/8bits/"]{image-rendering:pixelated;image-rendering:crisp-edges}
 .pet.flip .pet-say{transform:none}
 .pet.saying .pet-say{opacity:1;translate:0 0}
 html.zen .pet .tsprite{animation:none!important;translate:none}
+
+/* ---- Comptes ---- */
+.acc-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:46vw;padding:3px 10px 3px 3px;border-radius:999px;border:1px solid var(--gold-faint);background:rgba(20,11,43,.6);color:var(--gold-hi);font-size:14px;font-weight:500}
+.acc-btn:hover{border-color:var(--gold-line)}
+.acc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.avatar{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--violet) 45%,transparent),rgba(20,11,43,.9) 75%);box-shadow:0 0 0 1px var(--gold-line)}
+.avatar b{font-family:var(--f-display);font-size:16px;color:var(--gold-hi)}
+.avatar .tsprite{--z:1}
+.acc-list{display:flex;flex-direction:column;gap:8px}
+.acc-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:var(--r-md);border:1px solid var(--gold-faint);background:rgba(28,17,58,.6);text-align:left}
+.acc-row .avatar{width:44px;height:44px}
+.acc-row .avatar .tsprite{--z:1.4}
+.acc-row .grow{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.acc-row b{font-size:15px;color:var(--gold-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-row.on{border-color:var(--gold-line);box-shadow:0 0 18px -8px var(--violet-glow)}
+.acc-go{font-size:22px;color:var(--mist)}
 </style>

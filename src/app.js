@@ -33,7 +33,21 @@ const fmtShort = new Intl.DateTimeFormat('fr-FR', {day:'numeric', month:'short'}
 const fromKey = k => { const [y,m,d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
 
 /* ---------- Stockage local ---------- */
+/* Plusieurs comptes sur l'appareil : chaque compte a sa propre clé ; le compte n°1 garde la clé historique. */
 const KEY = 'madame-voyance:v1';
+const KEY_ACC = 'madame-voyance:comptes';                  // {active, list:[{id, name, birth, totem, points}]}
+const keyOf = id => id === 'p1' ? KEY : KEY + ':' + id;
+let ACC = {active: 'p1', list: []};
+try { const r = localStorage.getItem(KEY_ACC); if (r) ACC = Object.assign({active: 'p1', list: []}, JSON.parse(r)); } catch (e) {}
+function saveAccounts(){ try { localStorage.setItem(KEY_ACC, JSON.stringify(ACC)); } catch (e) {} }
+function syncAccount(){                                    // la fiche du compte actif suit son état
+  if (!S || !S.profile) return;
+  let a = ACC.list.find(x => x.id === ACC.active);
+  if (!a){ a = {id: ACC.active}; ACC.list.push(a); }
+  const t = S.totem ? S.totem.id : null;
+  if (a.name === S.profile.name && a.birth === S.profile.birth && a.totem === t && a.points === S.points) return;
+  Object.assign(a, {name: S.profile.name, birth: S.profile.birth, totem: t, points: S.points}); saveAccounts();
+}
 let storageOK = true;
 function defaultState(){
   return {consent:false, profile:null, points:0, streak:0, best:0, lastVisit:null, days:0, rituals:0,
@@ -42,23 +56,25 @@ function defaultState(){
 }
 function load(){
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(keyOf(ACC.active));
     localStorage.setItem(KEY + ':test', '1'); localStorage.removeItem(KEY + ':test');
     if (!raw) return defaultState();
     return Object.assign(defaultState(), JSON.parse(raw));
   } catch (e) { storageOK = false; return defaultState(); }
 }
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
+function save(){ try { localStorage.setItem(keyOf(ACC.active), JSON.stringify(S)); } catch (e) { storageOK = false; } syncAccount(); }
 let S = load();
 ART = artOf(S.art).id;
 let shown = S.points;
 /* Grimoire : on reprend les cartes déjà tirées avant cette version */
-(function backfillSeen(){
+function backfillSeen(){
   if (!S.seen || typeof S.seen !== 'object') S.seen = {};
   if (Object.keys(S.seen).length) return;
   for (const j of S.journal) if (j && j.id){ const e = S.seen[j.id] || (S.seen[j.id] = {n:0, d:j.d}); e.n++; }
   for (const k in (S.today.draws || {})) if (S.today.d) for (const id of S.today.draws[k]) if (!S.seen[id]) S.seen[id] = {n:1, d:S.today.d};
-})();
+}
+backfillSeen();
+syncAccount();
 
 /* ---------- Application installable (écran d'accueil, hors ligne) ---------- */
 const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -558,7 +574,7 @@ function moonRow(){
 function chipInner(){ return `${ICONS.spark}<span data-pts>${shown}</span><span class="sep"></span>${moonMini(streakPos(), 'mmini')}<span>${S.streak} j</span>`; }
 function topbar(){
   const on = S.sound && !S.zen;
-  return `<div class="topbar"><span class="brand-mini">Madame Voyance</span>
+  return `<div class="topbar"><button class="acc-btn" data-act="accounts" aria-label="Compte de ${esc(S.profile.name)} : changer de compte">${avatar(S.profile.name, S.totem && S.totem.id)}<span class="acc-name">${esc(S.profile.name)}</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <div class="tb-right"><button class="snd" data-act="sound" aria-pressed="${on}" aria-label="${on ? 'Couper les sons' : 'Activer les sons'}">${on ? ICONS.sndOn : ICONS.sndOff}</button>
     <a class="chip" href="#profil" id="pchip" aria-label="Mes points et ma série">${chipInner()}</a></div></div>`;
 }
@@ -808,6 +824,52 @@ function vAstres(){
     </div>
     ${body}
   </section>`;
+}
+
+/* ---------- Comptes ---------- */
+const avatar = (name, totem) => totem && TOT[totem]
+  ? `<span class="avatar">${sprite(totem, 'av-sprite')}</span>`
+  : `<span class="avatar"><b>${esc((name || '?').trim().charAt(0).toUpperCase())}</b></span>`;
+function accountsList(){
+  return `<div class="acc-list">${ACC.list.map(a => {
+    const bp = birthParts(a.birth), z = ZODIAC[signIndex(bp.m, bp.d)], on = a.id === ACC.active;
+    return `<button class="acc-row ${on ? 'on' : ''}" data-act="acc" data-id="${a.id}" aria-current="${on}">
+      ${avatar(a.name, a.totem)}<span class="grow"><b>${esc(a.name)}</b><span class="small muted">${z.n}${a.totem && TOT[a.totem] ? ' · ' + TOT[a.totem].n : ''} · ${a.points || 0} pts</span></span>
+      ${on ? '<span class="badge ok">✓</span>' : '<span class="acc-go" aria-hidden="true">›</span>'}</button>`;
+  }).join('')}</div>
+  <button class="btn btn-ghost btn-wide" data-act="acc-new">+ Ajouter un compte</button>`;
+}
+function accountsSheet(){
+  openSheet(`<div class="stack"><div class="h-eyebrow">Comptes sur cet appareil</div>${accountsList()}
+    <p class="small muted" style="margin:0">Chaque compte a ses propres points, tirages et animal totem. Il n'y a pas de mot de passe : toute personne qui utilise cet appareil peut ouvrir chaque compte.</p></div>`);
+}
+function resetUI(){
+  Object.assign(UI, {view: 'accueil', oracle: null, tq: null, flips: new Set(), confirmErase: false, compat: null, pendulum: null});
+  ART = artOf(S.art).id; shown = S.points; totemInvited = false;
+  closeSheet(); applyZen(); history.replaceState(null, '', '#accueil');
+}
+function switchAccount(id, noSave){
+  if (id === ACC.active){ closeSheet(); return; }
+  if (S.profile && !noSave) save();
+  ACC.active = id; saveAccounts();
+  S = load(); backfillSeen(); resetUI();
+  if (S.consent && S.profile) checkIn();
+  render(); window.scrollTo(0, 0);
+  if (S.profile){ toast('Bonjour, ' + esc(S.profile.name)); setTimeout(() => totemInvite(false), 1500); }
+}
+function newAccount(){
+  if (S.profile){ save(); UI.prevAcc = ACC.active; }
+  ACC.active = 'p' + Date.now().toString(36); saveAccounts();
+  S = defaultState(); S.consent = true;                      // l'avertissement a déjà été lu sur cet appareil
+  resetUI(); render(); window.scrollTo(0, 0);
+}
+function removeAccount(){
+  try { localStorage.removeItem(keyOf(ACC.active)); } catch (e) {}
+  ACC.list = ACC.list.filter(a => a.id !== ACC.active);
+  const next = ACC.list[0];
+  if (next){ switchAccount(next.id, true); return; }
+  ACC.active = 'p1'; saveAccounts();
+  S = defaultState(); resetUI(); render();
 }
 
 /* ---------- Animal totem ---------- */
@@ -1232,15 +1294,19 @@ function vProfil(){
       </div>
     </section>`}
 
+    <section class="stack"><div class="section-head"><h2>Comptes sur cet appareil</h2><span class="count">${ACC.list.length}</span></div>
+      <div class="frame-plain stack">${accountsList()}</div>
+    </section>
+
     <section class="stack"><div class="section-head"><h2>Mes données</h2></div>
       <div class="frame-plain stack">
         <p class="small" style="margin:0">Tout est enregistré uniquement sur cet appareil.${storageOK ? '' : ' <b style="color:var(--danger)">Votre navigateur bloque l\'enregistrement : vos données disparaîtront à la fermeture de la page.</b>'}</p>
         <button class="btn btn-ghost btn-wide" data-act="edit">Modifier mon prénom ou ma date</button>
         <button class="btn btn-ghost btn-wide" data-act="privacy">Revoir l'avertissement</button>
         ${UI.confirmErase
-          ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer prénom, date, points et journal ? Cette action est définitive.</p>
-              <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Tout effacer</button></div></div>`
-          : `<button class="btn btn-danger btn-wide" data-act="erase">Effacer toutes mes données</button>`}
+          ? `<div class="stack" style="text-align:center"><p class="small" style="margin:0">Effacer le compte de ${esc(S.profile.name)} : prénom, date, points, journal et animal ? Cette action est définitive.${ACC.list.length > 1 ? ' Les autres comptes ne sont pas touchés.' : ''}</p>
+              <div class="duo"><button class="btn btn-ghost" data-act="erase-no">Annuler</button><button class="btn btn-danger" data-act="erase-yes">Effacer ce compte</button></div></div>`
+          : `<button class="btn btn-danger btn-wide" data-act="erase">${ACC.list.length > 1 ? 'Effacer ce compte' : 'Effacer toutes mes données'}</button>`}
         <div class="legal-box">
           <div class="h-eyebrow">Informations légales</div>
           <p class="small muted" style="margin:0">Aucun compte, aucun cookie, aucune mesure d'audience. Le site est hébergé par GitHub Pages et les polices viennent de Google Fonts : ces deux services voient l'adresse IP de votre appareil quand la page se charge, comme pour tout site web.</p>
@@ -1265,7 +1331,7 @@ const PRIVACY = `
     <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
   <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
-  <p class="small muted" style="margin:0">Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
+  <p class="small muted" style="margin:0">Plusieurs personnes peuvent avoir chacune leur compte sur l'appareil, sans mot de passe. Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
 
 function profileForm(isEdit){
   const p = S.profile || {name:'', birth:''};
@@ -1287,7 +1353,8 @@ function showOnboarding(step){
       <div class="h-eyebrow" style="text-align:center">Faisons connaissance</div>
       <h1 class="h-title gold" style="text-align:center">Bienvenue dans le cercle</h1>
       <p class="small muted" style="margin:0;text-align:center">Ces deux informations suffisent à Madame Voyance pour lire vos astres.</p>
-      ${profileForm(false)}</div>`;
+      ${profileForm(false)}
+      ${UI.prevAcc && ACC.list.some(a => a.id === UI.prevAcc) ? `<button class="btn btn-ghost btn-wide" data-act="acc-cancel">Revenir au compte de ${esc(ACC.list.find(a => a.id === UI.prevAcc).name)}</button>` : ''}</div>`;
   }
   ov.scrollTop = 0;
 }
@@ -1526,9 +1593,11 @@ document.addEventListener('click', e => {
     case 'privacy': openSheet(`<div class="stack">${PRIVACY}</div>`); break;
     case 'erase': UI.confirmErase = true; render(); break;
     case 'erase-no': UI.confirmErase = false; render(); break;
-    case 'erase-yes':
-      try { localStorage.removeItem(KEY); } catch (err) {}
-      S = defaultState(); ART = 'rws'; shown = 0; applyZen(); UI.view = 'accueil'; UI.confirmErase = false; history.replaceState(null, '', '#accueil'); render(); break;
+    case 'erase-yes': removeAccount(); break;
+    case 'accounts': accountsSheet(); break;
+    case 'acc': switchAccount(el.dataset.id); break;
+    case 'acc-new': newAccount(); break;
+    case 'acc-cancel': { const prev = UI.prevAcc; UI.prevAcc = null; if (prev && ACC.list.some(a => a.id === prev)) switchAccount(prev, true); break; }
     case 'install': installApp(); break;
     case 'install-hide': S.installHide = true; save(); render(); break;
     case 'close': closeSheet(); break;
@@ -1544,7 +1613,7 @@ document.addEventListener('submit', e => {
     const first = !S.profile;
     S.profile = p; save();
     if (kind === 'edit') closeSheet();
-    if (first){ sparkle(innerWidth / 2, innerHeight / 2, 60, 1.6); checkIn(); installBonus(); UI.view = 'accueil'; history.replaceState(null, '', '#accueil'); }
+    if (first){ UI.prevAcc = null; sparkle(innerWidth / 2, innerHeight / 2, 60, 1.6); checkIn(); installBonus(); UI.view = 'accueil'; history.replaceState(null, '', '#accueil'); }
     render();
     if (first) setTimeout(() => totemInvite(true), 1200);
     return;
