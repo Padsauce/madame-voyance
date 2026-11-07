@@ -92,12 +92,12 @@ if (!inFrame){
   meta('apple-mobile-web-app-capable', 'yes');
   meta('mobile-web-app-capable', 'yes');
   meta('apple-mobile-web-app-status-bar-style', 'black-translucent');
-  meta('apple-mobile-web-app-title', 'Madame Voyance');
+  meta('apple-mobile-web-app-title', 'Circé');
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
-  window.addEventListener('appinstalled', () => { installEvt = null; toast('Madame Voyance est sur votre écran d\'accueil'); render(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; toast('L\'Oracle de Circé est sur votre écran d\'accueil'); render(); });
 }
 if (isIOS) document.documentElement.classList.add('ios');
 const dateInput = (id, value) => `<div class="date-wrap${value ? ' has-value' : ''}"><input id="${id}" name="${id}" type="date" min="1900-01-01" max="${dk()}" value="${esc(value || '')}"><span class="date-ph" aria-hidden="true">Touchez pour choisir</span></div>`;
@@ -604,7 +604,7 @@ function vAccueil(){
   return `<section class="view">
     ${topbar()}
     <header class="hero">
-      <h1 class="wordmark gold"><small>Madame</small>Voyance</h1>
+      <h1 class="wordmark gold"><small>L'Oracle de</small>Circé</h1>
       <div class="date-line"><span>${cap(fmtLong.format(now))}</span><span class="dot"></span><span>${MOON_PHASES[mi.idx].n}</span></div>
       <div class="greet">${hello}, ${esc(p.name)}</div>
     </header>
@@ -617,7 +617,7 @@ function vAccueil(){
 
     ${canInstall() && !S.installHide ? `<div class="install-banner">
       <img src="icons/icon-192.png" alt="" width="48" height="48">
-      <div class="grow"><b>Gardez Madame Voyance à portée de main</b><span class="small muted">Sur votre écran d'accueil, comme une vraie app, même hors ligne. +50 points</span></div>
+      <div class="grow"><b>Gardez l'Oracle de Circé à portée de main</b><span class="small muted">Sur votre écran d'accueil, comme une vraie app, même hors ligne. +50 points</span></div>
       <div class="ib-actions"><button class="btn btn-gold btn-sm" data-act="install">${installEvt ? 'Installer' : 'Comment faire'}</button>
       <button class="ib-close" data-act="install-hide" aria-label="Masquer">×</button></div>
     </div>` : ''}
@@ -910,7 +910,7 @@ function totemBody(){
     const z = birthEl();
     return `<div class="frame stack totem-intro">
         <div class="totem-parade">${['loup','hibou','renard','dauphin','papillon','ours'].map(id => sprite(id)).join('')}</div>
-        <p class="lead" style="margin:0">Quarante animaux veillent sur Madame Voyance. Lequel vous ressemble ?</p>
+        <p class="lead" style="margin:0">Circé connaît quarante animaux. Lequel sommeille en vous ?</p>
         <p class="small muted" style="margin:0">Vingt questions sur votre façon d'être. Votre élément de naissance, ${esc(z.el)} (${esc(z.n)}), fera aussi pencher la balance.</p>
         <button class="btn btn-gold btn-wide" data-act="tq-start">Commencer le quiz <span class="pts">+30</span></button>
       </div>
@@ -1206,12 +1206,12 @@ function legalSheet(t){
         <dt>Conception et textes</dt><dd>${todo(LEGAL.editeur)}</dd>
         <dt>Développement</dt><dd>${todo(LEGAL.developpement)}</dd>
         <dt>Illustrations des cartes</dt>${DECK_ARTS.map(a => `<dd><b>${esc(a.n)}</b> : ${esc(a.credit)}</dd>`).join('')}
-        <dt>Animaux totems</dt><dd>Sprites pixel art dessinés à la main pour Madame Voyance.</dd>
+        <dt>Animaux totems</dt><dd>Sprites pixel art dessinés à la main pour l'Oracle de Circé.</dd>
         <dt>Polices</dt><dd>Cinzel (Natanael Gama), Cormorant Garamond (Christian Thalmann), Jost (indestructible type*), Noto Sans Runic, Noto Sans Symbols et Noto Serif SC (Google). Licence SIL Open Font, servies par Google Fonts.</dd>
         <dt>Sons</dt><dd>Bol, carillon et souffle sont créés en direct par le navigateur. Aucun fichier audio, aucun enregistrement.</dd>
         <dt>Ciel et astres</dt><dd>Phases de lune calculées à partir du cycle synodique moyen. Constellations dessinées de façon stylisée.</dd>
       </dl>
-      <p class="small muted" style="margin:0">Madame Voyance est un divertissement : ses messages n'ont aucune valeur prédictive.</p></div>`);
+      <p class="small muted" style="margin:0">L'Oracle de Circé est un divertissement : ses messages n'ont aucune valeur prédictive.</p></div>`);
     return;
   }
   openSheet(`<div class="legal-doc">
@@ -1288,7 +1288,7 @@ function vProfil(){
       <div class="frame-plain app-row">
         <img src="icons/icon-192.png" alt="" width="56" height="56">
         <div class="grow">${standalone()
-          ? `<b>Installée sur cet appareil</b><span class="small muted">Madame Voyance fonctionne aussi sans connexion.</span>`
+          ? `<b>Installée sur cet appareil</b><span class="small muted">L'Oracle de Circé fonctionne aussi sans connexion.</span>`
           : `<b>Écran d'accueil</b><span class="small muted">Installez l'app pour l'ouvrir d'un geste, même hors ligne. +50 points</span>`}</div>
         ${standalone() ? '<span class="badge ok">✓</span>' : `<button class="btn btn-gold btn-sm" data-act="install">${installEvt ? 'Installer' : 'Comment faire'}</button>`}
       </div>
@@ -1315,7 +1315,7 @@ function vProfil(){
         </div>
       </div>
     </section>
-    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>Madame Voyance est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarots Rider-Waite-Smith (1909) et Jean Dodal (vers 1701), domaine public ; versions 8 bits et Encre générées.</p>
+    <p class="foot"><img src="icons/icon-192.png" alt="" width="40" height="40" class="foot-icon"><br>L'Oracle de Circé est un divertissement. Ses messages ne remplacent pas l'avis d'un professionnel de santé, du droit ou de la finance.<br>Illustrations : tarots Rider-Waite-Smith (1909) et Jean Dodal (vers 1701), domaine public ; versions 8 bits et Encre générées.</p>
   </section>`;
 }
 
@@ -1323,7 +1323,7 @@ function vProfil(){
 const PRIVACY = `
   <div class="h-eyebrow" style="text-align:center">Avant de commencer</div>
   <h1 class="h-title gold" style="text-align:center;margin-bottom:6px">Vos données restent chez vous</h1>
-  <p class="small" style="margin:0">Pour vous offrir des tirages personnels, Madame Voyance utilise :</p>
+  <p class="small" style="margin:0">Pour vous offrir des tirages personnels, l'Oracle de Circé utilise :</p>
   <ul class="data-list">
     <li><span><b>Votre prénom</b>, pour vous saluer et personnaliser les tirages.</span></li>
     <li><span><b>Votre date de naissance</b>, pour votre signe, votre signe chinois et votre numérologie.</span></li>
@@ -1331,7 +1331,7 @@ const PRIVACY = `
     <li><span><b>Le journal et le grimoire de vos cartes</b>, et vos préférences (jeu, dos de carte, sons, mode zen).</span></li>
   </ul>
   <p class="small" style="margin:0">Tout est enregistré <b>uniquement dans le navigateur de cet appareil</b>. Rien n'est envoyé ni partagé. Les questions posées au pendule, les dates saisies pour la compatibilité et les réponses au quiz de l'animal totem ne sont pas conservées : seul l'animal obtenu l'est.</p>
-  <p class="small muted" style="margin:0">Plusieurs personnes peuvent avoir chacune leur compte sur l'appareil, sans mot de passe. Vous pouvez tout effacer à tout moment depuis l'onglet Profil. Madame Voyance est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
+  <p class="small muted" style="margin:0">Plusieurs personnes peuvent avoir chacune leur compte sur l'appareil, sans mot de passe. Vous pouvez tout effacer à tout moment depuis l'onglet Profil. L'Oracle de Circé est un divertissement : ses messages ne remplacent pas l'avis d'un professionnel.</p>`;
 
 function profileForm(isEdit){
   const p = S.profile || {name:'', birth:''};
@@ -1352,7 +1352,7 @@ function showOnboarding(step){
     inner.innerHTML = `<div class="frame stack">
       <div class="h-eyebrow" style="text-align:center">Faisons connaissance</div>
       <h1 class="h-title gold" style="text-align:center">Bienvenue dans le cercle</h1>
-      <p class="small muted" style="margin:0;text-align:center">Ces deux informations suffisent à Madame Voyance pour lire vos astres.</p>
+      <p class="small muted" style="margin:0;text-align:center">Ces deux informations suffisent à Circé pour lire vos astres.</p>
       ${profileForm(false)}
       ${UI.prevAcc && ACC.list.some(a => a.id === UI.prevAcc) ? `<button class="btn btn-ghost btn-wide" data-act="acc-cancel">Revenir au compte de ${esc(ACC.list.find(a => a.id === UI.prevAcc).name)}</button>` : ''}</div>`;
   }
@@ -1421,9 +1421,9 @@ async function installApp(){
     ? [`Dans Safari, touchez le bouton Partager ${share} en bas de l'écran.`, 'Faites défiler et choisissez « Sur l\'écran d\'accueil ».', 'Touchez « Ajouter » : l\'icône apparaît avec vos autres apps.']
     : ['Ouvrez le menu du navigateur (les trois points ⋮).', 'Choisissez « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ».', 'Confirmez : l\'icône apparaît avec vos autres apps.'];
   openSheet(`<div class="stack" style="align-items:center;text-align:center">
-      <img src="icons/icon-192.png" alt="Icône Madame Voyance" width="88" height="88" class="app-icon-lg">
+      <img src="icons/icon-192.png" alt="Icône de l'Oracle de Circé" width="88" height="88" class="app-icon-lg">
       <div class="h-eyebrow">Sur votre écran d'accueil</div>
-      <h2 class="h-title gold" style="font-size:22px;margin:0">Installer Madame Voyance</h2>
+      <h2 class="h-title gold" style="font-size:22px;margin:0">Installer l'Oracle de Circé</h2>
     </div>
     <ol class="steps">${steps.map(t => `<li><span>${t}</span></li>`).join('')}</ol>
     <p class="small muted" style="margin:0;text-align:center">Une fois installée, l'app s'ouvre en plein écran et fonctionne sans connexion. Vous gagnez 50 points à la première ouverture.${isIOS ? ' Sur iPhone, l\'app installée garde ses propres données : vous referez une fois votre profil.' : ''}</p>`);

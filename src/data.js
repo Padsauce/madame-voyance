@@ -1,4 +1,4 @@
-/* ============ CONTENUS DE MADAME VOYANCE ============
+/* ============ CONTENUS DE L'ORACLE DE CIRCÉ ============
    Tous les textes sont ici : modifiez-les librement. */
 
 /* --- Arcanes majeurs : [nom, mots-clés, message, conseil] --- */
@@ -482,9 +482,9 @@ const DECK_ARTS = [
   {id:'marseille', n:'Marseille', d:'Jean Dodal, Lyon, vers 1701', dir:'decks/marseille',
    credit:'Tarot de Marseille de Jean Dodal (Lyon, vers 1701), exemplaire de la Bibliothèque nationale de France, via Wikimedia Commons. Domaine public.'},
   {id:'8bits', n:'8 bits', d:'Pixel art aux règles de la NES', dir:'decks/8bits',
-   credit:'Pixel art généré pour Madame Voyance à partir du Rider-Waite-Smith, aux contraintes de la NES : 96×160 pixels, couleurs de la palette NES sans les gris, un fond commun et 4 palettes de 3 couleurs, une palette par bloc de 16×16.'},
+   credit:'Pixel art généré pour l’Oracle de Circé à partir du Rider-Waite-Smith, aux contraintes de la NES : 96×160 pixels, couleurs de la palette NES sans les gris, un fond commun et 4 palettes de 3 couleurs, une palette par bloc de 16×16.'},
   {id:'encre', n:'Encre', d:'Hachures aux stylos de couleur', dir:'decks/encre',
-   credit:'Version en hachures de stylos de couleur sur papier crème, générée pour Madame Voyance à partir du Rider-Waite-Smith.'}
+   credit:'Version en hachures de stylos de couleur sur papier crème, générée pour l’Oracle de Circé à partir du Rider-Waite-Smith.'}
 ];
 let ART = 'rws';
 const artOf = id => DECK_ARTS.find(a => a.id === id) || DECK_ARTS[0];

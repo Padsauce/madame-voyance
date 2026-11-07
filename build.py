@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble Madame Voyance : index.html (aperçu artifact) et docs/ (site publié par GitHub Pages)."""
+"""Assemble l'Oracle de Circé : index.html (aperçu artifact) et docs/ (site publié par GitHub Pages)."""
 import os, json, shutil, zipfile, hashlib
 ROOT = os.path.dirname(os.path.abspath(__file__))
 P = lambda *a: os.path.join(ROOT, *a)
@@ -30,7 +30,7 @@ if os.path.isdir(P('totems')): shutil.copytree(P('totems'), os.path.join(dist, '
 open(os.path.join(dist, '.nojekyll'), 'w').close()  # GitHub Pages : servir les fichiers tels quels
 page = ('<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-        '<meta name="description" content="Votre voyance du jour : tarot, horoscope, lune, runes et numérologie.">\n'
+        '<meta name="description" content="Votre oracle du jour : tarot, horoscope, animal totem, lune et runes.">\n'
         '<link rel="manifest" href="manifest.webmanifest">\n'
         '<style>html{padding-top:env(safe-area-inset-top,0px)}</style>\n'
         + head + '</head>\n<body>\n' + BODY + '</body>\n</html>\n')
@@ -38,8 +38,8 @@ page = page.replace("  link('manifest', 'manifest.webmanifest');\n", "")
 open(os.path.join(dist, 'index.html'), 'w', encoding='utf-8').write(page)
 
 manifest = {
-  "name": "Madame Voyance", "short_name": "Mme Voyance",
-  "description": "Votre voyance du jour : tarot, horoscope, lune, runes et numérologie.",
+  "name": "L'Oracle de Circé", "short_name": "Circé",
+  "description": "Votre oracle du jour : tarot, horoscope, animal totem, lune et runes.",
   "lang": "fr", "start_url": "./index.html#accueil", "scope": "./", "id": "./",
   "display": "standalone", "orientation": "portrait",
   "background_color": "#0a0616", "theme_color": "#0a0616",
@@ -55,7 +55,7 @@ open(os.path.join(dist, 'manifest.webmanifest'), 'w', encoding='utf-8').write(js
 files = ['./', 'index.html', 'manifest.webmanifest'] + ['icons/' + f for f in sorted(os.listdir(P('icons')))] + ['cards/' + f for f in sorted(os.listdir(P('cards')))]  # autres jeux : mis en cache à la première utilisation
 files += ['totems/' + f for f in sorted(os.listdir(P('totems')))] if os.path.isdir(P('totems')) else []
 version = hashlib.sha1(page.encode()).hexdigest()[:8]
-sw = """/* Madame Voyance : fonctionnement hors ligne */
+sw = """/* L'Oracle de Circé : fonctionnement hors ligne */
 const CACHE = 'mv-%s';
 const FONTS = 'mv-fonts';
 const FILES = %s;
@@ -91,7 +91,7 @@ self.addEventListener('fetch', e => {
 """ % (version, json.dumps(files))
 open(os.path.join(dist, 'sw.js'), 'w', encoding='utf-8').write(sw)
 
-open(os.path.join(dist, 'LISEZMOI.txt'), 'w', encoding='utf-8').write("""MADAME VOYANCE : site installable
+open(os.path.join(dist, 'LISEZMOI.txt'), 'w', encoding='utf-8').write("""L'ORACLE DE CIRCÉ : site installable
 
 Mise en ligne
   Déposez tout le contenu de ce dossier sur n'importe quel hébergement statique en HTTPS

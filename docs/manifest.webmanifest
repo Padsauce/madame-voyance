@@ -1,7 +1,7 @@
 {
-  "name": "Madame Voyance",
-  "short_name": "Mme Voyance",
-  "description": "Votre voyance du jour : tarot, horoscope, lune, runes et numérologie.",
+  "name": "L'Oracle de Circé",
+  "short_name": "Circé",
+  "description": "Votre oracle du jour : tarot, horoscope, animal totem, lune et runes.",
   "lang": "fr",
   "start_url": "./index.html#accueil",
   "scope": "./",
