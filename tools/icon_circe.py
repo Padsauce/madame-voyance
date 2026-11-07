@@ -3,7 +3,7 @@ Trois propositions en SVG, rendues en PNG par Chromium :
   D « Le baiser »        : croissant de profil face au soleil qui sourit (motif classique du tarot) ;
   E « Jour et nuit »     : un seul visage, moitié soleil doré, moitié lune sombre ;
   F « Le berceau »       : grand croissant de profil qui berce un petit soleil endormi.
-Usage : python3 tools/icon_circe.py <dossier sortie>  → D.png, D-mask.png, etc."""
+Usage : python3 tools/icon_circe.py <dossier sortie>  → D.png, D-mask.png, etc. Icône en place : E (Jour et nuit)."""
 import asyncio, math, sys
 from playwright.async_api import async_playwright
 
