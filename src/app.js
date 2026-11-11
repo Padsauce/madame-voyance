@@ -881,18 +881,28 @@ function exportCode(){
   if (S.profile) save();
   const data = {};
   ACC.list.forEach(a => { try { const r = localStorage.getItem(keyOf(a.id)); if (r) data[a.id] = JSON.parse(r); } catch (e) {} });
+  if (S.profile) data[ACC.active] = JSON.parse(JSON.stringify(S));     // le compte ouvert, quoi qu'il arrive
   return CODE_TAG + b64(JSON.stringify({active: ACC.active, data}));
 }
-function importCode(text){                                  // nombre de comptes récupérés (0 si le code est invalide)
-  let o;
-  try {
-    const t = String(text || ''), i = t.indexOf(CODE_TAG); if (i < 0) return 0;
-    const rest = t.slice(i + CODE_TAG.length).trim();
-    for (const c of [(rest.match(/^[A-Za-z0-9+/]+=*/) || [''])[0], rest.replace(/[^A-Za-z0-9+/=]/g, '')]){   // code seul, ou coupé en plusieurs lignes
-      try { o = JSON.parse(unb64(c)); break; } catch (e) {}
-    }
-  } catch (e) { return 0; }
-  if (!o || !o.data || typeof o.data !== 'object') return 0;
+let importErr = '';
+function decodeCode(text){                                  // tolère espaces, retours à la ligne, caractères invisibles et texte autour
+  const t = String(text || '').normalize('NFKC').replace(/[​-‍⁠﻿]/g, '');
+  const m = /CIRCE1\s*[:：]/i.exec(t);
+  const peek = esc(t.trim().slice(0, 14)) + (t.trim().length > 14 ? '…' : '');
+  if (!m){ importErr = t.trim() ? `Le texte collé ne contient pas de code de profil (${t.trim().length} caractères, commence par « ${peek} »). Recopiez votre profil, puis réessayez.` : 'Le champ est vide : collez le code de votre profil.'; return null; }
+  const rest = t.slice(m.index + m[0].length).replace(/-/g, '+').replace(/_/g, '/');
+  const pad = c => c + '='.repeat((4 - c.length % 4) % 4);
+  const first = (rest.trim().match(/^[A-Za-z0-9+/]+/) || [''])[0], all = rest.replace(/[^A-Za-z0-9+/]/g, '');
+  for (const c of [first, all]){
+    if (!c) continue;
+    try { const o = JSON.parse(unb64(pad(c))); if (o && o.data && typeof o.data === 'object') return o; } catch (e) {}
+  }
+  importErr = `Le code est incomplet ou abîmé (${all.length} caractères reçus après « CIRCE1: »). Recopiez votre profil en entier, puis réessayez.`;
+  return null;
+}
+function importCode(text){                                  // nombre de comptes récupérés (0 si le code est invalide, raison dans importErr)
+  importErr = '';
+  const o = decodeCode(text); if (!o) return 0;
   if (S.profile) save();
   const map = {}; let n = 0;
   Object.entries(o.data).forEach(([id, st], k) => {
@@ -901,43 +911,57 @@ function importCode(text){                                  // nombre de comptes
     if (same && (same.points || 0) > (st.points || 0)){ map[id] = same.id; return; }   // déjà là, et plus avancé ici
     const nid = same ? same.id : ACC.list.some(a => a.id === id) ? 'p' + Date.now().toString(36) + k : id;
     st.consent = true;
-    try { localStorage.setItem(keyOf(nid), JSON.stringify(st)); } catch (e) { return; }
+    try { localStorage.setItem(keyOf(nid), JSON.stringify(st)); } catch (e) { importErr = 'Votre navigateur refuse d\'enregistrer les données (mémoire pleine ou navigation privée).'; return; }
     let a = ACC.list.find(x => x.id === nid); if (!a){ a = {id: nid}; ACC.list.push(a); }
     Object.assign(a, {name: st.profile.name, birth: st.profile.birth, totem: st.totem ? st.totem.id : null, points: st.points || 0});
     map[id] = nid; n++;
   });
   const act = map[o.active] || Object.values(map)[0];
-  if (!act) return 0;
+  if (!act){ importErr = importErr || 'Ce code ne contient aucun profil. Recopiez-le depuis un appareil où votre profil est créé.'; return 0; }
   ACC.active = act; saveAccounts();
   S = load(); backfillSeen(); resetUI(); UI.prevAcc = null;
-  checkIn(); installBonus(); render(); window.scrollTo(0, 0);
-  sparkle(innerWidth / 2, innerHeight / 2, 50, 1.4);
-  toast(n > 1 ? `${n} comptes récupérés` : 'Bon retour, ' + esc(S.profile.name));
+  try {                                                     // l'import est fait : l'affichage ne doit plus pouvoir le faire échouer
+    closeSheet(); checkIn(); installBonus(); render(); window.scrollTo(0, 0);
+    sparkle(innerWidth / 2, innerHeight / 2, 50, 1.4);
+    toast(n > 1 ? `${n} comptes récupérés` : 'Bon retour, ' + esc(S.profile.name));
+  } catch (e) { try { render(); } catch (e2) {} }
   return Math.max(n, 1);
 }
 async function copyProfile(quiet){
   const code = exportCode();
-  try { await navigator.clipboard.writeText(code); if (!quiet) toast('Profil copié ✓'); return true; }
-  catch (e) {
-    const ta = document.createElement('textarea'); ta.value = code; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0;top:0';
-    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, code.length);
-    let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {}
+  let ok = false;
+  try { await navigator.clipboard.writeText(code); ok = true; } catch (e) {}
+  if (!ok){
+    const ta = document.createElement('textarea'); ta.value = code; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, code.length);
+    try { ok = document.execCommand('copy'); } catch (e2) {}
     ta.remove();
-    if (ok){ if (!quiet) toast('Profil copié ✓'); return true; }
-    if (!quiet) openSheet(`<div class="stack"><div class="h-eyebrow">Mon code de profil</div><p class="small" style="margin:0">Copiez ce texte en entier, puis collez-le dans « J'ai déjà un profil ».</p><textarea class="code-box" readonly rows="5">${esc(code)}</textarea></div>`);
-    return false;
   }
+  if (!quiet) codeSheet(code, ok);
+  return ok;
+}
+function codeSheet(code, copied){                            // le code reste visible : copie à la main ou partage (Notes, Messages…) en secours
+  UI.code = code;
+  openSheet(`<div class="stack">
+    <div class="h-eyebrow">Transférer mon profil</div>
+    <h2 class="h-title gold" style="font-size:22px;margin:0">${copied ? 'Profil copié ✓' : 'Mon code de profil'}</h2>
+    <p class="small" style="margin:0">Ouvrez l'app (ou l'autre téléphone), touchez « J'ai déjà un profil : le récupérer » et collez.${copied ? '' : ' Sélectionnez tout le texte ci-dessous et copiez-le.'}</p>
+    <textarea class="code-box" readonly rows="4" aria-label="Code de profil">${esc(code)}</textarea>
+    <p class="small muted" style="margin:0">${code.length} caractères. Si le collage échoue, partagez le code vers Notes, puis copiez-le depuis Notes.</p>
+    <button class="btn btn-ghost btn-wide" data-act="exp-again">Copier à nouveau</button>
+    ${navigator.share ? '<button class="btn btn-ghost btn-wide" data-act="exp-share">Partager le code</button>' : ''}</div>`);
 }
 async function pasteProfile(){
   let t = '';
   try { t = await navigator.clipboard.readText(); } catch (e) {}
   if (t && importCode(t)) return;
+  const why = t ? importErr : '';
   openSheet(`<div class="stack">
     <div class="h-eyebrow">J'ai déjà un profil</div>
     <h2 class="h-title gold" style="font-size:22px;margin:0">Retrouver mon profil</h2>
     <ol class="steps"><li><span>Là où se trouve votre profil (Safari ou l'autre téléphone) : Profil → Mes données → « Copier mon profil ».</span></li><li><span>Revenez ici et collez le code ci-dessous.</span></li></ol>
-    <textarea id="imp" class="code-box" rows="4" placeholder="Collez ici le code (il commence par CIRCE1:)" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
-    <span class="err" id="imp-err"></span>
+    <textarea id="imp" class="code-box" rows="4" placeholder="Collez ici le code (il commence par CIRCE1:)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <span class="err" id="imp-err">${why}</span>
     <button class="btn btn-gold btn-wide" data-act="imp-go">Récupérer</button></div>`);
 }
 
@@ -1611,7 +1635,9 @@ document.addEventListener('click', e => {
     case 'consent': S.consent = true; save(); sparkleAt(el, 24); render(); break;
     case 'exp': copyProfile(); break;
     case 'imp': pasteProfile(); break;
-    case 'imp-go': { const t = $('#imp') && $('#imp').value; if (importCode(t)) closeSheet(); else $('#imp-err').textContent = 'Ce code n\'est pas reconnu. Copiez-le à nouveau, en entier.'; break; }
+    case 'imp-go': { const t = $('#imp') && $('#imp').value; if (!importCode(t) && $('#imp-err')) $('#imp-err').innerHTML = importErr; break; }
+    case 'exp-again': { const c = UI.code || exportCode(); navigator.clipboard.writeText(c).then(() => toast('Profil copié ✓'), () => { const ta = document.querySelector('.sheet .code-box'); if (ta){ ta.focus(); ta.select(); ta.setSelectionRange(0, c.length); try { document.execCommand('copy'); toast('Profil copié ✓'); } catch (e) {} } }); break; }
+    case 'exp-share': navigator.share({title: 'Mon profil · L’Oracle de Circé', text: UI.code || exportCode()}).catch(() => {}); break;
     case 'go': { const g = JSON.parse(el.dataset.go); go(g[0], g[1]); break; }
     case 'breathe': breathe(); break;
     case 'tmode': UI.flips = new Set(); UI.tarot = +el.dataset.n; render(); break;
